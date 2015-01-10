@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mage Knight</title>
+<script src="jquery.js"></script>
+<script>
+function cardImageUrl(cardName) {
+  return '/img/cards/all/' + cardName + '.jpg';
+}
+
+function manaUrl(mana) {
+  return '/img/mana/' + mana + '.jpg';
+}
+
+function drawSource(manas) {
+  var source = $('<div/>');
+  jQuery.each(manas, function(ix,mana) {
+    var img = $('<img/>')
+              .attr('src', manaUrl(mana))
+              .css('display', 'inline-block')
+              .css('box-shadow', '2px 2px 5px #ccc')
+              .css('margin', '2px')
+              .width('20px');
+    source.append(img);
+  });
+  return source;
+}
+
+function drawHand(cards) {
+  var hand = $('<div/>');
+  jQuery.each(cards, function(ix,card) {
+    var img = $('<img/>')
+              .attr('src', cardImageUrl(card))
+              .css('display', 'inline-block')
+              .css('margin', '2px')
+              .width('150px');
+    img.hover( function () { img.width('250px'); }
+             , function () { img.width('150px'); }
+             );
+    hand.append(img);
+  });
+  return hand;
+}
+
+$(document).ready(function() {
+  var body = $('body');
+  body.append(drawHand(['stamina', 'crystallize', 'improvisation']))
+      .append(drawSource(['red','green','gold','white','black']));
+
+});
+</script>
+</head>
+<body>
+<table>
+</table>
+</body>
+</html>
