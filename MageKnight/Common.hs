@@ -53,22 +53,6 @@ data Mana = BasicMana BasicMana | Gold | Black
 data Time = Day | Night
             deriving (Eq,Ord,Show)
 
-data Terrain = Plains | Hills | Forest | Wasteland | Desert | Swamp
-             | City | Lake | Mountain
-
-terrainCostDay :: Terrain -> Time -> Maybe Int
-terrainCostDay terra time =
-  case terra of
-    Plains    -> Just 2
-    Hills     -> Just 3
-    Forest    -> Just (if time == Day then 3 else 5)
-    Wasteland -> Just 4
-    Desert    -> Just (if time == Day then 5 else 3)
-    Swamp     -> Just 5
-    City      -> Just 2
-    Lake      -> Nothing
-    Mountain  -> Nothing
-
 
 
 anyBasicMana :: [ BasicMana ]

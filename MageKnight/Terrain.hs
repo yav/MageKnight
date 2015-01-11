@@ -3,9 +3,6 @@ module MageKnight.Terrain where
 
 import MageKnight.Common
 
-import           Data.Map ( Map )
-import qualified Data.Map as Map
-
 type TileAddr       = (Int,Int)
 
 data Dir            = NE | E | SE | SW | W | NW
@@ -19,6 +16,41 @@ data HexNeighbour   = Local HexAddr | Foreign Int Int Dir
 
 data Addr           = Addr { tileAddr :: TileAddr, hexAddr :: HexAddr }
                       deriving (Eq,Show)
+
+data Terrain        = Plains | Hills | Forest | Wasteland | Desert | Swamp
+                    | City BasicMana
+                    | Lake | Mountain
+                    | Ocean {- for tile A and B -}
+                      deriving (Eq,Show)
+
+data Feature        = MagicalGlade | Mine BasicMana
+                    | Village | Monastery
+                    | Keep | MageTower
+                    | Dungeon | Tomb
+                    | MonsterDen | SpawningGrounds
+                    | AncientRuins
+                      deriving (Eq,Show)
+
+newtype Tile        = Tile (HexAddr -> (Terrain, Maybe Feature))
+
+
+
+terrainCost :: Terrain -> Time -> Maybe Int
+terrainCost terra time =
+  case terra of
+    Plains    -> Just 2
+    Hills     -> Just 3
+    Forest    -> Just (if time == Day then 3 else 5)
+    Wasteland -> Just 4
+    Desert    -> Just (if time == Day then 5 else 3)
+    Swamp     -> Just 5
+    City _    -> Just 2
+    Lake      -> Nothing
+    Mountain  -> Nothing
+    Ocean     -> Nothing
+
+
+
 
 
 neighbour :: Addr -> Dir -> Addr
