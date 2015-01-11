@@ -1,7 +1,13 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
 module MageKnight.Terrain where
 
 import MageKnight.Common
+import MageKnight.Enemies(EnemyType(Orc,Draconum))
+
+import Data.Text (Text)
+import Data.Array (array, (!))
 
 type TileAddr       = (Int,Int)
 
@@ -14,7 +20,7 @@ data HexAddr        = Center | Border Dir
 data HexNeighbour   = Local HexAddr | Foreign Int Int Dir
                       deriving (Eq,Ord,Show)
 
-data Addr           = Addr { tileAddr :: TileAddr, hexAddr :: HexAddr }
+data Addr           = Addr { addrGlobal :: TileAddr, addrLocal :: HexAddr }
                       deriving (Eq,Show)
 
 data Terrain        = Plains | Hills | Forest | Wasteland | Desert | Swamp
@@ -29,10 +35,15 @@ data Feature        = MagicalGlade | Mine BasicMana
                     | Dungeon | Tomb
                     | MonsterDen | SpawningGrounds
                     | AncientRuins
+                    | RampagingEnemy EnemyType
                       deriving (Eq,Show)
 
-newtype Tile        = Tile (HexAddr -> (Terrain, Maybe Feature))
+data TileType       = BasicTile | AdvancedTile
 
+data Tile           = Tile { tileName    :: Text
+                           , tileType    :: TileType
+                           , tileTerrain :: HexAddr -> (Terrain, Maybe Feature)
+                           }
 
 
 terrainCost :: Terrain -> Time -> Maybe Int
@@ -55,10 +66,12 @@ terrainCost terra time =
 
 neighbour :: Addr -> Dir -> Addr
 neighbour Addr { .. } dir =
-  case tileGraph hexAddr dir of
-    Local x         -> Addr { hexAddr = x, .. }
-    Foreign dx dy a -> Addr { tileAddr = (fst tileAddr + dx, snd tileAddr + dy)
-                            , hexAddr  = Border a
+  case tileGraph addrLocal dir of
+    Local x         -> Addr { addrLocal = x, .. }
+    Foreign dx dy a -> Addr { addrGlobal = ( fst addrGlobal + dx
+                                           , snd addrGlobal + dy
+                                           )
+                            , addrLocal = Border a
                             }
 
 oppositeDir :: Dir -> Dir
@@ -72,56 +85,307 @@ oppositeDir dir =
     NW -> SE
 
 tileGraph :: HexAddr -> Dir -> HexNeighbour
-tileGraph hexAddr d =
-  case hexAddr of
-    Center -> Local (Border d)
+tileGraph a d =
+  case a of
+    Center -> local d
     Border b ->
       case b of
         NW -> case d of
                 NW -> Foreign 0 1 SW
                 NE -> Foreign 0 1 SE
-                E  -> Local (Border NE)
-                SE -> Local Center
-                SW -> Local (Border W)
+                E  -> local NE
+                SE -> local Center
+                SW -> local W
                 W  -> Foreign (-1) 1 E
         NE -> case d of
                 NW -> Foreign 0 1 SE
                 NE -> Foreign 1 0 W
                 E  -> Foreign 1 0 SW
-                SE -> Local (Border E)
-                SW -> Local Center
-                W  -> Local (Border NW)
+                SE -> local E
+                SW -> local Center
+                W  -> local NW
         E -> case d of
-               NW -> Local (Border NE)
+               NW -> local NE
                NE -> Foreign 1 0 SW
                E  -> Foreign 1 (-1) NW
                SE -> Foreign 1 (-1) W
-               SW -> Local (Border SE)
-               W  -> Local Center
+               SW -> local SE
+               W  -> local Center
         SE -> case d of
-                NW -> Local Center
-                NE -> Local (Border E)
+                NW -> local Center
+                NE -> local E
                 E  -> Foreign 1 (-1) W
                 SE -> Foreign 0 (-1) NE
                 SW -> Foreign 0 (-1) NW
-                W  -> Local (Border SW)
+                W  -> local SW
         SW -> case d of
-                NW -> Local (Border W)
-                NE -> Local Center
-                E  -> Local (Border SE)
+                NW -> local W
+                NE -> local Center
+                E  -> local SE
                 SE -> Foreign 0 (-1) NW
                 SW -> Foreign (-1) 0 E
                 W  -> Foreign (-1) 0 NE
         W -> case d of
                NW -> Foreign (-1) 1 E
-               NE -> Local (Border NW)
-               E  -> Local Center
-               SE -> Local (Border SW)
+               NE -> local NW
+               E  -> local Center
+               SE -> local SW
                SW -> Foreign (-1) 0 NE
                W  -> Foreign (-1) 1 SE
 
+  where local x = Local (hexAddr x)
+
+--------------------------------------------------------------------------------
+
+class IsHexAddr a where
+  hexAddr :: a -> HexAddr
+
+instance IsHexAddr Dir where
+  hexAddr = Border
+
+instance IsHexAddr HexAddr where
+  hexAddr = id
 
 
+
+class IsHexContent a where
+  hexContent :: a -> (Terrain, Maybe Feature)
+
+instance IsHexContent Terrain where
+  hexContent a = (a, Nothing)
+
+instance IsHexContent (Terrain,Feature) where
+  hexContent (a,b) = (a,Just b)
+
+instance IsHexContent (Terrain,EnemyType) where
+  hexContent (a,b) = (a,Just (RampagingEnemy b))
+
+
+
+type Hex = (HexAddr, (Terrain, Maybe Feature))
+
+listTileFun :: [Hex] -> HexAddr -> (Terrain, Maybe Feature)
+listTileFun xs = \d -> arr ! cvt d
+  where
+  arr   = array (0,6) [ (cvt c,a) | (c,a) <- xs ]
+  cvt c = case c of
+            Center   -> 0
+            Border b -> 1 + fromEnum b
+
+(|->) :: (IsHexAddr a, IsHexContent b) => a -> b -> Hex
+a |-> b = (hexAddr a, hexContent b)
+
+tile :: Text -> TileType -> [Hex] -> Tile
+tile tileName tileType hexes = Tile { tileTerrain = listTileFun hexes, .. }
+
+
+tileA :: Tile
+tileA = tile "A" BasicTile [ NW     |-> Plains
+                           , NE     |-> Forest
+                           , W      |-> Ocean
+                           , Center |-> Plains -- and portal...
+                           , E      |-> Plains
+                           , SW     |-> Ocean
+                           , SE     |-> Ocean
+                           ]
+
+tileB :: Tile
+tileB = tile "B" BasicTile [ NW     |-> Plains
+                           , NE     |-> Forest
+                           , W      |-> Ocean
+                           , Center |-> Plains -- and portal...
+                           , E      |-> Plains
+                           , SW     |-> Ocean
+                           , SE     |-> Plains
+                           ]
+
+basicTiles :: [Tile]
+basicTiles = map basic
+  [ ("1", [ NW     |-> (Forest, Orc)
+          , NE     |-> Lake
+          , W      |-> Forest
+          , Center |-> (Forest, MagicalGlade)
+          , E      |-> (Plains, Village)
+          , SW     |-> Plains
+          , SE     |-> Plains
+          ])
+
+  , ("2", [ NW     |-> (Hills, Orc)
+          , NE     |-> (Forest, MagicalGlade)
+          , W      |-> Plains
+          , Center |-> Hills
+          , E      |-> (Plains, Village)
+          , SW     |-> (Hills, Mine Green)
+          , SE     |-> Plains
+          ])
+
+  , ("3", [ NW     |-> Plains
+          , NE     |-> (Hills, Keep)
+          , W      |-> Plains
+          , Center |-> Forest
+          , E      |-> Hills
+          , SW     |-> (Plains, Village)
+          , SE     |-> (Hills, Mine White)
+          ])
+
+  , ("4", [ NW     |-> Desert
+          , NE     |-> Desert
+          , W      |-> (Hills, Orc)
+          , Center |-> (Desert, MageTower)
+          , E      |-> Mountain
+          , SW     |-> Plains
+          , SE     |-> (Plains, Village)
+          ])
+
+  , ("5", [ NW     |-> Forest
+          , NE     |-> (Plains, Monastery)
+          , W      |-> (Forest, MagicalGlade)
+          , Center |-> Lake
+          , E      |-> (Plains, Orc)
+          , SW     |-> Forest
+          , SE     |-> (Hills, Mine Blue)
+          ])
+
+  , ("6", [ NW     |-> Mountain
+          , NE     |-> Forest
+          , W      |-> (Hills, MonsterDen)
+          , Center |-> (Hills, Mine Red)
+          , E      |-> Plains
+          , SW     |-> Hills
+          , SE     |-> (Forest, Orc)
+          ])
+
+  , ("7", [ NW     |-> Lake
+          , NE     |-> (Forest, Orc)
+          , W      |-> (Plains, Monastery)
+          , Center |-> Swamp
+          , E      |-> (Forest, MagicalGlade)
+          , SW     |-> Plains
+          , SE     |-> (Plains, Dungeon)
+          ])
+
+  , ("8", [ NW     |-> (Forest, MagicalGlade)
+          , NE     |-> (Forest, AncientRuins)
+          , W      |-> Forest
+          , Center |-> (Swamp, Orc)
+          , E      |-> Plains
+          , SW     |-> Swamp
+          , SE     |-> (Swamp, Village)
+          ])
+
+  , ("9", [ NW     |-> (Wasteland, Dungeon)
+          , NE     |-> Mountain
+          , W      |-> Plains
+          , Center |-> Mountain
+          , E      |-> (Wasteland, Keep)
+          , SW     |-> (Wasteland, MageTower)
+          , SE     |-> Plains
+          ])
+
+  , ("10",[ NW     |-> (Hills, MonsterDen)
+          , NE     |-> Forest
+          , W      |-> Hills
+          , Center |-> Mountain
+          , E      |-> Plains
+          , SW     |-> (Hills, Keep)
+          , SE     |-> (Hills, AncientRuins)
+          ])
+
+  , ("11",[ NW     |-> Hills
+          , NE     |-> Lake
+          , W      |-> (Plains, AncientRuins)
+          , Center |-> (Plains, MageTower)
+          , E      |-> Lake
+          , SW     |-> Lake
+          , SE     |-> (Hills, Orc)
+          ])
+  ]
+  where
+  basic (x,y) = tile x BasicTile y
+
+
+
+advancedTiles :: [Tile]
+advancedTiles = map advanced
+  [ ("1", [ NW     |-> Mountain
+          , NE     |-> (Desert, Tomb)
+          , W      |-> (Hills, SpawningGrounds)
+          , Center |-> (Desert, Monastery)
+          , E      |-> Desert
+          , SW     |-> Hills
+          , SE     |-> Desert
+          ])
+
+  , ("2", [ NW     |-> Lake
+          , NE     |-> (Swamp, AncientRuins)
+          , W      |-> Forest
+          , Center |-> Lake
+          , E      |-> (Hills, Mine Green)
+          , SW     |-> (Swamp, MageTower)
+          , SE     |-> (Swamp, Draconum)
+          ])
+
+  , ("3", [ NW     |-> Mountain
+          , NE     |-> (Wasteland, AncientRuins)
+          , W      |-> (Wasteland, Tomb)
+          , Center |-> Wasteland
+          , E      |-> (Hills, MageTower)
+          , SW     |-> (Hills, Mine White)
+          , SE     |-> Wasteland
+          ])
+
+  , ("4", [ NW     |-> (Hills, Mine Blue)
+          , NE     |-> Hills
+          , W      |-> Wasteland
+          , Center |-> (Mountain, Draconum)
+          , E      |-> (Wasteland, Keep)
+          , SW     |-> (Wasteland, AncientRuins)
+          , SE     |-> Wasteland
+          ])
+
+  , ("5", [ NW     |-> (Forest, MagicalGlade)
+          , NE     |-> (Swamp, Village)
+          , W      |-> Lake
+          , Center |-> City Green
+          , E      |-> (Swamp, Orc)
+          , SW     |-> (Forest, Orc)
+          , SE     |-> Swamp
+          ])
+
+  , ("6", [ NW     |-> Forest
+          , NE     |-> (Plains, Monastery)
+          , W      |-> (Mountain, Draconum)
+          , Center |-> City Blue
+          , E      |-> Lake
+          , SW     |-> Hills
+          , SE     |-> Lake
+          ])
+
+  , ("7", [ NW     |-> (Wasteland, SpawningGrounds)
+          , NE     |-> Plains
+          , W      |-> (Wasteland, Keep)
+          , Center |-> City White
+          , E      |-> Forest
+          , SW     |-> Lake
+          , SE     |-> (Lake, Draconum)
+          ])
+
+  , ("8", [ NW     |-> (Desert, AncientRuins)
+          , NE     |-> (Hills, Mine Red)
+          , W      |-> (Wasteland, Draconum)
+          , Center |-> City Red
+          , E      |-> Desert
+          , SW     |-> Wasteland
+          , SE     |-> (Desert, Draconum)
+          ])
+
+
+
+
+
+  ]
+  where
+  advanced (x,y) = tile x AdvancedTile y
 
 
 
