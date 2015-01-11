@@ -10,12 +10,14 @@ function tileUrl(ty,n ) { return '/img/maps/' + ty + '/' + n + '.png'; }
 function charUrl(ch,ty) { return '/img/characters/' + ch + '/' + ty + '.png'; }
 function enemyUrl(ty,ch) { return '/img/enemies/' + ty + '/' + ch + '.png'; }
 
-var maxX         = 10;
-var maxY         = 10;
+var maxX         = 2;
+var maxY         = 2;
 var tileWidth    = 200;
-var enemyWidth   = Math.floor(tileWidth / 4);
-var charWidth    = Math.floor(tileWidth / 6);
 var hexWidth     = tileWidth / 3;
+var enemyWidth   = 3 * hexWidth / 4;
+var charWidth    = hexWidth / 2;
+var shieldWidth  = hexWidth / 3;
+
 var centerToSide = hexWidth / 2;
 var hexSide      = centerToSide / Math.sin(Math.PI/ 3);
 var hexHeight    = 2 * hexSide;
@@ -187,7 +189,7 @@ $(document).ready(function() {
     img = drawTile('basic',i == 0 ? 'A' : i,0,i);
     div.append(img)
   }
-  div.append(drawTile('basic',7,1,1));
+  div.append(drawTile('basic',3,1,1));
 
 
   var it = $('<img/>')
@@ -198,8 +200,9 @@ $(document).ready(function() {
   div.append(it);
 
   it.load(function() { positionItem(it, 0, 1, 'SE'); });
-  //it.attr('src', enemyUrl('orc','diggers'));
-  it.attr('src', charUrl('arythea', 'art'));
+  // it.attr('src', charUrl('arythea', 'shield'));
+  // it.attr('src', enemyUrl('orc','diggers'));
+  it.attr('src', charUrl('norowas', 'art'));
   body.append(div);
 
 
