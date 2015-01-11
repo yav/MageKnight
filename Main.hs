@@ -2,8 +2,8 @@
 {-# LANGUAGE RecordWildCards #-}
 module Main where
 
-import MK
 import MageKnight.Enemies
+import MageKnight.Cards
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)

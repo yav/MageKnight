@@ -4,8 +4,10 @@ module MageKnight.Rule where
 import MageKnight.Common
 import MageKnight.Bag
 
-import Data.Text (Text)
-import Control.Monad (foldM)
+import           Data.Text (Text)
+import qualified Data.Text as Text
+import           Control.Monad (foldM)
+import           Text.PrettyPrint
 
 
 data Rule = Rule
@@ -20,6 +22,15 @@ useRule Rule { .. } rAvail =
   where
   rm rs (r,q) = bagRemove q r rs
 
+ppRule :: Rule -> Doc
+ppRule Rule { .. } = vcat [ text (Text.unpack ruleName) <> text ":"
+                          , nest 2 (ppResources ruleIn)
+                          , text "-->"
+                          , nest 2 (ppResources ruleOut)
+                          ]
+
+
+
 infix 1 ===
 infix 2 -->
 
@@ -31,6 +42,25 @@ rIn --> rOut = Rule { ruleName = ""
 
 (===) :: Text -> Rule -> Rule
 name === rule = rule { ruleName = name }
+
+
+rules :: [ Rule ]
+rules =
+  [ Text.pack ("gold -> " ++ show (ppBasicMana b)) ===
+    [ ManaToken Gold ] --> [ ManaToken (BasicMana b) ]
+  | b <- anyBasicMana
+  ]
+  ++
+  [ Text.pack ("take " ++ show (ppMana m) ++ " die") ===
+    [ ManaDie, ManaSource m ] --> [ ManaToken m ]
+  | m <- anyMana
+  ]
+  ++
+  [ Text.pack ("use " ++ show (ppBasicMana b) ++ " crystal") ===
+    [ ManaCrystal b ] --> [ ManaToken (BasicMana b), SpentManaCrystal b ]
+  | b <- anyBasicMana
+  ]
+
 
 
 

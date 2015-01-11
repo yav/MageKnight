@@ -197,6 +197,22 @@ cards =
   ]
 
 
+blueActions :: [Card]
+blueActions =
+  [ Card
+      { cardName = "Crystal Mastery"
+      , cardColor = Blue
+      , cardBasic = [ [ ManaCrystal b ] --> [ ManaCrystal b, ManaCrystal b ]
+                    | b <- anyBasicMana
+                    ]
+      , cardPower = [ [] --> [ RegainUsedCrystals ] ]
+      }
+
+
+  ]
+
+
+
 improvise :: Int -> Card -> [ Rule ]
 improvise amt Card { .. } =
   [ [ ACard cardName ] --> replicate amt act
