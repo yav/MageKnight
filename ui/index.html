@@ -4,6 +4,90 @@
 <title>Mage Knight</title>
 <script src="jquery.js"></script>
 <script>
+
+function tileUrl(ty,n) { return '/img/maps/' + ty + '/' + n + '.png'; }
+
+function drawTile(ty,n,x,y) {
+  var w     = 200;
+  var maxX  = 10;
+  var maxY  = 10;
+
+
+  var centerToSide = w / 6;
+  var hexSide = centerToSide / Math.sin(Math.PI/ 3);
+  var x_off   = maxX * centerToSide;
+  var y_off   = maxY * 4.5 * hexSide;
+  var left    = x_off + x * 4 * centerToSide - y * centerToSide;
+  var top     = y_off - x * 3 * hexSide      - y * 4.5 * hexSide;
+
+  var XdX = 2 * centerToSide;
+  var XdY = 0;
+  var YdX = centerToSide;
+  var YdY = 1.5 * hexSide;
+
+  var img = $('<img/>').css('position','absolute')
+                       .css('z-index', x + 2*y)
+                       .width(w)
+                       .css('left', left)
+                       .css('top',top);
+
+  img.click(function(ev) {
+    var off = img.offset();
+    var imX = ev.pageX - off.left;
+    var imY = ev.pageY - off.top;
+
+    var rectX   = 2 * centerToSide;
+    var rectY   = 1.5 * hexSide;
+
+    var row    = Math.floor(imY / rectY);
+    var clickY = imY - row * rectY;
+    var even   = row % 2 === 0;
+    if (even) imX += centerToSide;
+
+    var col    = Math.floor(imX / rectX);
+    var clickX = imX - col * rectX;
+
+    if (clickY < hexSide / 2)
+      var smllPart = hexSide / 2;
+      var slope = smllPart / centerToSide;
+      if (clickX < centerToSide) {
+        if (clickY < smllPart - clickX * slope) {
+          --row;
+          if (even) --col;
+        }
+      } else {
+        clickX -= centerToSide;
+        if (clickY < clickX * slope) {
+          --row;
+          if (!even) ++col;
+        }
+      }
+    ++row;
+
+    var table = [ [ [0,1,'SW'],  [0,1,'SE'], [1,1,'W'] ]
+                , [ [-1,1,'E'],  [0,0,'NW'], [0,0,'NE'],[1,0,'SW'] ]
+                , [ [0,0,'W'],   [0,0,'C'],  [0,0,'E'] ]
+                , [ [-1,0,'NE'], [0,0,'SW'], [0,0,'SE'],[1,-1,'W'] ]
+                , [ [-1,0,'E'],  [0,-1,'NW'],[0,-1,'NE'] ]
+                ]
+    var diff = table[row][col];
+    var cX = x + diff[0];
+    var cY = y + diff[1];
+    var dir = diff[2];
+    if (cX >= 0 && cY >= 0) console.log(cX,cY,dir);
+  });
+
+
+
+  var imgs = [ img ];
+  if (x == 0) imgs.push(drawTile('basic','border-left',-1,y+1)[0])
+  if (y == 0) imgs.push(drawTile('basic','border-bottom',x+1,-1)[0]);
+
+  img.attr('src',tileUrl(ty,n));
+  return imgs;
+}
+
+
 function cardImageUrl(cardName) {
   return '/img/cards/all/' + cardName + '.jpg';
 }
@@ -44,14 +128,33 @@ function drawHand(cards) {
 
 $(document).ready(function() {
   var body = $('body');
-  body.append(drawHand(['stamina', 'crystallize', 'improvisation']))
-      .append(drawSource(['red','green','gold','white','black']));
+  var div = $('<div/>')
+            .css('position', 'absolute')
+            .css('left', '500px')
+            .css('top', '5px')
+            .css('border', '1px solid black')
+            .css('width', '1024')
+            .css('height', '600px')
+            .css('overflow', 'auto')
+            .css('background', 'black');
+
+  var img;
+  for (var i = 1; i < 2; ++i) {
+    img = drawTile('basic',i == 0 ? 'A' : i,i,0);
+    div.append(img)
+  }
+
+  for (var i = 0; i < 2; ++i) {
+    img = drawTile('basic',i == 0 ? 'A' : i,0,i);
+    div.append(img)
+  }
+  div.append(drawTile('basic',7,1,1));
+  body.append(div);
+
 
 });
 </script>
 </head>
 <body>
-<table>
-</table>
 </body>
 </html>
