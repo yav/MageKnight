@@ -12,6 +12,7 @@ import           Data.Text (Text)
 data EnemyAbility =
 
     Fortified
+  | FortifiedX2
   | Resists Element
   | Swift
   | Brutal
