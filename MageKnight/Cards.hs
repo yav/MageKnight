@@ -208,6 +208,12 @@ blueActions =
       , cardPower = [ [] --> [ RegainUsedCrystals ] ]
       }
 
+  , Card
+      { cardName = "Ice Bolt"
+      , cardColor = Blue
+      , cardBasic = [ [] --> [ ManaCrystal Blue ] ]
+      , cardPower = [ [] --> replicate 3 (Attack Ranged Ice) ]
+      }
 
   ]
 
