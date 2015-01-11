@@ -5,29 +5,61 @@
 <script src="jquery.js"></script>
 <script>
 
-function tileUrl(ty,n) { return '/img/maps/' + ty + '/' + n + '.png'; }
+
+function tileUrl(ty,n ) { return '/img/maps/' + ty + '/' + n + '.png'; }
+function charUrl(ch,ty) { return '/img/characters/' + ch + '/' + ty + '.png'; }
+function enemyUrl(ty,ch) { return '/img/enemies/' + ty + '/' + ch + '.png'; }
+
+var maxX         = 10;
+var maxY         = 10;
+var tileWidth    = 200;
+var enemyWidth   = Math.floor(tileWidth / 4);
+var charWidth    = Math.floor(tileWidth / 6);
+var hexWidth     = tileWidth / 3;
+var centerToSide = hexWidth / 2;
+var hexSide      = centerToSide / Math.sin(Math.PI/ 3);
+var hexHeight    = 2 * hexSide;
+var x_off        = maxX * centerToSide;
+var y_off        = maxY * 4.5 * hexSide;
+
+function tilePos(x,y) {
+  return { left: x_off + x * 2 * hexWidth - y * centerToSide
+         , top:  y_off - x * 3 * hexSide  - y * 4.5 * hexSide
+         };
+}
+
+function hexLocation(x, y, dir) {
+  var coords = tilePos(x,y);
+  var dX, dY;
+  switch(dir) {
+    case 'NW': dX = 1; dY = 0; break;
+    case 'NE': dX = 3; dY = 0; break;
+    case 'W' : dX = 0; dY = 1; break;
+    case 'C' : dX = 2; dY = 1; break;
+    case 'E' : dX = 4; dY = 1; break;
+    case 'SW': dX = 1; dY = 2; break;
+    case 'SE': dX = 3; dY = 2; break;
+  }
+  return { top:  coords.top  + dY * 1.5 * hexSide
+         , left: coords.left + dX * centerToSide
+         };
+}
+
+function positionItem(item, x, y, dir) {
+  var c = hexLocation(x,y,dir);
+  item.css('left', c.left + (hexWidth  - item.width()) / 2)
+      .css('top',  c.top  + (hexHeight - item.height()) / 2);
+}
+
 
 function drawTile(ty,n,x,y) {
-  var w     = 200;
-  var maxX  = 10;
-  var maxY  = 10;
 
-
-  var centerToSide = w / 6;
-  var hexSide = centerToSide / Math.sin(Math.PI/ 3);
-  var x_off   = maxX * centerToSide;
-  var y_off   = maxY * 4.5 * hexSide;
-  var left    = x_off + x * 4 * centerToSide - y * centerToSide;
-  var top     = y_off - x * 3 * hexSide      - y * 4.5 * hexSide;
-
-  var XdX = 2 * centerToSide;
-  var XdY = 0;
-  var YdX = centerToSide;
-  var YdY = 1.5 * hexSide;
+  var coords = tilePos(x,y);
+  var left   = coords.left;
+  var top    = coords.top;
 
   var img = $('<img/>').css('position','absolute')
-                       .css('z-index', x + 2*y)
-                       .width(w)
+                       .width(tileWidth)
                        .css('left', left)
                        .css('top',top);
 
@@ -36,7 +68,7 @@ function drawTile(ty,n,x,y) {
     var imX = ev.pageX - off.left;
     var imY = ev.pageY - off.top;
 
-    var rectX   = 2 * centerToSide;
+    var rectX   = hexWidth;
     var rectY   = 1.5 * hexSide;
 
     var row    = Math.floor(imY / rectY);
@@ -74,7 +106,7 @@ function drawTile(ty,n,x,y) {
     var cX = x + diff[0];
     var cY = y + diff[1];
     var dir = diff[2];
-    if (cX >= 0 && cY >= 0) console.log(cX,cY,dir);
+    if (cX >= 0 && cY >= 0) tileClicked(cX,cY,dir);
   });
 
 
@@ -86,6 +118,13 @@ function drawTile(ty,n,x,y) {
   img.attr('src',tileUrl(ty,n));
   return imgs;
 }
+
+
+function tileClicked(x,y,dir) {
+  positionItem($('#char'), x, y, dir);
+}
+
+
 
 
 function cardImageUrl(cardName) {
@@ -129,11 +168,11 @@ function drawHand(cards) {
 $(document).ready(function() {
   var body = $('body');
   var div = $('<div/>')
-            .css('position', 'absolute')
-            .css('left', '500px')
+            .css('position', 'relative')
+            .css('left', '5px')
             .css('top', '5px')
             .css('border', '1px solid black')
-            .css('width', '1024')
+            .css('width', '800px')
             .css('height', '600px')
             .css('overflow', 'auto')
             .css('background', 'black');
@@ -149,6 +188,18 @@ $(document).ready(function() {
     div.append(img)
   }
   div.append(drawTile('basic',7,1,1));
+
+
+  var it = $('<img/>')
+           .attr('id','char')
+           .css('position','absolute')
+           .width(charWidth);
+
+  div.append(it);
+
+  it.load(function() { positionItem(it, 0, 1, 'SE'); });
+  //it.attr('src', enemyUrl('orc','diggers'));
+  it.attr('src', charUrl('arythea', 'art'));
   body.append(div);
 
 
