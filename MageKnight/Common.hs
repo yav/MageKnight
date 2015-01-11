@@ -88,6 +88,8 @@ ppResource resource =
   case resource of
     ManaToken m -> ppMana m <+> text "token"
     ManaCrystal m -> ppBasicMana m <+> text "crystal"
+    SpentManaCrystal m -> ppBasicMana m <+> text "crystal (spent)"
+    RegainUsedCrystals -> text "regain unused crystals"
     ManaSource m -> ppMana m <+> text "source"
     ManaSourceFixed m -> ppMana m <+> text "source (fixed)"
     ManaDie -> text "mana die"
