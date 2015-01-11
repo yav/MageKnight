@@ -2,6 +2,7 @@ module MageKnight.Bag where
 
 import           Data.Map ( Map )
 import qualified Data.Map as Map
+import           Data.Set ( Set )
 import           Data.Maybe ( fromMaybe )
 
 -- Invariant: the amount of each resource is strictly positive.
@@ -42,6 +43,9 @@ bagToList = flatGrouped . bagToListGrouped
 
 bagFromList :: Ord a => [a] -> Bag a
 bagFromList = foldr (bagAdd 1) bagEmpty
+
+bagKeys :: Bag a -> Set a
+bagKeys (Bag m) = Map.keysSet m
 
 flatGrouped :: [(a,Int)] -> [a]
 flatGrouped xs = [ x | (a,n) <- xs, x <- replicate n a ]
