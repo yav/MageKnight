@@ -160,14 +160,12 @@ instance IsHexContent (Terrain,Feature) where
 instance IsHexContent (Terrain,EnemyType) where
   hexContent (a,b) = (a,Just (RampagingEnemy b))
 
-
-
 type Hex = (HexAddr, (Terrain, Maybe Feature))
 
 listTileFun :: [Hex] -> HexAddr -> (Terrain, Maybe Feature)
 listTileFun xs = \d -> arr ! cvt d
   where
-  arr   = array (0,6) [ (cvt c,a) | (c,a) <- xs ]
+  arr   = array (0,1 + fromEnum (maxBound :: Dir)) [ (cvt c,a) | (c,a) <- xs ]
   cvt c = case c of
             Center   -> 0
             Border b -> 1 + fromEnum b
@@ -378,10 +376,6 @@ advancedTiles = map advanced
           , SW     |-> Wasteland
           , SE     |-> (Desert, Draconum)
           ])
-
-
-
-
 
   ]
   where
