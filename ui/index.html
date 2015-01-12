@@ -3,35 +3,57 @@
 <head>
 <title>Mage Knight</title>
 <script src="jquery.js"></script>
+<script src="jquery.kinetic.js"></script>
 <script>
 
 
 function tileUrl(ty,n ) { return '/img/maps/' + ty + '/' + n + '.png'; }
 function charUrl(ch,ty) { return '/img/characters/' + ch + '/' + ty + '.png'; }
 function enemyUrl(ty,ch) { return '/img/enemies/' + ty + '/' + ch + '.png'; }
+function manaUrl(mana) { return '/img/mana/' + mana + '.png'; }
 
-var maxX         = 2;
-var maxY         = 2;
-var tileWidth    = 200;
-var hexWidth     = tileWidth / 3;
-var enemyWidth   = 3 * hexWidth / 4;
-var charWidth    = hexWidth / 2;
-var shieldWidth  = hexWidth / 3;
+function prepareMap(pMaxX, pMaxY, pTileWidth) {
 
-var centerToSide = hexWidth / 2;
-var hexSide      = centerToSide / Math.sin(Math.PI/ 3);
-var hexHeight    = 2 * hexSide;
-var x_off        = maxX * centerToSide;
-var y_off        = maxY * 4.5 * hexSide;
+  var tileWidth    = pTileWidth;
+  var hexWidth     = tileWidth / 3;
+  var enemyWidth   = 3 * hexWidth / 4;
+  var charWidth    = hexWidth / 2;
+  var shieldWidth  = hexWidth / 3;
 
-function tilePos(x,y) {
-  return { left: x_off + x * 2 * hexWidth - y * centerToSide
-         , top:  y_off - x * 3 * hexSide  - y * 4.5 * hexSide
+  var centerToSide = hexWidth / 2;
+  var hexSide      = centerToSide / Math.sin(Math.PI/ 3);
+  var hexHeight    = 2 * hexSide;
+
+  var maxX         = pMaxX;
+  var maxY         = pMaxY;
+  var x_off        = maxY * centerToSide;
+  var y_off        = maxX * 3 * hexSide  + maxY * 4.5 * hexSide;
+
+  return { tileWidth    : tileWidth
+         , hexWidth     : hexWidth
+         , enemyWidth   : enemyWidth
+         , charWidth    : charWidth
+         , shieldWidth  : shieldWidth
+
+         , centerToSide : centerToSide
+         , hexSide      : hexSide
+         , hexHeight    : hexHeight
+
+         , maxX         : maxX
+         , maxY         : maxY
+         , x_off        : x_off
+         , y_off        : y_off
          };
 }
 
-function hexLocation(x, y, dir) {
-  var coords = tilePos(x,y);
+function tilePos(m,x,y) {
+  return { left: m.x_off + x * 2 * m.hexWidth - y * m.centerToSide
+         , top:  m.y_off - x * 3 * m.hexSide  - y * 4.5 * m.hexSide
+         };
+}
+
+function hexLocation(m, x, y, dir) {
+  var coords = tilePos(m,x,y);
   var dX, dY;
   switch(dir) {
     case 'NW': dX = 1; dY = 0; break;
@@ -42,55 +64,62 @@ function hexLocation(x, y, dir) {
     case 'SW': dX = 1; dY = 2; break;
     case 'SE': dX = 3; dY = 2; break;
   }
-  return { top:  coords.top  + dY * 1.5 * hexSide
-         , left: coords.left + dX * centerToSide
+  return { top:  coords.top  + dY * 1.5 * m.hexSide
+         , left: coords.left + dX * m.centerToSide
          };
 }
 
-function positionItem(item, x, y, dir) {
-  var c = hexLocation(x,y,dir);
-  item.css('left', c.left + (hexWidth  - item.width()) / 2)
-      .css('top',  c.top  + (hexHeight - item.height()) / 2);
+function positionItem(m,item, x, y, dir) {
+  var c = hexLocation(m,x,y,dir);
+  item.css('left', c.left + (m.hexWidth  - item.width()) / 2)
+      .css('top',  c.top  + (m.hexHeight - item.height()) / 2);
 }
 
 
-function drawTile(ty,n,x,y) {
+function drawTile(m, tile) {
 
-  var coords = tilePos(x,y);
+
+  var x      = tile.x;
+  var y      = tile.y;
+  var coords = tilePos(m,x,y);
   var left   = coords.left;
   var top    = coords.top;
 
   var img = $('<img/>').css('position','absolute')
-                       .width(tileWidth)
+                       .width(m.tileWidth)
+                       .height(m.tileWidth * 0.96)
                        .css('left', left)
                        .css('top',top);
 
   img.click(function(ev) {
+
+    if (scrolling === true) return;
+
     var off = img.offset();
     var imX = ev.pageX - off.left;
     var imY = ev.pageY - off.top;
 
-    var rectX   = hexWidth;
-    var rectY   = 1.5 * hexSide;
+    var rectX   = m.hexWidth;
+    var rectY   = 1.5 * m.hexSide;
 
     var row    = Math.floor(imY / rectY);
     var clickY = imY - row * rectY;
     var even   = row % 2 === 0;
-    if (even) imX += centerToSide;
+    if (even) imX += m.centerToSide;
 
     var col    = Math.floor(imX / rectX);
     var clickX = imX - col * rectX;
 
-    if (clickY < hexSide / 2)
-      var smllPart = hexSide / 2;
-      var slope = smllPart / centerToSide;
-      if (clickX < centerToSide) {
+    if (clickY < m.hexSide / 2)
+      var smllPart = m.hexSide / 2;
+      var slope = smllPart / m.centerToSide;
+      if (clickX < m.centerToSide) {
         if (clickY < smllPart - clickX * slope) {
           --row;
           if (even) --col;
         }
       } else {
-        clickX -= centerToSide;
+        clickX -= m.centerToSide;
         if (clickY < clickX * slope) {
           --row;
           if (!even) ++col;
@@ -108,34 +137,65 @@ function drawTile(ty,n,x,y) {
     var cX = x + diff[0];
     var cY = y + diff[1];
     var dir = diff[2];
-    if (cX >= 0 && cY >= 0) tileClicked(cX,cY,dir);
+    if (cX >= 0 && cY >= 0) { return tileClicked(m,cX,cY,dir); return true; }
+    return false;
   });
 
 
-
   var imgs = [ img ];
-  if (x == 0) imgs.push(drawTile('basic','border-left',-1,y+1)[0])
-  if (y == 0) imgs.push(drawTile('basic','border-bottom',x+1,-1)[0]);
+  if (x == 0) imgs.push(drawTile(m,{ ty: 'basic', name: 'border-left'
+                                   , x: -1,y: y+1})[0]);
+  if (y == 0) imgs.push(drawTile(m,{ ty: 'basic', name: 'border-bottom'
+                                   , x: x+1, y: -1})[0]);
 
-  img.attr('src',tileUrl(ty,n));
+  img.attr('src',tileUrl(tile.ty,tile.name));
   return imgs;
 }
 
 
-function tileClicked(x,y,dir) {
-  positionItem($('#char'), x, y, dir);
+function tileClicked(m,x,y,dir) {
+  positionItem(m,$('#char'), x, y, dir);
+}
+
+
+function drawMap(map) {
+  var div = $('<div/>')
+            .css('position', 'relative')
+            .css('width', '50%')
+            .css('overflow', 'auto')
+            .css('background', 'black');
+
+  var maxX = 0;
+  var maxY = 0;
+
+  jQuery.each(map, function(ix,tile) {
+    if (tile.x > maxX) maxX = tile.x;
+    if (tile.y > maxY) maxY = tile.y;
+  });
+
+  var m = prepareMap(maxX,maxY,250);
+  div.css('height', $(window).height() - 30);
+
+  jQuery.each(map, function(ix,tile) {
+    div.append(drawTile(m,tile));
+  });
+
+  scrolling = false;
+
+  div.kinetic( { moved: function() { console.log('moved'); scrolling = true; div.css('cursor','move')}
+               , stopped: function() { scrolling = false; div.css('cursor','pointer');}
+               })
+
+  return { dom: div, m: m };
+}
+
+function focusMap(m,map,x,y) {
+  var c = tilePos(m,x,y);
+  map.scrollTop(c.top).scrollLeft(c.left);
 }
 
 
 
-
-function cardImageUrl(cardName) {
-  return '/img/cards/all/' + cardName + '.jpg';
-}
-
-function manaUrl(mana) {
-  return '/img/mana/' + mana + '.jpg';
-}
 
 function drawSource(manas) {
   var source = $('<div/>');
@@ -151,60 +211,44 @@ function drawSource(manas) {
   return source;
 }
 
-function drawHand(cards) {
-  var hand = $('<div/>');
-  jQuery.each(cards, function(ix,card) {
-    var img = $('<img/>')
-              .attr('src', cardImageUrl(card))
-              .css('display', 'inline-block')
-              .css('margin', '2px')
-              .width('150px');
-    img.hover( function () { img.width('250px'); }
-             , function () { img.width('150px'); }
-             );
-    hand.append(img);
-  });
-  return hand;
+function sampleMap() {
+  var tiles = [];
+
+  for (var i = 0; i < 5; ++i)
+    for (var j = 0; j < 5; ++j)
+      tiles.push( { ty: 'basic'
+                  , name: i == 0 && j == 0
+                        ? 'A'
+                        : Math.floor(1 + 11 * Math.random())
+                  , x:i, y: j });
+
+  return tiles;
 }
+
 
 $(document).ready(function() {
   var body = $('body');
-  var div = $('<div/>')
-            .css('position', 'relative')
-            .css('left', '5px')
-            .css('top', '5px')
-            .css('border', '1px solid black')
-            .css('width', '800px')
-            .css('height', '600px')
-            .css('overflow', 'auto')
-            .css('background', 'black');
 
-  var img;
-  for (var i = 1; i < 2; ++i) {
-    img = drawTile('basic',i == 0 ? 'A' : i,i,0);
-    div.append(img)
-  }
 
-  for (var i = 0; i < 2; ++i) {
-    img = drawTile('basic',i == 0 ? 'A' : i,0,i);
-    div.append(img)
-  }
-  div.append(drawTile('basic',3,1,1));
 
+  var mp = drawMap(sampleMap());
+  var div = mp.dom.css('left', '5px')
+                  .css('top', '5px');
 
   var it = $('<img/>')
            .attr('id','char')
            .css('position','absolute')
-           .width(charWidth);
+           .width(mp.m.charWidth);
 
   div.append(it);
 
-  it.load(function() { positionItem(it, 0, 1, 'SE'); });
+  it.load(function() { positionItem(mp.m,it, 0, 1, 'SE'); });
   // it.attr('src', charUrl('arythea', 'shield'));
   // it.attr('src', enemyUrl('orc','diggers'));
   it.attr('src', charUrl('norowas', 'art'));
-  body.append(div);
+  body.append(mp.dom);
 
+  focusMap(mp.m, div,0,0);
 
 });
 </script>
