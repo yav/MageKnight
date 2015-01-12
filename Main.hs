@@ -4,6 +4,7 @@ module Main where
 
 import MageKnight.Enemies
 import MageKnight.Cards
+import MageKnight.Terrain
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)
@@ -28,6 +29,7 @@ main :: IO ()
 main = quickHttpServe $ Snap.route
   [ ("/card/img/:name", sendCard)
   , ("/enemy/img/:name", sendEnemy)
+  -- , ("/:tileTy/:tile_x/:tile_y/:hex", tileInfo)
   ] <|> serveDirectory "ui"
 
 
@@ -59,6 +61,24 @@ intParam p =
      case decimal txt of
        Right (a,t) | Text.null t -> return a
        _ -> badInput ("Malformed integer parameter: " `BS.append` p)
+
+addrParam :: Snap Addr
+addrParam =
+  do x <- intParam  "tile_x"
+     y <- intParam  "tile_y"
+     h <- textParam "hex"
+     let ok d = return (hexAddr d)
+     loc <- case h of
+              "NW" -> ok NW
+              "NE" -> ok NE
+              "W"  -> ok W
+              "C"  -> ok Center
+              "E"  -> ok E
+              "SW" -> ok SW
+              "SE" -> ok SE
+              _    -> badInput "Malformed parameter: hex"
+     return Addr { addrGlobal = (x,y), addrLocal = loc }
+
 
 
 --------------------------------------------------------------------------------
@@ -100,6 +120,7 @@ sendEnemy =
      case find ((name ==) . enemyName) allEnemies of
        Just enemy -> serveFile (enemyImagePath enemy)
        Nothing    -> notFound
+
 
 
 
