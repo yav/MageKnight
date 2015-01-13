@@ -11,6 +11,27 @@ function charUrl(ch,ty) { return '/img/characters/' + ch + '/' + ty + '.png'; }
 function enemyUrl(ty,ch) { return '/img/enemies/' + ty + '/' + ch + '.png'; }
 function manaUrl(mana) { return '/img/mana/' + mana + '.png'; }
 
+function boardToken(wi,url) {
+  return $('<img/>')
+         .css('position', 'absolute')
+         .css('width', wi + 'px')
+         .attr('src', url);
+}
+
+function characterToken(m,ch) {
+  return boardToken(m.charWidth, charUrl(ch,'figure'));
+}
+
+function shieldToken(m,ch) {
+  return boardToken(m.shieldWidth, charUrl(ch,'shield'));
+}
+
+function enemyToken(m,ty,ch) {
+  return boardToken(m.enemyWidth, enemyUrl(ty,ch));
+}
+
+
+
 function prepareMap(pMaxX, pMaxY, pTileWidth) {
 
   var tileWidth    = pTileWidth;
@@ -70,17 +91,22 @@ function hexLocation(m, x, y, dir) {
 
 function positionItems(m, items, x, y, dir) {
   var c = hexLocation(m,x,y,dir);
-  var sep = m.hexWidth / 10;
+  var hexCenter = c.left + m.hexWidth / 2;
 
   var totWidth = 0;
   jQuery.each(items,function(ix,item) { totWidth += item.width(); })
-  totWidth = totWidth + (items.length - 1) * sep;
 
-  var left = c.left + (m.hexWidth - totWidth) / 2;
+  var maxW = 1.5 * m.hexWidth;
+  var scaling;
+  if (totWidth > maxW) { scaling = maxW / totWidth; totWidth = maxW; }
+  else scaling = 1;
+
+  var left = hexCenter - totWidth / 2;
+
   jQuery.each(items,function(ix,item) {
     item.css('left', left)
         .css('top',  c.top  + (m.hexHeight - item.height()) / 2);
-    left += item.width() + sep;
+    left += item.width() * scaling;
   });
 
 }
@@ -164,7 +190,7 @@ function drawTile(m, tile) {
 
 
 function tileClicked(m,x,y,dir) {
-  positionItems(m, [$('#char'), $('#enemy')], x, y, dir);
+  positionItems(m, tokens, x, y, dir);
 }
 
 
@@ -239,24 +265,25 @@ $(document).ready(function() {
   var div = mp.dom.css('left', '5px')
                   .css('top', '5px');
 
-  var it = $('<img/>')
-           .attr('id','char')
-           .css('position','absolute')
-           .width(mp.m.charWidth);
+  tokens = [ characterToken(mp.m, 'norowas')
+           , enemyToken(mp.m, 'orc', 'diggers') /*
 
-  div.append(it);
-  it.attr('src', charUrl('goldyx', 'figure'));
+           , characterToken(mp.m, 'goldyx')
+           , characterToken(mp.m, 'tovak')
+           , characterToken(mp.m, 'arythea')
 
-  it = $('<img/>')
-       .attr('id','enemy')
-       .css('position','absolute')
-       .width(mp.m.enemyWidth);
 
-  div.append(it);
-  it.attr('src', enemyUrl('orc','diggers'));
+             shieldToken(mp.m, 'tovak')
+           , shieldToken(mp.m, 'tovak') 
+           , shieldToken(mp.m, 'tovak')
+           , shieldToken(mp.m, 'tovak')
+           , shieldToken(mp.m, 'tovak')
+           , shieldToken(mp.m, 'goldyx')  */
+           ];
 
-  // it.attr('src', charUrl('tovak', 'shield'));
-  // it.attr('src', enemyUrl('orc','diggers'));
+  div.append(tokens);
+
+
   body.append(mp.dom);
 
   focusMap(mp.m, div,0,0);
