@@ -89,7 +89,7 @@ function hexLocation(m, x, y, dir) {
          };
 }
 
-function positionItems(m, items, x, y, dir) {
+function positionItems(m, items, x, y, dir, lower) {
   var c = hexLocation(m,x,y,dir);
   var hexCenter = c.left + m.hexWidth / 2;
 
@@ -97,15 +97,15 @@ function positionItems(m, items, x, y, dir) {
   jQuery.each(items,function(ix,item) { totWidth += item.width(); })
 
   var maxW = 1.5 * m.hexWidth;
-  var scaling;
+  var scaling = 1;
   if (totWidth > maxW) { scaling = maxW / totWidth; totWidth = maxW; }
-  else scaling = 1;
 
   var left = hexCenter - totWidth / 2;
 
   jQuery.each(items,function(ix,item) {
+    var h = lower ? (3/4) : (1/2);
     item.css('left', left)
-        .css('top',  c.top  + (m.hexHeight - item.height()) / 2);
+        .css('top',  c.top  + h * (m.hexHeight - item.height()));
     left += item.width() * scaling;
   });
 
@@ -190,7 +190,8 @@ function drawTile(m, tile) {
 
 
 function tileClicked(m,x,y,dir) {
-  positionItems(m, tokens, x, y, dir);
+  positionItems(m, shields, x, y, dir, true);
+  positionItems(m, tokens, x, y, dir, false);
 }
 
 
@@ -218,6 +219,7 @@ function drawMap(map) {
 
   return { dom: div, m: m };
 }
+
 
 function focusMap(m,map,x,y) {
   var c = tilePos(m,x,y);
@@ -265,23 +267,23 @@ $(document).ready(function() {
   var div = mp.dom.css('left', '5px')
                   .css('top', '5px');
 
-  tokens = [ characterToken(mp.m, 'norowas')
-           , enemyToken(mp.m, 'orc', 'diggers') /*
+  tokens = [] /* characterToken(mp.m, 'norowas')
+           , enemyToken(mp.m, 'mage', 'back') ]
 
            , characterToken(mp.m, 'goldyx')
            , characterToken(mp.m, 'tovak')
-           , characterToken(mp.m, 'arythea')
+           , characterToken(mp.m, 'arythea') ]; */
 
-
-             shieldToken(mp.m, 'tovak')
-           , shieldToken(mp.m, 'tovak') 
+  shields = [ shieldToken(mp.m, 'tovak') ]; /*
            , shieldToken(mp.m, 'tovak')
            , shieldToken(mp.m, 'tovak')
            , shieldToken(mp.m, 'tovak')
-           , shieldToken(mp.m, 'goldyx')  */
-           ];
+           , shieldToken(mp.m, 'tovak')
+           , shieldToken(mp.m, 'goldyx')
+           ];*/
 
   div.append(tokens);
+  div.append(shields);
 
 
   body.append(mp.dom);
