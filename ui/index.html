@@ -3,7 +3,6 @@
 <head>
 <title>Mage Knight</title>
 <script src="jquery.js"></script>
-<script src="jquery.kinetic.js"></script>
 <script>
 
 
@@ -17,7 +16,7 @@ function prepareMap(pMaxX, pMaxY, pTileWidth) {
   var tileWidth    = pTileWidth;
   var hexWidth     = tileWidth / 3;
   var enemyWidth   = 3 * hexWidth / 4;
-  var charWidth    = hexWidth / 2;
+  var charWidth    = hexWidth / 1.5;
   var shieldWidth  = hexWidth / 3;
 
   var centerToSide = hexWidth / 2;
@@ -75,6 +74,20 @@ function positionItem(m,item, x, y, dir) {
       .css('top',  c.top  + (m.hexHeight - item.height()) / 2);
 }
 
+function positionItems(m, item1, item2, x, y, dir) {
+  var c = hexLocation(m,x,y,dir);
+  var sep = m.hexWidth / 15;
+  var totWidth = item1.width() + item2.width() + sep;
+  var left = c.left + (m.hexWidth  - totWidth) / 2;
+  item1.css('left', left)
+       .css('top',  c.top  + (m.hexHeight - item1.height()) / 2);
+
+  item2.css('left', left + item1.width() + sep)
+       .css('top',  c.top  + (m.hexHeight - item2.height()) / 2);
+}
+
+
+
 
 function drawTile(m, tile) {
 
@@ -92,8 +105,6 @@ function drawTile(m, tile) {
                        .css('top',top);
 
   img.click(function(ev) {
-
-    if (scrolling === true) return;
 
     var off = img.offset();
     var imX = ev.pageX - off.left;
@@ -154,7 +165,7 @@ function drawTile(m, tile) {
 
 
 function tileClicked(m,x,y,dir) {
-  positionItem(m,$('#char'), x, y, dir);
+  positionItems(m,$('#char'), $('#enemy'), x, y, dir);
 }
 
 
@@ -173,18 +184,12 @@ function drawMap(map) {
     if (tile.y > maxY) maxY = tile.y;
   });
 
-  var m = prepareMap(maxX,maxY,250);
+  var m = prepareMap(maxX,maxY,600);
   div.css('height', $(window).height() - 30);
 
   jQuery.each(map, function(ix,tile) {
     div.append(drawTile(m,tile));
   });
-
-  scrolling = false;
-
-  div.kinetic( { moved: function() { console.log('moved'); scrolling = true; div.css('cursor','move')}
-               , stopped: function() { scrolling = false; div.css('cursor','pointer');}
-               })
 
   return { dom: div, m: m };
 }
@@ -241,11 +246,18 @@ $(document).ready(function() {
            .width(mp.m.charWidth);
 
   div.append(it);
+  it.attr('src', charUrl('goldyx', 'figure'));
 
-  it.load(function() { positionItem(mp.m,it, 0, 1, 'SE'); });
-  // it.attr('src', charUrl('arythea', 'shield'));
+  it = $('<img/>')
+       .attr('id','enemy')
+       .css('position','absolute')
+       .width(mp.m.enemyWidth);
+
+  div.append(it);
+  it.attr('src', enemyUrl('orc','diggers'));
+
+  // it.attr('src', charUrl('tovak', 'shield'));
   // it.attr('src', enemyUrl('orc','diggers'));
-  it.attr('src', charUrl('norowas', 'art'));
   body.append(mp.dom);
 
   focusMap(mp.m, div,0,0);
