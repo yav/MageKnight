@@ -68,22 +68,21 @@ function hexLocation(m, x, y, dir) {
          };
 }
 
-function positionItem(m,item, x, y, dir) {
+function positionItems(m, items, x, y, dir) {
   var c = hexLocation(m,x,y,dir);
-  item.css('left', c.left + (m.hexWidth  - item.width()) / 2)
-      .css('top',  c.top  + (m.hexHeight - item.height()) / 2);
-}
+  var sep = m.hexWidth / 10;
 
-function positionItems(m, item1, item2, x, y, dir) {
-  var c = hexLocation(m,x,y,dir);
-  var sep = m.hexWidth / 15;
-  var totWidth = item1.width() + item2.width() + sep;
-  var left = c.left + (m.hexWidth  - totWidth) / 2;
-  item1.css('left', left)
-       .css('top',  c.top  + (m.hexHeight - item1.height()) / 2);
+  var totWidth = 0;
+  jQuery.each(items,function(ix,item) { totWidth += item.width(); })
+  totWidth = totWidth + (items.length - 1) * sep;
 
-  item2.css('left', left + item1.width() + sep)
-       .css('top',  c.top  + (m.hexHeight - item2.height()) / 2);
+  var left = c.left + (m.hexWidth - totWidth) / 2;
+  jQuery.each(items,function(ix,item) {
+    item.css('left', left)
+        .css('top',  c.top  + (m.hexHeight - item.height()) / 2);
+    left += item.width() + sep;
+  });
+
 }
 
 
@@ -165,7 +164,7 @@ function drawTile(m, tile) {
 
 
 function tileClicked(m,x,y,dir) {
-  positionItems(m,$('#char'), $('#enemy'), x, y, dir);
+  positionItems(m, [$('#char'), $('#enemy')], x, y, dir);
 }
 
 
@@ -184,7 +183,7 @@ function drawMap(map) {
     if (tile.y > maxY) maxY = tile.y;
   });
 
-  var m = prepareMap(maxX,maxY,600);
+  var m = prepareMap(maxX,maxY,300);
   div.css('height', $(window).height() - 30);
 
   jQuery.each(map, function(ix,tile) {
