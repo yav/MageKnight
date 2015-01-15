@@ -7,9 +7,13 @@ import MageKnight.Terrain
 import MageKnight.Enemies
 import MageKnight.Ruins
 import MageKnight.Cards
+import           MageKnight.ResourceQ ( ResourceQ )
+import qualified MageKnight.ResourceQ as RQ
 
-import Data.Map (Map)
-import Data.Text (Text)
+import           Data.Map (Map)
+import qualified Data.Map as Map
+import           Data.Text (Text)
+import           System.Random (StdGen, split)
 
 data MageKnight = MageKnight
   { mkName        :: Text
@@ -19,9 +23,9 @@ data MageKnight = MageKnight
   , mkCardLimit   :: Int
   , mkUnits       :: [ Maybe Unit ]
   , mkCrystals    :: Bag BasicMana
-  , mkDeedDeck    :: Bag CardName
-  , mkHand        :: Bag CardName
-  , mkDiscardPile :: Bag CardName
+  , mkDeedDeck    :: [ Card ]
+  , mkHand        :: Bag Card
+  , mkDiscardPile :: [ Card ]
   }
 
 instance Eq MageKnight where
@@ -30,11 +34,6 @@ instance Eq MageKnight where
 instance Ord MageKnight where
   compare x y = compare (mkName x) (mkName y)
 
-
-data ResourceQ a = ResourceQ
-  { available     :: [a]
-  , forRecycling  :: [a]
-  }
 
 data Offer = Offer
   { offerDeck :: ResourceQ Card
@@ -51,18 +50,30 @@ data Offers = Offers
 
 type PlayerId = Int
 
+
+data HexContent =
+    ShieldFor PlayerId
+  | Enemy Visibility Enemy
+  | Ruins Visibility Ruins
+    deriving (Eq,Ord,Show)
+
+data GameTile = GameTile
+  { gameTile        :: Tile
+  , gameTileContent :: Map HexAddr (Bag HexContent)
+  }
+
+
+
+
 data Land = Land
-  { landTiles       :: Map TileAddr Tile
+  { landTiles       :: Map TileAddr GameTile
   , landPlayers     :: Map Addr MageKnight
-  , landShields     :: Map Addr (Bag PlayerId)
-  , landEnemies     :: Map Addr (Visibility, Bag Enemy)
-  , landRuins       :: Map Addr (Visibility, Ruins)
   , unexploredTiles :: [ Tile ]
   , unexploredRuins :: ResourceQ Ruins
   }
 
 data Visibility = Revealed | Hidden
-
+                  deriving (Eq,Ord,Show)
 
 data Game = Game
   { gameTime  :: Time
@@ -71,4 +82,17 @@ data Game = Game
   , enemyPool :: Map EnemyType (ResourceQ Enemy)
   , land      :: Land
   }
+
+
+blankEmenyPool :: StdGen -> Map EnemyType (ResourceQ Enemy)
+blankEmenyPool g0 = snd $ foldr add (g0,Map.empty) allEnemyTypes
+  where
+  add e (g,m) = let (g1,g2) = split g
+                in (g2, Map.insert e (RQ.empty g1) m)
+
+initialEnemyPool :: StdGen -> Map EnemyType (ResourceQ Enemy)
+initialEnemyPool g0 = foldr add (blankEmenyPool g0) allEnemies
+  where
+  add e qs = Map.adjust (RQ.discard e) (enemyType e) qs
+
 

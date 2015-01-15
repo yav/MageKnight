@@ -1,5 +1,4 @@
-{-# LANGUAGE Safe #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE Safe, OverloadedStrings #-}
 module MageKnight.Enemies where
 
 import MageKnight.Common(Element(..))
@@ -25,7 +24,10 @@ data EnemyAttack = AttcaksWith Element Int
                    deriving (Eq,Show)
 
 data EnemyType  = Orc | Guardian | Mage | Underworld | Citizen | Draconum
-                  deriving (Eq,Ord,Show)
+                  deriving (Eq,Ord,Show,Enum,Bounded)
+
+allEnemyTypes :: [EnemyType]
+allEnemyTypes = [ minBound .. maxBound ]
 
 data Enemy = Enemy
   { enemyName       :: Text
@@ -34,7 +36,7 @@ data Enemy = Enemy
   , enemyAttack     :: EnemyAttack
   , enemyFameGain   :: Int
   , enemyAbilities  :: Set EnemyAbility
-  }
+  } deriving Show
 
 instance Eq Enemy where
   x == y = enemyName x == enemyName y

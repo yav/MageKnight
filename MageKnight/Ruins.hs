@@ -28,7 +28,13 @@ data Ruins = Ruins
   { ruinsName :: Text
   , ruinsIn   :: Bag Objectve
   , ruinsOut  :: Bag Reward
-  }
+  } deriving Show
+
+instance Eq Ruins where
+  x == y = ruinsName x == ruinsName y
+
+instance Ord Ruins where
+  compare x y = compare (ruinsName x) (ruinsName y)
 
 infix 1 ===
 infix 2 -->

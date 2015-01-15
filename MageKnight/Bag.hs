@@ -8,6 +8,7 @@ import           Data.Maybe ( fromMaybe )
 -- Invariant: the amount of each resource is strictly positive.
 
 newtype Bag a = Bag (Map a Int)
+                deriving Show
 
 bagEmpty :: Bag a
 bagEmpty = Bag Map.empty
