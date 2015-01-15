@@ -25,7 +25,7 @@ data EnemyAttack = AttcaksWith Element Int
                    deriving (Eq,Show)
 
 data EnemyType  = Orc | Guardian | Mage | Underworld | Citizen | Draconum
-                  deriving (Eq,Show)
+                  deriving (Eq,Ord,Show)
 
 data Enemy = Enemy
   { enemyName       :: Text
