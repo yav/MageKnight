@@ -1,7 +1,7 @@
 {-# LANGUAGE Safe, RecordWildCards #-}
 module MageKnight.ResourceQ
   ( ResourceQ
-  , empty
+  , empty, fromListRandom, fromListOrdered
   , MageKnight.ResourceQ.take
   , discard
   ) where
@@ -31,4 +31,13 @@ take ResourceQ { .. } =
 
 discard :: a -> ResourceQ a -> ResourceQ a
 discard a ResourceQ { .. } = ResourceQ { qDiscarded = a : qDiscarded, .. }
+
+fromListRandom :: StdGen -> [a] -> ResourceQ a
+fromListRandom qRandom qDiscarded = ResourceQ { qAvailable = [], .. }
+
+fromListOrdered :: StdGen -> [a] -> ResourceQ a
+fromListOrdered qRandom qAvailable = ResourceQ { qDiscarded = [], .. }
+
+
+
 

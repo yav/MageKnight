@@ -4,6 +4,7 @@ module MageKnight.JSON where
 import MageKnight.Game
 import MageKnight.Common
 import MageKnight.Cards
+import MageKnight.Units
 import MageKnight.Terrain hiding (tile)
 import MageKnight.GameTile
 import MageKnight.HexContent
@@ -145,12 +146,24 @@ instance Export GameTile where
 instance Export Card where
   toJS Card { .. } = toJS cardName
 
+instance Export Unit where
+  toJS Unit { .. } = JS.object [ "name" .= unitName, "type" .= unitType ]
+
+instance Export UnitType where
+  toJS t = toJS (txt :: Text)
+    where
+    txt = case t of
+            RegularUnit -> "regular"
+            EliteUnit   -> "elite"
+
+
 instance Export Offers where
   toJS Offers { .. } =
     JS.object
       [ "advancedActions" .= offering advancedActionOffer
       , "spells"          .= offering spellOffer
-      , "units"           .= offering unitOffer
+      , "units"           .= unitsOnOffer unitOffer
+      , "monasteries"     .= monasteryTech
       ]
 
 instance Export Game where

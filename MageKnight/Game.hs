@@ -19,28 +19,145 @@ import           Control.Monad(guard)
 import           System.Random (StdGen, split)
 
 
-data Offer = Offer
-  { offerDeck :: ResourceQ Card
-  , offering  :: [Card]         -- newest first
+
+data Offer a = Offer
+  { offerDeck :: ResourceQ a
+  , offering  :: [a]  -- newest first
   }
 
-offerNewCard :: Offer -> Offer
-offerNewCard Offer { .. } =
+offerEmpty :: StdGen -> [a] -> Offer a
+offerEmpty r is = Offer { offerDeck = RQ.fromListRandom r is, offering  = [] }
+
+offerDrawItem :: Offer a -> Offer a
+offerDrawItem Offer { .. } =
   case RQ.take offerDeck of
     Just (c,d) -> Offer { offerDeck = d, offering = c : offering }
     Nothing    -> Offer { .. }
 
+offerDrawItems :: Int -> Offer a -> Offer a
+offerDrawItems n o = iterate offerDrawItem o !! n
+
+offerDiscardAll :: Offer a -> Offer a
+offerDiscardAll Offer { .. } = Offer
+  { offering = []
+  , offerDeck = foldr RQ.discard offerDeck offering
+  }
+
+offerTakeItem :: Int -> Offer a -> Maybe (a, Offer a)
+offerTakeItem n0 Offer { .. }
+  | n0 >= 0    = do (c,os) <- go n0 offering
+                    return (c, Offer { offering = os, .. })
+  | otherwise = Nothing
+  where
+  go _ []       = Nothing
+  go 0 (c : cs) = Just (c, cs)
+  go n (c : cs) = do (a,as) <- go (n-1) cs
+                     return (a, c : as)
+
+offerReturnItem :: a -> Offer a -> Offer a
+offerReturnItem a Offer { .. } =
+  Offer { offerDeck = RQ.discard a offerDeck, .. }
+
+offeringLength :: Offer a -> Int
+offeringLength Offer { .. } = length offering
+
+
+--------------------------------------------------------------------------------
+
+newCardOffer :: StdGen -> [Card] -> Offer Card
+newCardOffer r cs = offerDrawItems 3 (offerEmpty r cs)
+
+refreshCardOffer :: Offer Card -> Maybe (Offer Card)
+refreshCardOffer Offer { .. } =
+  case reverse offering of
+    [] -> Nothing
+    x : xs -> Just $ offerDrawItem Offer { offerDeck = RQ.discard x offerDeck
+                                         , offering  = reverse xs }
+
+refreshCardOfferDummy :: Offer Card -> Maybe (Card, Offer Card)
+refreshCardOfferDummy Offer { .. } =
+  case reverse offering of
+    [] -> Nothing
+    x : xs -> Just (x, offerDrawItem Offer { offering = reverse xs, .. })
+
+offerTakeCard :: Int -> Offer Card -> Maybe (Card, Offer Card)
+offerTakeCard n o =
+  do (c,o1) <- offerTakeItem n o
+     return (c, offerDrawItem o1)
+
+offerReturnCards :: [Card] -> Offer Card -> Offer Card
+offerReturnCards cs o = foldr offerReturnItem o cs
+
+--------------------------------------------------------------------------------
+
+data UnitOffer = UnitOffer
+  { regularUnits :: Offer Unit
+  , eliteUnits   :: Offer Unit
+  }
+
+unitsOnOffer :: UnitOffer -> [Unit]
+unitsOnOffer UnitOffer { .. } = offering regularUnits ++ offering eliteUnits
+
+emptyUnitOffer :: StdGen -> [Unit] -> [Unit] -> UnitOffer
+emptyUnitOffer g regular elite = UnitOffer
+  { regularUnits = offerEmpty g1 regular
+  , eliteUnits   = offerEmpty g2 elite
+  }
+  where
+  (g1,g2) = split g
+
+refreshOnlyRegulars :: Int -> UnitOffer -> UnitOffer
+refreshOnlyRegulars playerNum UnitOffer { .. } = UnitOffer
+  { regularUnits = offerDrawItems (playerNum + 2) (offerDiscardAll regularUnits)
+  , eliteUnits   = offerDiscardAll eliteUnits
+  }
+
+refreshWithElite :: Int -> UnitOffer -> UnitOffer
+refreshWithElite playerNum UnitOffer { .. } = UnitOffer
+  { regularUnits = offerDrawItems regularNum (offerDiscardAll regularUnits)
+  , eliteUnits   = offerDrawItems eliteNum   (offerDiscardAll eliteUnits)
+  }
+  where
+  totalNum   = playerNum + 2
+  regularNum = div totalNum 2
+  eliteNum   = totalNum - regularNum
+
+offerTakeUnit :: Int -> UnitOffer -> Maybe (Unit, UnitOffer)
+offerTakeUnit n UnitOffer { .. }
+  | n < 0 = Nothing
+  | Just (u,rs) <- offerTakeItem n regularUnits =
+                        Just (u, UnitOffer { regularUnits = rs, .. })
+  | otherwise =
+    do (u,es) <- offerTakeItem (n - offeringLength regularUnits) eliteUnits
+       return (u, UnitOffer { eliteUnits = es, .. })
+
+offerDisbandUnit :: Unit -> UnitOffer -> UnitOffer
+offerDisbandUnit u UnitOffer { .. } =
+  case unitType u of
+    RegularUnit -> UnitOffer { regularUnits = offerReturnItem u regularUnits,..}
+    EliteUnit -> UnitOffer { eliteUnits = offerReturnItem u eliteUnits, .. }
+
+
+
+
 
 data Offers = Offers
-  { advancedActionOffer :: Offer
-  , spellOffer          :: Offer
-  , unitOffer           :: Offer
+  { advancedActionOffer :: Offer Card
+  , spellOffer          :: Offer Card
+  , unitOffer           :: UnitOffer
+  , monasteryTech       :: [Card]
   , artifactDeck        :: ResourceQ Card
   }
 
-newAdvancedAction :: Offers -> Offers
-newAdvancedAction Offers { .. } =
-  Offers { advancedActionOffer = offerNewCard advancedActionOffer, .. }
+newMonastery :: Offers -> Offers
+newMonastery Offers { .. } =
+  case RQ.take (offerDeck advancedActionOffer) of
+    Nothing -> Offers { .. }
+    Just (c,d) -> Offers
+      { advancedActionOffer = advancedActionOffer { offerDeck = d }
+      , monasteryTech = c : monasteryTech
+      , ..
+      }
 
 data Game = Game
   { gameTime        :: Time
@@ -110,7 +227,7 @@ populateTile gameTile g = (GameTile { .. }, g1)
              MagicalGlade -> nothing
              Mine _     -> nothing
              Village    -> nothing
-             Monastery  -> (c, Game { offers = newAdvancedAction offers, .. })
+             Monastery  -> (c, Game { offers = newMonastery offers, .. })
              Keep       -> enemy Hidden Guardian
              MageTower  -> enemy Hidden Mage
              Dungeon    -> nothing
