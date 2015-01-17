@@ -42,8 +42,8 @@ assignDamage d Player { .. }
       ( Player { playerHand = hand1, .. }
       , False
       )
- where
-  woundNum    = div (d + playerArmor - 1) playerArmor
+  where
+  woundNum    = div (max 0 d + playerArmor - 1) playerArmor
   hand1       = bagAdd woundNum Wound playerHand
   totalWounds = bagLookup Wound hand1
 
