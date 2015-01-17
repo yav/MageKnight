@@ -7,8 +7,17 @@ import Data.Text ( Text )
 import Text.PrettyPrint
 import Data.Char(toLower)
 
+
+type PlayerId   = Int
+
+
+data Visibility = Revealed | Hidden
+                  deriving (Eq,Ord,Show)
+
 data Element    = Physycal | Fire | Ice | ColdFire
                   deriving (Eq,Ord,Show)
+
+
 
 type CardName = Text
 

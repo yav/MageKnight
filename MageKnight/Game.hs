@@ -4,6 +4,7 @@ import MageKnight.Common
 import MageKnight.Bag
 import MageKnight.Units
 import MageKnight.Terrain
+import MageKnight.HexContent
 import MageKnight.Enemies
 import MageKnight.Ruins
 import MageKnight.Cards
@@ -48,19 +49,16 @@ data Offers = Offers
   , artifactDeck       :: ResourceQ Card
   }
 
-type PlayerId = Int
 
 
-data HexContent =
-    ShieldFor PlayerId
-  | Enemy Visibility Enemy
-  | Ruins Visibility Ruins
-    deriving (Eq,Ord,Show)
 
 data GameTile = GameTile
   { gameTile        :: Tile
-  , gameTileContent :: Map HexAddr (Bag HexContent)
+  , gameTileContent :: Map HexAddr HexContent
   }
+
+
+
 
 
 
@@ -72,8 +70,6 @@ data Land = Land
   , unexploredRuins :: ResourceQ Ruins
   }
 
-data Visibility = Revealed | Hidden
-                  deriving (Eq,Ord,Show)
 
 data Game = Game
   { gameTime  :: Time
@@ -94,5 +90,7 @@ initialEnemyPool :: StdGen -> Map EnemyType (ResourceQ Enemy)
 initialEnemyPool g0 = foldr add (blankEmenyPool g0) allEnemies
   where
   add e qs = Map.adjust (RQ.discard e) (enemyType e) qs
+
+
 
 

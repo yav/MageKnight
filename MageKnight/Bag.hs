@@ -13,6 +13,9 @@ newtype Bag a = Bag (Map a Int)
 bagEmpty :: Bag a
 bagEmpty = Bag Map.empty
 
+bagIsEmpty :: Bag a -> Bool
+bagIsEmpty (Bag m) = Map.null m
+
 bagAdd :: Ord a => Int -> a -> Bag a -> Bag a
 bagAdd q r (Bag m)
   | q > 0     = Bag (Map.insertWith (+) r q m)
@@ -50,5 +53,8 @@ bagKeys (Bag m) = Map.keysSet m
 
 flatGrouped :: [(a,Int)] -> [a]
 flatGrouped xs = [ x | (a,n) <- xs, x <- replicate n a ]
+
+bagMap :: Ord b => (a -> b) -> Bag a -> Bag b
+bagMap f = bagFromList . map f . bagToList
 
 
