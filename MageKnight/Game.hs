@@ -4,7 +4,7 @@ import MageKnight.Common
 import MageKnight.Bag
 import MageKnight.Units
 import MageKnight.Terrain
-import MageKnight.HexContent
+import MageKnight.GameTile
 import MageKnight.Enemies
 import MageKnight.Ruins
 import MageKnight.Cards
@@ -13,27 +13,7 @@ import qualified MageKnight.ResourceQ as RQ
 
 import           Data.Map (Map)
 import qualified Data.Map as Map
-import           Data.Text (Text)
 import           System.Random (StdGen, split)
-
-data MageKnight = MageKnight
-  { mkName        :: Text
-  , mkFame        :: Int
-  , mkReputation  :: Int      -- ^ Index on board, *NOT* same as influence
-  , mkArmor       :: Int
-  , mkCardLimit   :: Int
-  , mkUnits       :: [ Maybe Unit ]
-  , mkCrystals    :: Bag BasicMana
-  , mkDeedDeck    :: [ Card ]
-  , mkHand        :: Bag Card
-  , mkDiscardPile :: [ Card ]
-  }
-
-instance Eq MageKnight where
-  x == y = mkName x == mkName y
-
-instance Ord MageKnight where
-  compare x y = compare (mkName x) (mkName y)
 
 
 data Offer = Offer
@@ -52,11 +32,6 @@ data Offers = Offers
 
 
 
-data GameTile = GameTile
-  { gameTile        :: Tile
-  , gameTileContent :: Map HexAddr HexContent
-  }
-
 
 
 
@@ -65,7 +40,6 @@ data GameTile = GameTile
 
 data Land = Land
   { landTiles       :: Map TileAddr GameTile
-  , landPlayers     :: Map Addr MageKnight
   , unexploredTiles :: [ Tile ]
   , unexploredRuins :: ResourceQ Ruins
   }

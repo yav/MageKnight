@@ -2,11 +2,14 @@
 module MageKnight.Enemies where
 
 import MageKnight.Common(Element(..))
+import MageKnight.ResourceQ(ResourceQ)
 
 import           Data.Set (Set)
 import qualified Data.Set as Set
+import           Data.Map (Map)
 import           Data.Text (Text)
 
+type EnemyPool = Map EnemyType (ResourceQ Enemy)
 
 data EnemyAbility =
 

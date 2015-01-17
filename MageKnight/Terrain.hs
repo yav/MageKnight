@@ -45,6 +45,12 @@ data Tile           = Tile { tileName    :: Text
                            , tileTerrain :: HexAddr -> (Terrain, Maybe Feature)
                            }
 
+allDirections :: [Dir]
+allDirections = [ minBound .. maxBound ]
+
+allHexAddrs :: [HexAddr]
+allHexAddrs = Center : map Border allDirections
+
 
 terrainCost :: Terrain -> Time -> Maybe Int
 terrainCost terra time =
