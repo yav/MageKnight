@@ -38,7 +38,7 @@ data Feature        = MagicalGlade | Mine BasicMana
                     | RampagingEnemy EnemyType
                       deriving (Eq,Show)
 
-data TileType       = BasicTile | AdvancedTile
+data TileType       = BasicTile | CoreTile
 
 data Tile           = Tile { tileName    :: Text
                            , tileType    :: TileType
@@ -90,6 +90,23 @@ oppositeDir dir =
     W  -> E
     NW -> SE
 
+
+-- | 'E' is in the direction of the increasing @x@ coordinate
+globalDelta :: Dir -> TileAddr
+globalDelta dir =
+  case dir of
+    E  -> (1,0)
+    W  -> (-1,0)
+    NE -> (1,1)
+    NW -> (0,1)
+    SE -> (0,-1)
+    SW -> (-1,-1)
+
+globalNeighbours :: TileAddr -> [TileAddr]
+globalNeighbours (x,y) =
+  [ (x+dx,y+dy) | (dx,dy) <- map globalDelta allDirections ]
+
+
 tileGraph :: HexAddr -> Dir -> HexNeighbour
 tileGraph a d =
   case a of
@@ -140,6 +157,50 @@ tileGraph a d =
                W  -> Foreign (-1) 1 SE
 
   where local x = Local (hexAddr x)
+
+
+--------------------------------------------------------------------------------
+
+data MapShape = Wedge | OpenMap Int Int
+
+openMap3 :: MapShape
+openMap3 = OpenMap 1 (-1)
+
+openMap4 :: MapShape
+openMap4 = OpenMap 1 (-2)
+
+openMap5 :: MapShape
+openMap5 = OpenMap 2 (-2)
+
+isOnMap :: MapShape -> TileAddr -> Bool
+isOnMap sh (x,y) =
+  case sh of
+    Wedge -> x >= 0 && y >= 0
+    OpenMap up down -> x >= 0 && y <= up && down <= y && (y >= 0 || -x <= y)
+
+-- | Assuming the position is on the map.
+isCoastal :: MapShape -> TileAddr -> Bool
+isCoastal sh (x,y) =
+  case sh of
+    Wedge           -> x == 0 || y == 0
+    OpenMap up down -> y == up || y == down || (-x == y)
+
+validPlacement :: MapShape -> (TileAddr -> Bool) -> TileType -> Bool ->
+                  TileAddr -> Bool
+validPlacement sh explored t backup pt =
+  isOnMap sh pt && not (explored pt) &&
+  (case (t, neighboursOf pt) of
+     (BasicTile, _ : _ : xs) -> backupCheck xs
+     (BasicTile, [b])        -> case neighboursOf b of
+                                 _ : _ : _ -> True
+                                 _         -> False
+     (CoreTile, _ : _ : xs)  -> not (isCoastal sh pt) && backupCheck xs
+     _                       -> False)
+  where
+  backupCheck xs  = not backup || not (null xs)
+  neighboursOf a  = [ b | b <- globalNeighbours a, explored b ]
+
+
 
 --------------------------------------------------------------------------------
 
@@ -309,8 +370,8 @@ basicTiles = map basic
 
 
 
-advancedTiles :: [Tile]
-advancedTiles = map advanced
+coreTiles :: [Tile]
+coreTiles = map core
   [ ("1", [ NW     |-> Mountain
           , NE     |-> (Desert, Tomb)
           , W      |-> (Hills, SpawningGrounds)
@@ -385,7 +446,7 @@ advancedTiles = map advanced
 
   ]
   where
-  advanced (x,y) = tile x AdvancedTile y
+  core (x,y) = tile x CoreTile y
 
 
 
