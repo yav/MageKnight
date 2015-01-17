@@ -8,8 +8,10 @@ import MageKnight.Units
 
 import           Data.Text (Text)
 
+type PlayerName = Text
+
 data Player = Player
-  { playerName        :: Text
+  { playerName        :: PlayerName
   , playerFame        :: Int
   , playerReputation  :: Int      -- ^ Index on board, *NOT* same as influence
   , playerArmor       :: Int

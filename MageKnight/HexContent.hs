@@ -15,7 +15,7 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
 
 data HexContent = HexContent
-  { hexShields  :: [ PlayerId ] -- in reversed order
+  { hexShields  :: [ PlayerName ] -- in reversed order
   , hexEnemies  :: Bag (Visibility, Enemy)
   , hexRuins    :: Maybe (Visibility, Ruins)
   , hexPlayers  :: Set Player
@@ -29,7 +29,7 @@ hexEmpty = HexContent
   , hexPlayers = Set.empty
   }
 
-hexAddShield :: PlayerId -> HexContent -> HexContent
+hexAddShield :: PlayerName -> HexContent -> HexContent
 hexAddShield s HexContent { .. } =
   HexContent { hexShields = s : hexShields, .. }
 
