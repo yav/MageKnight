@@ -36,6 +36,9 @@ bagRemove q r (Bag m)
   (mbCur, m1) = Map.updateLookupWithKey upd r m
   avail       = fromMaybe 0 mbCur
 
+bagRemoveAll :: Ord a => a -> Bag a -> Bag a
+bagRemoveAll a (Bag m) = Bag (Map.delete a m)
+
 bagLookup :: Ord a => a -> Bag a -> Int
 bagLookup r (Bag m) = Map.findWithDefault 0 r m
 

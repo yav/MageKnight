@@ -18,6 +18,12 @@ data Card = Card { cardName  :: CardName
                  , cardPower :: [ Rule ]
                  }
 
+instance Eq Card where
+  x == y = cardName x == cardName y
+
+instance Ord Card where
+  compare x y = compare (cardName x) (cardName y)
+
 cardRules :: Card -> [Rule]
 cardRules Card { .. } =
   [ "use for 1 movement" === [ACard cardName] --> [Movement]
