@@ -21,25 +21,26 @@ import           System.Random (StdGen, split)
 
 data Offer = Offer
   { offerDeck :: ResourceQ Card
-  , offering  :: [Card]
+  , offering  :: [Card]         -- newest first
   }
+
+offerNewCard :: Offer -> Offer
+offerNewCard Offer { .. } =
+  case RQ.take offerDeck of
+    Just (c,d) -> Offer { offerDeck = d, offering = c : offering }
+    Nothing    -> Offer { .. }
+
 
 data Offers = Offers
   { advancedActionOffer :: Offer
   , spellOffer          :: Offer
   , unitOffer           :: Offer
-  , monasteryTech       :: [Card]
   , artifactDeck        :: ResourceQ Card
   }
 
-newMonastery :: Offers -> Offers
-newMonastery Offers { .. } =
-  case RQ.take (offerDeck advancedActionOffer) of
-    Nothing    -> Offers { .. }
-    Just (c,d) -> Offers { advancedActionOffer = advancedActionOffer
-                                                              { offerDeck = d }
-                         , monasteryTech = c : monasteryTech
-                         , .. }
+newAdvancedAction :: Offers -> Offers
+newAdvancedAction Offers { .. } =
+  Offers { advancedActionOffer = offerNewCard advancedActionOffer, .. }
 
 data Game = Game
   { gameTime        :: Time
@@ -106,15 +107,15 @@ populateTile gameTile g = (GameTile { .. }, g1)
 
          (_, Just feature) ->
            case feature of
-             MagicalGlade      -> nothing
-             Mine _            -> nothing
-             Village           -> nothing
-             Monastery         -> (c, Game { offers = newMonastery offers, .. })
-             Keep              -> enemy Hidden Guardian
-             MageTower         -> enemy Hidden Mage
-             Dungeon           -> nothing
-             Tomb              -> nothing
-             MonsterDen        -> nothing
+             MagicalGlade -> nothing
+             Mine _     -> nothing
+             Village    -> nothing
+             Monastery  -> (c, Game { offers = newAdvancedAction offers, .. })
+             Keep       -> enemy Hidden Guardian
+             MageTower  -> enemy Hidden Mage
+             Dungeon    -> nothing
+             Tomb       -> nothing
+             MonsterDen -> nothing
              SpawningGrounds   -> nothing
              AncientRuins      ->
                case hexWithRuins gameTime ruinsPool of
