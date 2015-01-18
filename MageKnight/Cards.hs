@@ -250,3 +250,10 @@ concentrate amt Card { .. }
                  _         -> False
 
 
+-- XXX
+advancedActionCards :: [Card]
+advancedActionCards = []
+
+-- XXX
+spellCards :: [Card]
+spellCards = []

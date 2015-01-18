@@ -9,3 +9,12 @@ data UnitType = RegularUnit | EliteUnit
 data Unit = Unit { unitName :: Text
                  , unitType :: UnitType
                  }
+
+-- XXX
+regularUnits :: [Unit]
+regularUnits = []
+
+-- XXX
+eliteUnits :: [Unit]
+eliteUnits = []
+

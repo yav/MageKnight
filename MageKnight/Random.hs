@@ -21,6 +21,11 @@ rollDie :: StdGen -> (Mana, StdGen)
 rollDie g = let (n,g1) = randomR (0,5) g
             in (anyMana !! n, g1)
 
-
+rollDice :: Int -> StdGen -> ([Mana], StdGen)
+rollDice n g
+  | n <= 0    = ([], g)
+  | otherwise = let (x,g1) = rollDie g
+                    (xs,g2) = rollDice (n-1) g1
+                in (x:xs,g2)
 
 

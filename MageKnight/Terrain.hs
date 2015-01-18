@@ -370,8 +370,8 @@ basicTiles = map basic
 
 
 
-coreTiles :: [Tile]
-coreTiles = map core
+coreNonCity :: [Tile]
+coreNonCity = map core
   [ ("1", [ NW     |-> Mountain
           , NE     |-> (Desert, Tomb)
           , W      |-> (Hills, SpawningGrounds)
@@ -407,8 +407,14 @@ coreTiles = map core
           , SW     |-> (Wasteland, AncientRuins)
           , SE     |-> Wasteland
           ])
+  ]
+  where
+  core (x,y) = tile x CoreTile y
 
-  , ("5", [ NW     |-> (Forest, MagicalGlade)
+
+cityTiles :: [Tile]
+cityTiles = map core
+  [ ("5", [ NW     |-> (Forest, MagicalGlade)
           , NE     |-> (Swamp, Village)
           , W      |-> Lake
           , Center |-> City Green

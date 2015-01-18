@@ -2,12 +2,14 @@
 module MageKnight.Game where
 
 import           MageKnight.Common
+import           MageKnight.Random
 import           MageKnight.Bag
 import           MageKnight.Units
 import           MageKnight.Terrain
 import           MageKnight.GameTile
 import           MageKnight.Enemies
 import           MageKnight.Ruins
+import           MageKnight.Artifact
 import           MageKnight.Cards
 import           MageKnight.HexContent
 import           MageKnight.ResourceQ ( ResourceQ )
@@ -16,7 +18,7 @@ import qualified MageKnight.ResourceQ as RQ
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Control.Monad(guard)
-import           System.Random (StdGen, split)
+import           System.Random (split)
 
 
 
@@ -92,51 +94,57 @@ offerReturnCards cs o = foldr offerReturnItem o cs
 --------------------------------------------------------------------------------
 
 data UnitOffer = UnitOffer
-  { regularUnits :: Offer Unit
-  , eliteUnits   :: Offer Unit
+  { regularUnitOffer :: Offer Unit
+  , eliteUnitOffer   :: Offer Unit
   }
 
 unitsOnOffer :: UnitOffer -> [Unit]
-unitsOnOffer UnitOffer { .. } = offering regularUnits ++ offering eliteUnits
+unitsOnOffer UnitOffer { .. } = offering regularUnitOffer ++
+                                offering eliteUnitOffer
 
 emptyUnitOffer :: StdGen -> [Unit] -> [Unit] -> UnitOffer
 emptyUnitOffer g regular elite = UnitOffer
-  { regularUnits = offerEmpty g1 regular
-  , eliteUnits   = offerEmpty g2 elite
+  { regularUnitOffer = offerEmpty g1 regular
+  , eliteUnitOffer   = offerEmpty g2 elite
   }
   where
   (g1,g2) = split g
 
 refreshOnlyRegulars :: Int -> UnitOffer -> UnitOffer
-refreshOnlyRegulars playerNum UnitOffer { .. } = UnitOffer
-  { regularUnits = offerDrawItems (playerNum + 2) (offerDiscardAll regularUnits)
-  , eliteUnits   = offerDiscardAll eliteUnits
+refreshOnlyRegulars totalNum UnitOffer { .. } = UnitOffer
+  { regularUnitOffer = offerDrawItems totalNum
+                                      (offerDiscardAll regularUnitOffer)
+  , eliteUnitOffer   = offerDiscardAll eliteUnitOffer
   }
 
 refreshWithElite :: Int -> UnitOffer -> UnitOffer
-refreshWithElite playerNum UnitOffer { .. } = UnitOffer
-  { regularUnits = offerDrawItems regularNum (offerDiscardAll regularUnits)
-  , eliteUnits   = offerDrawItems eliteNum   (offerDiscardAll eliteUnits)
+refreshWithElite totalNum UnitOffer { .. } = UnitOffer
+  { regularUnitOffer = offerDrawItems regularNum
+                                      (offerDiscardAll regularUnitOffer)
+  , eliteUnitOffer   = offerDrawItems eliteNum
+                                      (offerDiscardAll eliteUnitOffer)
   }
   where
-  totalNum   = playerNum + 2
   regularNum = div totalNum 2
   eliteNum   = totalNum - regularNum
 
 offerTakeUnit :: Int -> UnitOffer -> Maybe (Unit, UnitOffer)
 offerTakeUnit n UnitOffer { .. }
   | n < 0 = Nothing
-  | Just (u,rs) <- offerTakeItem n regularUnits =
-                        Just (u, UnitOffer { regularUnits = rs, .. })
+  | Just (u,rs) <- offerTakeItem n regularUnitOffer =
+                        Just (u, UnitOffer { regularUnitOffer = rs, .. })
   | otherwise =
-    do (u,es) <- offerTakeItem (n - offeringLength regularUnits) eliteUnits
-       return (u, UnitOffer { eliteUnits = es, .. })
+    do let eliteIx = n - offeringLength regularUnitOffer
+       (u,es) <- offerTakeItem eliteIx eliteUnitOffer
+       return (u, UnitOffer { eliteUnitOffer = es, .. })
 
 offerDisbandUnit :: Unit -> UnitOffer -> UnitOffer
 offerDisbandUnit u UnitOffer { .. } =
   case unitType u of
-    RegularUnit -> UnitOffer { regularUnits = offerReturnItem u regularUnits,..}
-    EliteUnit -> UnitOffer { eliteUnits = offerReturnItem u eliteUnits, .. }
+    RegularUnit ->
+      UnitOffer { regularUnitOffer = offerReturnItem u regularUnitOffer, ..}
+    EliteUnit ->
+      UnitOffer { eliteUnitOffer = offerReturnItem u eliteUnitOffer, .. }
 
 --------------------------------------------------------------------------------
 
@@ -147,8 +155,21 @@ data Offers = Offers
   , spellOffer          :: Offer Card
   , unitOffer           :: UnitOffer
   , monasteryTech       :: [Card]
-  , artifactDeck        :: ResourceQ Card
+  , artifactDeck        :: ResourceQ Artifact
   }
+
+initialOffers :: StdGen -> Offers
+initialOffers r0 = Offers
+  { advancedActionOffer = newCardOffer randAct advancedActionCards
+  , spellOffer    = newCardOffer randSpell spellCards
+  , unitOffer     = emptyUnitOffer randUnit regularUnits eliteUnits
+  , monasteryTech = []
+  , artifactDeck  = RQ.fromListRandom randArt artifacts
+  }
+  where
+  (randAct,r1)        = split r0
+  (randSpell,r2)      = split r1
+  (randUnit,randArt)  = split r2
 
 newMonastery :: Offers -> Offers
 newMonastery Offers { .. } =
@@ -159,6 +180,52 @@ newMonastery Offers { .. } =
       , monasteryTech = c : monasteryTech
       , ..
       }
+
+
+--------------------------------------------------------------------------------
+
+
+testGame :: StdGen -> Game
+testGame g = ga4 { theMap = Map.fromList
+                              [ ((0,0), tA)
+                              , ((0,1), ta1)
+                              , ((0,2), ta2)
+                              ] }
+  where
+  ga1   = Game { gameTime   = Day
+               , theSource  = bagFromList [ BasicMana Red, BasicMana Green, Gold ]
+               , offers     = initialOffers offerRand
+               , enemyPool  = initialEnemyPool enemyRand
+               , ruinsPool  = RQ.fromListRandom ruinsRand ruins
+
+               , theMap     = Map.empty
+               , mapShape   = Wedge
+               , unexploredTiles = basicUsed ++ coreAll
+               , backupTiles     = basicBackup ++ coreBackup
+               , cityLevels      = [3,5]
+               }
+  (tA,ga2)  = populateTile tileA ga1
+  (ta1,ga3) = populateTile t1 ga2
+  (ta2,ga4) = populateTile t2 ga3
+
+
+  (offerRand,g1) = split g
+  (enemyRand,g2) = split g1
+  (ruinsRand,gg2) = split g2
+
+  (basicShuffled, g3)   = shuffle gg2 basicTiles
+  (t1 : t2 : basicUsed, basicBackup) = splitAt 7 basicShuffled
+
+  (cityShuffled, g4)    = shuffle g3 cityTiles
+  (coreShuffled, g5)    = shuffle g4 coreNonCity
+
+  (coreUsed, coreBackup)  = splitAt 2 coreShuffled
+
+  (coreAll, _g6)         = shuffle g5 (coreUsed ++ take 2 cityShuffled)
+
+
+--------------------------------------------------------------------------------
+
 
 data Game = Game
   { gameTime        :: Time
@@ -173,7 +240,6 @@ data Game = Game
   , backupTiles     :: [ Tile ] -- to be used if we run out of the scenario ones
                                 -- base should be before advanced
   , cityLevels      :: [Int]
-  , unexploredRuins :: ResourceQ Ruins
   }
 
 
