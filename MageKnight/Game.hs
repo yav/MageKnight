@@ -2,6 +2,7 @@
 module MageKnight.Game where
 
 import           MageKnight.Common
+import           MageKnight.Offers
 import           MageKnight.Random
 import           MageKnight.Bag
 import           MageKnight.Units
@@ -18,135 +19,7 @@ import qualified MageKnight.ResourceQ as RQ
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Control.Monad(guard)
-import           System.Random (split)
 
-
-
-data Offer a = Offer
-  { offerDeck :: ResourceQ a
-  , offering  :: [a]  -- newest first
-  }
-
-offerEmpty :: StdGen -> [a] -> Offer a
-offerEmpty r is = Offer { offerDeck = RQ.fromListRandom r is, offering  = [] }
-
-offerDrawItem :: Offer a -> Offer a
-offerDrawItem Offer { .. } =
-  case RQ.take offerDeck of
-    Just (c,d) -> Offer { offerDeck = d, offering = c : offering }
-    Nothing    -> Offer { .. }
-
-offerDrawItems :: Int -> Offer a -> Offer a
-offerDrawItems n o = iterate offerDrawItem o !! n
-
-offerDiscardAll :: Offer a -> Offer a
-offerDiscardAll Offer { .. } = Offer
-  { offering = []
-  , offerDeck = foldr RQ.discard offerDeck offering
-  }
-
-offerTakeItem :: Int -> Offer a -> Maybe (a, Offer a)
-offerTakeItem n0 Offer { .. }
-  | n0 >= 0    = do (c,os) <- go n0 offering
-                    return (c, Offer { offering = os, .. })
-  | otherwise = Nothing
-  where
-  go _ []       = Nothing
-  go 0 (c : cs) = Just (c, cs)
-  go n (c : cs) = do (a,as) <- go (n-1) cs
-                     return (a, c : as)
-
-offerReturnItem :: a -> Offer a -> Offer a
-offerReturnItem a Offer { .. } =
-  Offer { offerDeck = RQ.discard a offerDeck, .. }
-
-offeringLength :: Offer a -> Int
-offeringLength Offer { .. } = length offering
-
-
---------------------------------------------------------------------------------
-
-newCardOffer :: StdGen -> [Card] -> Offer Card
-newCardOffer r cs = offerDrawItems 3 (offerEmpty r cs)
-
-refreshCardOffer :: Offer Card -> Maybe (Offer Card)
-refreshCardOffer Offer { .. } =
-  case reverse offering of
-    [] -> Nothing
-    x : xs -> Just $ offerDrawItem
-                   $ offerReturnItem x
-                     Offer { offering  = reverse xs, .. }
-
-refreshCardOfferDummy :: Offer Card -> Maybe (Card, Offer Card)
-refreshCardOfferDummy Offer { .. } =
-  case reverse offering of
-    [] -> Nothing
-    x : xs -> Just (x, offerDrawItem Offer { offering = reverse xs, .. })
-
-offerTakeCard :: Int -> Offer Card -> Maybe (Card, Offer Card)
-offerTakeCard n o =
-  do (c,o1) <- offerTakeItem n o
-     return (c, offerDrawItem o1)
-
-offerReturnCards :: [Card] -> Offer Card -> Offer Card
-offerReturnCards cs o = foldr offerReturnItem o cs
-
---------------------------------------------------------------------------------
-
-data UnitOffer = UnitOffer
-  { regularUnitOffer :: Offer Unit
-  , eliteUnitOffer   :: Offer Unit
-  }
-
-unitsOnOffer :: UnitOffer -> [Unit]
-unitsOnOffer UnitOffer { .. } = offering regularUnitOffer ++
-                                offering eliteUnitOffer
-
-emptyUnitOffer :: StdGen -> [Unit] -> [Unit] -> UnitOffer
-emptyUnitOffer g regular elite = UnitOffer
-  { regularUnitOffer = offerEmpty g1 regular
-  , eliteUnitOffer   = offerEmpty g2 elite
-  }
-  where
-  (g1,g2) = split g
-
-refreshOnlyRegulars :: Int -> UnitOffer -> UnitOffer
-refreshOnlyRegulars totalNum UnitOffer { .. } = UnitOffer
-  { regularUnitOffer = offerDrawItems totalNum
-                                      (offerDiscardAll regularUnitOffer)
-  , eliteUnitOffer   = offerDiscardAll eliteUnitOffer
-  }
-
-refreshWithElite :: Int -> UnitOffer -> UnitOffer
-refreshWithElite totalNum UnitOffer { .. } = UnitOffer
-  { regularUnitOffer = offerDrawItems regularNum
-                                      (offerDiscardAll regularUnitOffer)
-  , eliteUnitOffer   = offerDrawItems eliteNum
-                                      (offerDiscardAll eliteUnitOffer)
-  }
-  where
-  regularNum = div totalNum 2
-  eliteNum   = totalNum - regularNum
-
-offerTakeUnit :: Int -> UnitOffer -> Maybe (Unit, UnitOffer)
-offerTakeUnit n UnitOffer { .. }
-  | n < 0 = Nothing
-  | Just (u,rs) <- offerTakeItem n regularUnitOffer =
-                        Just (u, UnitOffer { regularUnitOffer = rs, .. })
-  | otherwise =
-    do let eliteIx = n - offeringLength regularUnitOffer
-       (u,es) <- offerTakeItem eliteIx eliteUnitOffer
-       return (u, UnitOffer { eliteUnitOffer = es, .. })
-
-offerDisbandUnit :: Unit -> UnitOffer -> UnitOffer
-offerDisbandUnit u UnitOffer { .. } =
-  case unitType u of
-    RegularUnit ->
-      UnitOffer { regularUnitOffer = offerReturnItem u regularUnitOffer, ..}
-    EliteUnit ->
-      UnitOffer { eliteUnitOffer = offerReturnItem u eliteUnitOffer, .. }
-
---------------------------------------------------------------------------------
 
 
 

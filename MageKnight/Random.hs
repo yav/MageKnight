@@ -3,10 +3,11 @@ module MageKnight.Random
   ( StdGen
   , shuffle
   , rollDie
+  , split
   ) where
 
 import MageKnight.Common
-import System.Random ( StdGen, randomR )
+import System.Random ( StdGen, randomR, split )
 
 shuffle :: StdGen -> [a] -> ([a], StdGen)
 shuffle g0 xs0 = go g0 (length xs0) xs0

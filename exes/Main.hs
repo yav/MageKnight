@@ -30,7 +30,7 @@ main :: IO ()
 main = quickHttpServe $ Snap.route
   [ ("/card/img/:name", sendCard)
   , ("/enemy/img/:name", sendEnemy)
---  , ("/game", sendGame)   -- tesing
+  --  , ("/game", sendGame)   -- tesing
   -- , ("/:tileTy/:tile_x/:tile_y/:hex", tileInfo)
   ] <|> serveDirectory "ui"
 

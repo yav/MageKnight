@@ -3,6 +3,7 @@ module MageKnight.JSON where
 
 import MageKnight.Game
 import MageKnight.Common
+import MageKnight.Offers
 import MageKnight.Cards
 import MageKnight.Units
 import MageKnight.Terrain hiding (tile)

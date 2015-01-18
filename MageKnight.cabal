@@ -1,0 +1,59 @@
+name:                MageKnight
+version:             0.1.0.0
+-- synopsis:
+-- description:
+-- license:
+-- license-file:        LICENSE
+author:              Iavor S. Diatchki
+maintainer:          iavor.diatchki@gmail.com
+category:            Game
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  exposed-modules:
+    MageKnight.Units,
+    MageKnight.Ruins,
+    MageKnight.Artifact,
+    MageKnight.JSON,
+    MageKnight.GameTile,
+    MageKnight.Enemies,
+    MageKnight.Cards,
+    MageKnight.DummyPlayer,
+    MageKnight.HexContent,
+    MageKnight.Offers,
+    MageKnight.Player,
+    MageKnight.Random,
+    MageKnight.Game,
+    MageKnight.ResourceQ,
+    MageKnight.Terrain,
+    MageKnight.Rule,
+    MageKnight.Bag,
+    MageKnight.Common
+
+  build-depends:
+    base,
+    bytestring,
+    text,
+    aeson,
+    containers,
+    vector,
+    random,
+    array,
+    pretty
+  default-language:    Haskell2010
+
+executable MageKnight
+  hs-source-dirs: exes
+  main-is: Main.hs
+  build-depends:
+    MageKnight == 0.1.0.0,
+    base,
+    text,
+    filepath,
+    bytestring,
+    snap-core,
+    snap-server
+
+
