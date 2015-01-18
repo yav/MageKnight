@@ -19,12 +19,16 @@ import qualified Data.Aeson.Types as JS
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 import qualified Data.Vector as Vector
+import qualified Data.ByteString.Lazy as LBS
 
 class Export a where
   toJS :: a -> JS.Value
 
 (.=) :: Export a => Text -> a -> JS.Pair
 x .= y = x JS..= toJS y
+
+jsonBytes :: Export a => a -> LBS.ByteString
+jsonBytes = JS.encode . toJS
 
 instance Export Int where
   toJS n = JS.Number (fromIntegral n)

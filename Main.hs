@@ -5,6 +5,7 @@ module Main where
 import MageKnight.Enemies
 import MageKnight.Cards
 import MageKnight.Terrain
+import MageKnight.JSON
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)
@@ -29,6 +30,7 @@ main :: IO ()
 main = quickHttpServe $ Snap.route
   [ ("/card/img/:name", sendCard)
   , ("/enemy/img/:name", sendEnemy)
+--  , ("/game", sendGame)   -- tesing
   -- , ("/:tileTy/:tile_x/:tile_y/:hex", tileInfo)
   ] <|> serveDirectory "ui"
 
@@ -79,6 +81,11 @@ addrParam =
               _    -> badInput "Malformed parameter: hex"
      return Addr { addrGlobal = (x,y), addrLocal = loc }
 
+
+sendJSON :: Export a => a -> Snap ()
+sendJSON a =
+  do Snap.modifyResponse (Snap.setHeader "content-type" "application/json")
+     Snap.writeLBS (jsonBytes a)
 
 
 --------------------------------------------------------------------------------
