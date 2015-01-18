@@ -8,8 +8,8 @@ import           MageKnight.Units
 import           MageKnight.Cards
 
 data Offer a = Offer
-  { offerDeck :: ResourceQ a
-  , offering  :: [a]  -- newest first
+  { offerDeck :: ResourceQ a  -- ^ New offers come from here
+  , offering  :: [a]          -- ^ Latest offers at the front
   }
 
 -- | A blank offer that will serve the given items.
@@ -34,7 +34,7 @@ offerClear Offer { .. } = Offer
   , offerDeck = foldr RQ.discard offerDeck offering
   }
 
--- | Take one of the offered items.  The index is ths position.
+-- | Take one of the offered items, identified positionally in the offerings.
 offerTakeItem :: Int -> Offer a -> Maybe (a, Offer a)
 offerTakeItem n0 Offer { .. }
   | n0 >= 0    = do (c,os) <- go n0 offering
@@ -58,33 +58,41 @@ offeringLength Offer { .. } = length offering
 
 --------------------------------------------------------------------------------
 
-newCardOffer :: StdGen -> [Card] -> Offer Card
-newCardOffer r cs = offerNewItems 3 (offerNothing r cs)
+-- | Setup a new card offer.
+newCardOffer :: StdGen {-^ Some randomness -}             ->
+                Int    {-^ How many cards are on offer -} ->
+                [Card] {-^ The deck for this offer -}     ->
+                Offer Card
+newCardOffer r n cs = offerNewItems n (offerNothing r cs)
 
+-- | Recycle the oldest offering, and pick a fresh one.
 refreshCardOffer :: Offer Card -> Maybe (Offer Card)
 refreshCardOffer Offer { .. } =
   case reverse offering of
     [] -> Nothing
     x : xs -> Just $ offerNewItem
-                   $ offerReturnItem x
-                     Offer { offering  = reverse xs, .. }
+                   $ offerReturnItem x Offer { offering  = reverse xs, .. }
 
+-- | Take the oldest offering, and pick a fresh one.
 refreshCardOfferDummy :: Offer Card -> Maybe (Card, Offer Card)
 refreshCardOfferDummy Offer { .. } =
   case reverse offering of
     [] -> Nothing
     x : xs -> Just (x, offerNewItem Offer { offering = reverse xs, .. })
 
+-- | Take one of the cards on offer.
 offerTakeCard :: Int -> Offer Card -> Maybe (Card, Offer Card)
 offerTakeCard n o =
   do (c,o1) <- offerTakeItem n o
      return (c, offerNewItem o1)
 
+-- | Recycle the given cards.
 offerReturnCards :: [Card] -> Offer Card -> Offer Card
 offerReturnCards cs o = foldr offerReturnItem o cs
 
 --------------------------------------------------------------------------------
 
+-- The unit decks.
 data UnitOffer = UnitOffer
   { regularUnitOffer :: Offer Unit
   , eliteUnitOffer   :: Offer Unit
@@ -95,31 +103,33 @@ unitsOnOffer UnitOffer { .. } = offering regularUnitOffer ++
                                 offering eliteUnitOffer
 
 emptyUnitOffer :: StdGen -> [Unit] -> [Unit] -> UnitOffer
-emptyUnitOffer g regular elite = UnitOffer
-  { regularUnitOffer = offerNothing g1 regular
-  , eliteUnitOffer   = offerNothing g2 elite
-  }
+emptyUnitOffer g regular elite =
+  UnitOffer { regularUnitOffer = offerNothing g1 regular
+            , eliteUnitOffer   = offerNothing g2 elite
+            }
   where
   (g1,g2) = split g
 
-refreshOnlyRegulars :: Int -> UnitOffer -> UnitOffer
-refreshOnlyRegulars totalNum UnitOffer { .. } = UnitOffer
-  { regularUnitOffer = offerNewItems totalNum
-                                      (offerClear regularUnitOffer)
-  , eliteUnitOffer   = offerClear eliteUnitOffer
-  }
+clearUnitOffer :: UnitOffer -> UnitOffer
+clearUnitOffer UnitOffer { .. } =
+  UnitOffer { regularUnitOffer = offerClear regularUnitOffer
+            , eliteUnitOffer   = offerClear eliteUnitOffer
+            }
 
-refreshWithElite :: Int -> UnitOffer -> UnitOffer
-refreshWithElite totalNum UnitOffer { .. } = UnitOffer
-  { regularUnitOffer = offerNewItems regularNum
-                                      (offerClear regularUnitOffer)
-  , eliteUnitOffer   = offerNewItems eliteNum
-                                      (offerClear eliteUnitOffer)
-  }
+stockUpRegulars :: Int -> UnitOffer -> UnitOffer
+stockUpRegulars n UnitOffer { .. } =
+  UnitOffer { regularUnitOffer = offerNewItems n regularUnitOffer, .. }
+
+stockUpMixed :: Int -> UnitOffer -> UnitOffer
+stockUpMixed n UnitOffer { .. } =
+  UnitOffer { regularUnitOffer = offerNewItems regularNum regularUnitOffer
+            , eliteUnitOffer   = offerNewItems eliteNum   eliteUnitOffer
+            }
   where
-  regularNum = div totalNum 2
-  eliteNum   = totalNum - regularNum
+  regularNum = div n 2
+  eliteNum   = n - regularNum
 
+-- | Take a unit from the offer.  Regulars are indexed before elite.
 offerTakeUnit :: Int -> UnitOffer -> Maybe (Unit, UnitOffer)
 offerTakeUnit n UnitOffer { .. }
   | n < 0 = Nothing
@@ -130,6 +140,7 @@ offerTakeUnit n UnitOffer { .. }
        (u,es) <- offerTakeItem eliteIx eliteUnitOffer
        return (u, UnitOffer { eliteUnitOffer = es, .. })
 
+-- | Recycle a unit.
 offerDisbandUnit :: Unit -> UnitOffer -> UnitOffer
 offerDisbandUnit u UnitOffer { .. } =
   case unitType u of

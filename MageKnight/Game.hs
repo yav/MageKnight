@@ -33,8 +33,8 @@ data Offers = Offers
 
 initialOffers :: StdGen -> Offers
 initialOffers r0 = Offers
-  { advancedActionOffer = newCardOffer randAct advancedActionCards
-  , spellOffer    = newCardOffer randSpell spellCards
+  { advancedActionOffer = newCardOffer randAct 3 advancedActionCards
+  , spellOffer    = newCardOffer randSpell 3 spellCards
   , unitOffer     = emptyUnitOffer randUnit regularUnits eliteUnits
   , monasteryTech = []
   , artifactDeck  = RQ.fromListRandom randArt artifacts
@@ -43,6 +43,9 @@ initialOffers r0 = Offers
   (randAct,r1)        = split r0
   (randSpell,r2)      = split r1
   (randUnit,randArt)  = split r2
+
+
+
 
 newMonastery :: Offers -> Offers
 newMonastery Offers { .. } =
