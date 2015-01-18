@@ -71,8 +71,9 @@ refreshCardOffer :: Offer Card -> Maybe (Offer Card)
 refreshCardOffer Offer { .. } =
   case reverse offering of
     [] -> Nothing
-    x : xs -> Just $ offerDrawItem Offer { offerDeck = RQ.discard x offerDeck
-                                         , offering  = reverse xs }
+    x : xs -> Just $ offerDrawItem
+                   $ offerReturnItem x
+                     Offer { offering  = reverse xs, .. }
 
 refreshCardOfferDummy :: Offer Card -> Maybe (Card, Offer Card)
 refreshCardOfferDummy Offer { .. } =
@@ -137,7 +138,7 @@ offerDisbandUnit u UnitOffer { .. } =
     RegularUnit -> UnitOffer { regularUnits = offerReturnItem u regularUnits,..}
     EliteUnit -> UnitOffer { eliteUnits = offerReturnItem u eliteUnits, .. }
 
-
+--------------------------------------------------------------------------------
 
 
 
