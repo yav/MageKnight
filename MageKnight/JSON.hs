@@ -163,12 +163,12 @@ instance Export UnitType where
 
 
 instance Export Offers where
-  toJS Offers { .. } =
+  toJS o =
     JS.object
-      [ "advancedActions" .= offering advancedActionOffer
-      , "spells"          .= offering spellOffer
-      , "units"           .= unitsOnOffer unitOffer
-      , "monasteries"     .= monasteryTech
+      [ "advancedActions" .= offeringAdvancedActions o
+      , "spells"          .= offeringSpells o
+      , "units"           .= offeringUnits o
+      , "monasteries"     .= offeringMonasteries o
       ]
 
 instance Export Game where

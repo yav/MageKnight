@@ -5,13 +5,10 @@ import           MageKnight.Common
 import           MageKnight.Offers
 import           MageKnight.Random
 import           MageKnight.Bag
-import           MageKnight.Units
 import           MageKnight.Terrain
 import           MageKnight.GameTile
 import           MageKnight.Enemies
 import           MageKnight.Ruins
-import           MageKnight.Artifact
-import           MageKnight.Cards
 import           MageKnight.HexContent
 import           MageKnight.ResourceQ ( ResourceQ )
 import qualified MageKnight.ResourceQ as RQ
@@ -22,40 +19,6 @@ import           Control.Monad(guard)
 
 
 
-
-data Offers = Offers
-  { advancedActionOffer :: Offer Card
-  , spellOffer          :: Offer Card
-  , unitOffer           :: UnitOffer
-  , monasteryTech       :: [Card]
-  , artifactDeck        :: ResourceQ Artifact
-  }
-
-initialOffers :: StdGen -> Offers
-initialOffers r0 = Offers
-  { advancedActionOffer = newCardOffer randAct 3 advancedActionCards
-  , spellOffer    = newCardOffer randSpell 3 spellCards
-  , unitOffer     = emptyUnitOffer randUnit regularUnits eliteUnits
-  , monasteryTech = []
-  , artifactDeck  = RQ.fromListRandom randArt artifacts
-  }
-  where
-  (randAct,r1)        = split r0
-  (randSpell,r2)      = split r1
-  (randUnit,randArt)  = split r2
-
-
-
-
-newMonastery :: Offers -> Offers
-newMonastery Offers { .. } =
-  case RQ.take (offerDeck advancedActionOffer) of
-    Nothing -> Offers { .. }
-    Just (c,d) -> Offers
-      { advancedActionOffer = advancedActionOffer { offerDeck = d }
-      , monasteryTech = c : monasteryTech
-      , ..
-      }
 
 
 --------------------------------------------------------------------------------
@@ -70,7 +33,7 @@ testGame g = ga4 { theMap = Map.fromList
   where
   ga1   = Game { gameTime   = Day
                , theSource  = bagFromList [ BasicMana Red, BasicMana Green, Gold ]
-               , offers     = initialOffers offerRand
+               , offers     = setupOffers offerRand (defaultOfferSetup 1 True)
                , enemyPool  = initialEnemyPool enemyRand
                , ruinsPool  = RQ.fromListRandom ruinsRand ruins
 
