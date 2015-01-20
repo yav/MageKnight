@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<head>
+<title>Mage Knight Rules</title>
+<script src="jquery.js"></script>
+<style>
+body { color: orange;
+       font-weight: bold;
+       font-family: monospace;
+       background-color: black;
+       text-align: center
+       }
+
+#menu {
+  background-color: #300;
+  margin: 3px;
+}
+
+</style>
+<script>
+$(document).ready(function () {
+  var curPage = 1;
+
+  function pageURL(pageNum) {
+    var p = pageNum.toString();
+    if (pageNum < 10) p = '0' + p;
+    return 'img/manual/page00' + p + '.png';
+  }
+
+  function loadCurPage() { $('#page').attr('src', pageURL(curPage)); }
+  loadCurPage();
+
+  $(document).keydown(function(ev) {
+    switch(ev.which) {
+      case 37: if (curPage >  1) { --curPage; loadCurPage(); }; break;
+      case 39: if (curPage < 20) { ++curPage; loadCurPage(); }; break;
+    }
+  });
+});
+</script>
+</head>
+<body><img id='page'></body>
