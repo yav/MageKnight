@@ -370,8 +370,8 @@ basicTiles = map basic
 
 
 
-coreNonCity :: [Tile]
-coreNonCity = map core
+coreNonCityTiles :: [Tile]
+coreNonCityTiles = map core
   [ ("1", [ NW     |-> Mountain
           , NE     |-> (Desert, Tomb)
           , W      |-> (Hills, SpawningGrounds)
