@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, Safe #-}
+{-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
 module MageKnight.Land
   ( LandSetup(..), defaultLandSetup, setupLand
   , Land
@@ -14,6 +14,7 @@ import           MageKnight.Common(Time(..), Visibility(..))
 import           MageKnight.Random(shuffle, split, StdGen)
 import           MageKnight.ResourceQ(ResourceQ)
 import qualified MageKnight.ResourceQ as RQ
+import           MageKnight.JSON
 
 import           Data.Map ( Map )
 import qualified Data.Map as Map
@@ -246,5 +247,30 @@ gameTileUpdateAt a f GameTile { .. } =
   GameTile { gameTileContent = Map.adjust g a gameTileContent, .. }
     where g = case tileTerrain gameTile a of
                 (x,y) -> f x y
+
+
+
+--------------------------------------------------------------------------------
+
+instance Export GameTile where
+  toJS GameTile { .. } =
+    object [ "tile"    .= gameTile
+           , "content" .= map export (Map.toList gameTileContent)
+           ]
+    where
+    export (l,c) = object [ "location" .= l, "content"  .= c ]
+
+instance Export Land where
+  toJS Land { .. } =
+    object [ "time"      .= timeOfDay
+           , "mapShape"  .= mapShape
+           , "map"       .= map expTile (Map.toList theMap)
+           , "nextTiles" .= map tileType (unexploredTiles ++ backupTiles)
+           ]
+    where
+    expTile ((x,y),t) = object [ "x" .= x, "y" .= y, "tile" .= t ]
+
+
+
 
 

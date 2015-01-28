@@ -5,6 +5,7 @@ module MageKnight.Terrain where
 
 import MageKnight.Common
 import MageKnight.Enemies(EnemyType(Orc,Draconum))
+import MageKnight.JSON
 
 import Data.Text (Text)
 import Data.Array (array, (!))
@@ -199,6 +200,48 @@ validPlacement sh explored t backup pt =
   where
   backupCheck xs  = not backup || not (null xs)
   neighboursOf a  = [ b | b <- globalNeighbours a, explored b ]
+
+
+
+--------------------------------------------------------------------------------
+
+instance Export Dir where
+  toJS dir = toJS (txt :: Text)
+    where
+    txt = case dir of
+            NE -> "NE"
+            E  -> "E"
+            SE -> "SE"
+            SW -> "SW"
+            W  -> "W"
+            NW -> "NW"
+
+
+instance Export MapShape where
+  toJS sh = case sh of
+              Wedge           -> object [ "shape" .= ("wedge" :: Text) ]
+              OpenMap up down -> object [ "shape" .= ("open" :: Text)
+                                        , "up"    .= up
+                                        , "down"  .= down
+                                        ]
+
+instance Export HexAddr where
+  toJS addr = case addr of
+                Center   -> toJS ("C" :: Text)
+                Border b -> toJS b
+
+instance Export TileType where
+  toJS t = toJS (txt :: Text)
+    where
+    txt = case t of
+            BasicTile -> "basic"
+            CoreTile  -> "core"
+
+instance Export Tile where
+  toJS Tile { .. } = object [ "name" .= tileName, "type" .= tileType ]
+
+
+
 
 
 

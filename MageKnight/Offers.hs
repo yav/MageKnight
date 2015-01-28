@@ -32,6 +32,7 @@ import           MageKnight.Random
 import           MageKnight.Units
 import           MageKnight.Cards
 import           MageKnight.Artifact
+import           MageKnight.JSON
 
 import Control.Monad(guard)
 
@@ -362,4 +363,17 @@ refreshOffersDummy useElite o0 =
   Offers { .. } = refreshUnitOffer useElite o0
   (lastAction,newActions) = refreshCardOfferDummy advancedActionOffer
   (lastSpell,newSpells)   = refreshCardOfferDummy spellOffer
+
+
+--------------------------------------------------------------------------------
+
+instance Export Offers where
+  toJS o =
+    object
+      [ "advancedActions" .= offeringAdvancedActions o
+      , "spells"          .= offeringSpells o
+      , "units"           .= offeringUnits o
+      , "monasteries"     .= offeringMonasteries o
+      ]
+
 

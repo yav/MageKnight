@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
 module MageKnight.HexContent where
 
 import           MageKnight.Common
@@ -8,6 +8,7 @@ import           MageKnight.Player
 import           MageKnight.Bag
 import           MageKnight.ResourceQ (ResourceQ)
 import qualified MageKnight.ResourceQ as RQ
+import           MageKnight.JSON
 
 import           Data.Maybe (fromMaybe)
 import           Data.Set ( Set )
@@ -145,6 +146,27 @@ hexWithCity color level pool
                ]
   where e n t = (replicate n t ++)
 
+
+--------------------------------------------------------------------------------
+
+instance Export HexContent where
+  toJS HexContent { .. } =
+    object [ "shields" .= reverse hexShields
+           , "enemies" .= fmap enemy      (bagToList hexEnemies)
+           , "players" .= fmap playerName (Set.toList hexPlayers)
+           , "ruins"   .= fmap ruins      hexRuins
+           ]
+      where
+      jsEnemy ty name = object [ "type" .= toJS ty, "name" .= name ]
+
+      enemy (v,e) = jsEnemy (enemyType e)
+                  $ case v of
+                      Hidden   -> "back"
+                      Revealed -> enemyName e
+
+      ruins (v,r) = case v of
+                      Hidden   -> "back"
+                      Revealed -> ruinsName r
 
 
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
 module MageKnight.Game where
 
 import           MageKnight.Common
@@ -7,6 +7,7 @@ import           MageKnight.Land
 import           MageKnight.Random
 import           MageKnight.Bag
 import           MageKnight.Terrain
+import           MageKnight.JSON
 
 
 
@@ -39,6 +40,17 @@ explore addr dir g0 =
   do (l,ms) <- exploreInDir addr dir (theLand g0)
      let addMon g = g { offers = newMonastery (offers g) }
      return (iterate addMon g0 { theLand = l } !! ms)
+
+
+--------------------------------------------------------------------------------
+
+instance Export Game where
+  toJS Game { .. } =
+    object
+      [ "source" .= bagToList theSource
+      , "offers" .= offers
+      , "land"   .= theLand
+      ]
 
 
 

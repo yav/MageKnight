@@ -1,7 +1,8 @@
-{-# LANGUAGE Safe #-}
+{-# LANGUAGE Safe, OverloadedStrings #-}
 module MageKnight.Common where
 
 import MageKnight.Bag
+import MageKnight.JSON
 
 import Data.Text ( Text )
 import Text.PrettyPrint
@@ -123,5 +124,32 @@ ppMana m =
 ppResources :: Bag Resource -> Doc
 ppResources = vcat . map ppEntry . bagToListGrouped
   where ppEntry (r,x) = int x <+> ppResource r
+
+
+
+--------------------------------------------------------------------------------
+
+instance Export Time where
+  toJS t = toJS (txt :: Text)
+    where
+    txt = case t of
+            Day   -> "day"
+            Night -> "night"
+
+instance Export BasicMana where
+  toJS m = toJS (txt :: Text)
+    where
+    txt = case m of
+            White -> "white"
+            Red   -> "red"
+            Blue  -> "blue"
+            Green -> "green"
+
+instance Export Mana where
+  toJS m = case m of
+             Gold        -> toJS ("gold" :: Text)
+             Black       -> toJS ("black" :: Text)
+             BasicMana b -> toJS b
+
 
 

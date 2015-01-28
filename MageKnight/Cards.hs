@@ -7,6 +7,7 @@ import MageKnight.Common
 import MageKnight.Enemies
 import MageKnight.Rule
 import MageKnight.Bag
+import MageKnight.JSON
 
 import qualified Data.Text as Text
 
@@ -23,6 +24,11 @@ instance Eq Card where
 
 instance Ord Card where
   compare x y = compare (cardName x) (cardName y)
+
+instance Export Card where
+  toJS Card { .. } = toJS cardName
+
+
 
 cardRules :: Card -> [Rule]
 cardRules Card { .. } =

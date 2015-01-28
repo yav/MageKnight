@@ -3,6 +3,7 @@ module MageKnight.Enemies where
 
 import MageKnight.Common(Element(..))
 import MageKnight.ResourceQ(ResourceQ)
+import MageKnight.JSON
 
 import           Data.Set (Set)
 import qualified Data.Set as Set
@@ -47,6 +48,22 @@ instance Eq Enemy where
 instance Ord Enemy where
   compare x y = compare (enemyName x) (enemyName y)
 
+
+
+instance Export EnemyType where
+  toJS et = toJS (txt :: Text)
+    where
+    txt = case et of
+            Orc         -> "orc"
+            Guardian    -> "guardian"
+            Mage        -> "mage"
+            Underworld  -> "underworld"
+            Citizen     -> "citizens"
+            Draconum    -> "draconum"
+
+
+
+--------------------------------------------------------------------------------
 
 allEnemies :: [Enemy]
 allEnemies = orcs ++ keep ++ dungeon ++ magical ++ draconum ++ citizens
