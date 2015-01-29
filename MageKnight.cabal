@@ -54,6 +54,8 @@ executable MageKnight
     filepath,
     bytestring,
     snap-core,
-    snap-server
+    snap-server,
+    transformers,
+    random
 
 

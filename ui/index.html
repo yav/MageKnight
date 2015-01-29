@@ -259,6 +259,11 @@ function sampleMap() {
 
 
 $(document).ready(function() {
+
+  jQuery.getJSON('/game', {}, function(g) {
+    console.log(g);
+  });
+
   var body = $('body');
 
 

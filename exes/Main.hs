@@ -6,6 +6,7 @@ import MageKnight.Enemies
 import MageKnight.Cards
 import MageKnight.Terrain
 import MageKnight.JSON
+import MageKnight.Game(testGame)
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)
@@ -23,14 +24,16 @@ import           Data.Text.Read(decimal)
 import qualified Data.Text as Text
 
 import           Control.Applicative ((<|>))
+import           Control.Monad.IO.Class(liftIO)
 
 import           System.FilePath((</>), (<.>))
+import           System.Random (newStdGen)
 
 main :: IO ()
 main = quickHttpServe $ Snap.route
   [ ("/card/img/:name", sendCard)
   , ("/enemy/img/:name", sendEnemy)
-  --  , ("/game", sendGame)   -- tesing
+  , ("/game", sendGame)   -- tesing
   -- , ("/:tileTy/:tile_x/:tile_y/:hex", tileInfo)
   ] <|> serveDirectory "ui"
 
@@ -128,7 +131,10 @@ sendEnemy =
        Just enemy -> serveFile (enemyImagePath enemy)
        Nothing    -> notFound
 
+--------------------------------------------------------------------------------
 
-
-
+sendGame :: Snap ()
+sendGame =
+  do g <- liftIO newStdGen
+     sendJSON (testGame g)
 

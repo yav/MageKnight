@@ -69,7 +69,7 @@ setupLand g0 LandSetup { .. } = foldM reveal (land0,0) revealPos
                                     Wedge -> (tileA, init startPositions)
                                     _     -> (tileB, startPositions)
   startPositions                = [(0,0), (0,1), (1,0), (1,-1)]
-  reveal (l,ms) addr            = do (l1,ms1) <- initialTile addr l
+  reveal (l,ms) addr            = do (l1,ms1) <- initialTile True addr l
                                      return (l1, ms + ms1)
 
   (shuffledBasic,g1)            = shuffle g0 useBasicTiles
@@ -129,10 +129,10 @@ data Land = Land
 
 -- | Check if there are any more tiles available.  If so, also check
 -- if the next tile may be placed at the given location.
-selectTile :: TileAddr -> Land -> Maybe (Tile, Land)
-selectTile pt Land { .. }
+selectTile :: Bool -> TileAddr -> Land -> Maybe (Tile, Land)
+selectTile noCheck pt Land { .. }
   | t : ts <- unexploredTiles =
-    do guard (validPlacement mapShape explored (tileType t) False pt)
+    do guard (noCheck || validPlacement mapShape explored (tileType t) False pt)
        return (t, Land { unexploredTiles = ts, .. })
 
   | t : ts <- backupTiles =
@@ -220,13 +220,13 @@ revealHidden Addr { .. } Land { .. } =
 exploreInDir :: Addr -> Dir -> Land -> Maybe (Land, Int)
 exploreInDir addr dir l =
   do let newTilePos = addrGlobal (neighbour addr dir)
-     (l1,ms) <- initialTile newTilePos l
+     (l1,ms) <- initialTile False newTilePos l
      return (revealHiddenNeighbours addr l1, ms)
 
 -- | Setup a new tile at the given position.
-initialTile :: TileAddr -> Land -> Maybe (Land, Int)
-initialTile addr l =
-  do (t,l1) <- selectTile addr l
+initialTile :: Bool -> TileAddr -> Land -> Maybe (Land, Int)
+initialTile noCheck addr l =
+  do (t,l1) <- selectTile noCheck addr l
      let (gt,ms,l2) = populateTile t l1
      return (l2 { theMap = Map.insert addr gt (theMap l2) }, ms)
 
