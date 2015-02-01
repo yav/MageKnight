@@ -5,12 +5,14 @@
 <script src="jquery.js"></script>
 <script>
 
+function imgUrl(x) { return '/img/' + x + '.png'; }
 
-function tileUrl(ty,n ) { return '/img/maps/' + ty + '/' + n + '.png'; }
-function charUrl(ch,ty) { return '/img/characters/' + ch + '/' + ty + '.png'; }
-function enemyUrl(ty,ch) { return '/img/enemies/' + ty + '/' + ch + '.png'; }
-function ruinsUrl(name) { return '/img/ruins/' + name + '.png'; }
-function manaUrl(mana) { return '/img/mana/' + mana + '.png'; }
+function tileUrl(ty,n )   { return imgUrl('maps/' + ty + '/' + n); }
+function charUrl(ch,ty)   { return imgUrl('characters/' + ch + '/' + ty); }
+function enemyUrl(ty,ch)  { return imgUrl('enemies/' + ty + '/' + ch); }
+function ruinsUrl(name)   { return imgUrl('ruins/' + name); }
+function manaUrl(mana)    { return imgUrl('mana/' + mana); }
+function timeUrl(when)    { return imgUrl('time/' + when); }
 
 function boardToken(wi,url) {
   return $('<img/>')
@@ -250,21 +252,19 @@ function drawTileContent(m,x,y,dir,c) {
 
 // What to do when a tile is clicked.
 function tileClicked(m,x,y,dir) {
-
-  // Just testing.
-  positionItems(m, shields, x, y, dir, true);
-  positionItems(m, tokens, x, y, dir, false);
+  jQuery.getJSON('/click', { tile_x: x, tile_y: y, hex: dir }, drawGame);
 }
 
 
 function drawMap(map) {
   var div = $('<div/>')
-            .css('position', 'relative')
+            .css('position', 'fixed')
+            .css('top', '0px')
+            .css('left', '0px')
+            .css('z-index', '1')
             .css('width', '50%')
             .css('overflow', 'auto')
             .css('background', 'black');
-
-  console.log(map);
 
   var maxX = 0;
   var maxY = 0;
@@ -281,7 +281,7 @@ function drawMap(map) {
     div.append(drawTile(m,tile));
   });
 
-  return { dom: div, m: m };
+  return div;
 }
 
 
@@ -307,46 +307,46 @@ function drawSource(manas) {
   return source;
 }
 
+function drawGame(game) {
+  $('body').empty()
+           .append(drawLand(game.land));
+}
+
+function drawLand(land) {
+  var time = $('<img/>')
+             .attr('src', timeUrl(land.time))
+             .css('position','fixed')
+             .css('right', '0px')
+             .css('top', '  0px')
+             .css('z-index', '0');
+
+  var map  = drawMap(land.map);
+
+  var next = $('<div/>')
+             .css('position','fixed')
+             .css('left', '5px')
+             .css('top', '5px')
+             .css('z-index', '2');
+  jQuery.each(land.nextTiles, function(ix,ty) {
+    var t = $('<img/>')
+            .width('32px')
+            .height('32px')
+            .css('display', 'inline-block')
+            .attr('src', tileUrl(ty,'back'));
+    next.append(t);
+  });
+
+  return [map,time,next];
+}
+
 
 $(document).ready(function() {
 
-  jQuery.getJSON('/game', {}, function(game) {
+  jQuery.getJSON('/newGame', {}, function(game) {
     console.log(game);
-    var res = drawMap(game.land.map);
-    $('body').append(res.dom);
+    drawGame(game);
   });
 
-  return;
-  var body = $('body');
-
-
-
-  var mp = drawMap(sampleMap());
-  var div = mp.dom.css('left', '5px')
-                  .css('top', '5px');
-
-  tokens = [] /* characterToken(mp.m, 'norowas')
-           , enemyToken(mp.m, 'mage', 'back') ]
-
-           , characterToken(mp.m, 'goldyx')
-           , characterToken(mp.m, 'tovak')
-           , characterToken(mp.m, 'arythea') ]; */
-
-  shields = [ shieldToken(mp.m, 'tovak') ]; /*
-           , shieldToken(mp.m, 'tovak')
-           , shieldToken(mp.m, 'tovak')
-           , shieldToken(mp.m, 'tovak')
-           , shieldToken(mp.m, 'tovak')
-           , shieldToken(mp.m, 'goldyx')
-           ];*/
-
-  div.append(tokens);
-  div.append(shields);
-
-
-  body.append(mp.dom);
-
-  focusMap(mp.m, div,0,0);
 
 });
 </script>

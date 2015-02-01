@@ -6,7 +6,7 @@ import MageKnight.Enemies
 import MageKnight.Cards
 import MageKnight.Terrain
 import MageKnight.JSON
-import MageKnight.Game(testGame)
+import MageKnight.Game
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)
@@ -22,6 +22,8 @@ import           Data.Text (Text)
 import           Data.Text.Encoding(decodeUtf8)
 import           Data.Text.Read(decimal)
 import qualified Data.Text as Text
+import           Data.IORef ( IORef, newIORef, writeIORef
+                            , atomicModifyIORef' )
 
 import           Control.Applicative ((<|>))
 import           Control.Monad.IO.Class(liftIO)
@@ -29,13 +31,19 @@ import           Control.Monad.IO.Class(liftIO)
 import           System.FilePath((</>), (<.>))
 import           System.Random (newStdGen)
 
+
 main :: IO ()
-main = quickHttpServe $ Snap.route
-  [ ("/card/img/:name", sendCard)
-  , ("/enemy/img/:name", sendEnemy)
-  , ("/game", sendGame)   -- tesing
-  -- , ("/:tileTy/:tile_x/:tile_y/:hex", tileInfo)
-  ] <|> serveDirectory "ui"
+main =
+  do r <- newStdGen
+     s <- newIORef (testGame r)
+     quickHttpServe $ Snap.route
+       [ ("/card/img/:name", sendCard)
+       , ("/enemy/img/:name", sendEnemy)
+
+       -- testing
+       , ("/newGame",                    newGame s)
+       , ("/click", clickHex s)
+       ] <|> serveDirectory "ui"
 
 
 --------------------------------------------------------------------------------
@@ -133,8 +141,24 @@ sendEnemy =
 
 --------------------------------------------------------------------------------
 
-sendGame :: Snap ()
-sendGame =
-  do g <- liftIO newStdGen
-     sendJSON (testGame g)
+newGame :: IORef Game -> Snap ()
+newGame s = sendJSON =<< liftIO go
+  where
+  go = do r <- liftIO newStdGen
+          let g = testGame r
+          writeIORef s g
+          return g
+
+clickHex :: IORef Game -> Snap ()
+clickHex s =
+  do a <- addrParam
+     g <- liftIO (atomicModifyIORef' s (go a))
+     sendJSON g
+  where
+  go a g = case explore a NW g of
+             Just g1 -> (g1, g1)
+             Nothing -> (g,g)
+
+
+
 
