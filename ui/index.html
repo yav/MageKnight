@@ -9,12 +9,14 @@
 function tileUrl(ty,n ) { return '/img/maps/' + ty + '/' + n + '.png'; }
 function charUrl(ch,ty) { return '/img/characters/' + ch + '/' + ty + '.png'; }
 function enemyUrl(ty,ch) { return '/img/enemies/' + ty + '/' + ch + '.png'; }
+function ruinsUrl(name) { return '/img/ruins/' + name + '.png'; }
 function manaUrl(mana) { return '/img/mana/' + mana + '.png'; }
 
 function boardToken(wi,url) {
   return $('<img/>')
          .css('position', 'absolute')
          .css('width', wi + 'px')
+         .css('height', wi + 'px')
          .attr('src', url);
 }
 
@@ -30,8 +32,14 @@ function enemyToken(m,ty,ch) {
   return boardToken(m.enemyWidth, enemyUrl(ty,ch));
 }
 
+function ruinsToken(m,name) {
+  return boardToken(m.enemyWidth, ruinsUrl(name));
+}
 
 
+
+// Compute various dimensions, for the given maximum width and height
+// (in hex-grid coordinates)
 function prepareMap(pMaxX, pMaxY, pTileWidth) {
 
   var tileWidth    = pTileWidth;
@@ -66,12 +74,14 @@ function prepareMap(pMaxX, pMaxY, pTileWidth) {
          };
 }
 
+// Convert from tile-grid coordinates, to screen coordinates.
 function tilePos(m,x,y) {
   return { left: m.x_off + x * 2 * m.hexWidth - y * m.centerToSide
          , top:  m.y_off - x * 3 * m.hexSide  - y * 4.5 * m.hexSide
          };
 }
 
+// Compute the location of an individual hex in a tile.
 function hexLocation(m, x, y, dir) {
   var coords = tilePos(m,x,y);
   var dX, dY;
@@ -89,6 +99,10 @@ function hexLocation(m, x, y, dir) {
          };
 }
 
+// Place some items on the given hex.
+//   - `lower` indicates that the items should be be placed at the
+//      bottom of the hex (e.g., shields)
+//   - the `items` are a collection of DOM elements.
 function positionItems(m, items, x, y, dir, lower) {
   var c = hexLocation(m,x,y,dir);
   var hexCenter = c.left + m.hexWidth / 2;
@@ -105,20 +119,24 @@ function positionItems(m, items, x, y, dir, lower) {
   jQuery.each(items,function(ix,item) {
     var h = lower ? (3/4) : (1/2);
     item.css('left', left)
-        .css('top',  c.top  + h * (m.hexHeight - item.height()));
+        .css('top',  c.top + h * (m.hexHeight - item.height()));
     left += item.width() * scaling;
   });
 
 }
 
+// Draw a tile on the map.
+//   - a `tile` is of type: { x, y: tile-grid coordinates
+//                          , tile: { name, type }
+//                          , content: [ content ]
+//                          }
+//
+//  XXX: Currnetly, this code assumes that we are drawing a "wedge" type map.
+//  The assumption ahs to do with drawing the "ocean" around the map's edges.
+function drawTile(m, t) {
 
-
-
-function drawTile(m, tile) {
-
-
-  var x      = tile.x;
-  var y      = tile.y;
+  var x      = t.x;
+  var y      = t.y;
   var coords = tilePos(m,x,y);
   var left   = coords.left;
   var top    = coords.top;
@@ -178,18 +196,62 @@ function drawTile(m, tile) {
   });
 
 
-  var imgs = [ img ];
-  if (x == 0) imgs.push(drawTile(m,{ ty: 'basic', name: 'border-left'
-                                   , x: -1,y: y+1})[0]);
-  if (y == 0) imgs.push(drawTile(m,{ ty: 'basic', name: 'border-bottom'
-                                   , x: x+1, y: -1})[0]);
+  var imgs = [ img ]; /*
+  if (x == 0) imgs.push(drawTile(m,{ tile: {type: 'basic', name: 'border-left'}
+                                   , x: -1,y: y+1
+                                   , content: []
+                                   })[0]);
+  if (y == 0) imgs.push(drawTile(m,{ tile: {type: 'basic', name:'border-bottom'}
+                                   , x: x+1, y: -1
+                                   , content: []
+                                   })[0]); */
 
-  img.attr('src',tileUrl(tile.ty,tile.name));
+  img.attr('src',tileUrl(t.tile.tile.type,t.tile.tile.name));
+
+  jQuery.each(t.tile.content, function(ix,c) {
+    var deco = drawTileContent(m,x,y,c.location,c.content);
+    jQuery.each(deco, function(ix,d) { imgs.push(d); });
+  });
+
   return imgs;
 }
 
 
+// Draw the various things on a hex in tile.
+function drawTileContent(m,x,y,dir,c) {
+  var items = [];
+
+  if (c.ruins !== null) {
+    items.push(ruinsToken(m,c.ruins));
+  }
+
+  jQuery.each (c.players, function(ix,player) {
+    items.push (characterToken(m,player.name));
+  });
+
+  jQuery.each (c.enemies, function(ix,enemy) {
+    items.push (enemyToken(m, enemy.type, enemy.name));
+  });
+
+  positionItems(m, items, x, y, dir, false);
+
+  var shields = [];
+  jQuery.each (c.shields, function(ix,player) {
+    var s = shieldToken(m,player);
+    shields.push(s);
+    items.push(s);
+  });
+
+  positionItems(m, shields, x, y, dir, true);
+
+  return items;
+}
+
+
+// What to do when a tile is clicked.
 function tileClicked(m,x,y,dir) {
+
+  // Just testing.
   positionItems(m, shields, x, y, dir, true);
   positionItems(m, tokens, x, y, dir, false);
 }
@@ -201,6 +263,8 @@ function drawMap(map) {
             .css('width', '50%')
             .css('overflow', 'auto')
             .css('background', 'black');
+
+  console.log(map);
 
   var maxX = 0;
   var maxY = 0;
@@ -243,27 +307,16 @@ function drawSource(manas) {
   return source;
 }
 
-function sampleMap() {
-  var tiles = [];
-
-  for (var i = 0; i < 5; ++i)
-    for (var j = 0; j < 5; ++j)
-      tiles.push( { ty: 'basic'
-                  , name: i == 0 && j == 0
-                        ? 'A'
-                        : Math.floor(1 + 11 * Math.random())
-                  , x:i, y: j });
-
-  return tiles;
-}
-
 
 $(document).ready(function() {
 
-  jQuery.getJSON('/game', {}, function(g) {
-    console.log(g);
+  jQuery.getJSON('/game', {}, function(game) {
+    console.log(game);
+    var res = drawMap(game.land.map);
+    $('body').append(res.dom);
   });
 
+  return;
   var body = $('body');
 
 

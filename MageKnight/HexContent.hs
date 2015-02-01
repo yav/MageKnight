@@ -14,6 +14,8 @@ import           Data.Maybe (fromMaybe)
 import           Data.Set ( Set )
 import qualified Data.Set as Set
 import qualified Data.Map as Map
+import           Data.Char ( toLower, isAlphaNum )
+import qualified Data.Text as Text
 
 data HexContent = HexContent
   { hexShields  :: [ PlayerName ] -- in reversed order
@@ -151,13 +153,15 @@ hexWithCity color level pool
 
 instance Export HexContent where
   toJS HexContent { .. } =
-    object [ "shields" .= reverse hexShields
+    object [ "shields" .= map toImage (reverse hexShields)
            , "enemies" .= fmap enemy      (bagToList hexEnemies)
-           , "players" .= fmap playerName (Set.toList hexPlayers)
+           , "players" .= fmap (toImage . playerName) (Set.toList hexPlayers)
            , "ruins"   .= fmap ruins      hexRuins
            ]
       where
-      jsEnemy ty name = object [ "type" .= toJS ty, "name" .= name ]
+      jsEnemy ty name = object [ "type" .= toJS ty
+                               , "name" .= toImage name
+                               ]
 
       enemy (v,e) = jsEnemy (enemyType e)
                   $ case v of
@@ -166,9 +170,13 @@ instance Export HexContent where
 
       ruins (v,r) = case v of
                       Hidden   -> "back"
-                      Revealed -> ruinsName r
+                      Revealed -> toImage (ruinsName r)
 
+      toImage = Text.map cvt
 
+      cvt c
+        | isAlphaNum c  = toLower c
+        | otherwise     = '_'
 
 
 
