@@ -311,7 +311,7 @@ draconum = concat
       }
 
   , replicate 2 Enemy
-      { enemyName      = "Swap Dragon"
+      { enemyName      = "Swamp Dragon"
       , enemyType      = Draconum
       , enemyArmour    = 9
       , enemyAbilities = Set.fromList [ Swift, Poisons ]

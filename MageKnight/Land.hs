@@ -3,12 +3,17 @@ module MageKnight.Land
   ( LandSetup(..), defaultLandSetup, setupLand
   , Land
   , exploreInDir
+  , placePlayer
+  , removePlayer
+  , movePlayer
+  , addrOnMap
   ) where
 
 import           MageKnight.Terrain
 import           MageKnight.HexContent
 import           MageKnight.Enemies( Enemy(..), EnemyType(..)
                                    , allEnemies, allEnemyTypes )
+import           MageKnight.Player
 import           MageKnight.Ruins(Ruins, ruins)
 import           MageKnight.Common(Time(..), Visibility(..))
 import           MageKnight.Random(shuffle, split, StdGen)
@@ -203,10 +208,7 @@ revealHiddenNeighbours a Land { .. } =
 
 -- | Reveal information when a player enters a location.
 revealHidden :: Addr -> Land -> Land
-revealHidden Addr { .. } Land { .. } =
-  revealHiddenNeighbours Addr { .. }
-  Land { theMap = Map.adjust (gameTileUpdateAt addrLocal upd) addrGlobal theMap
-       , .. }
+revealHidden a l = updateAddr a upd l
   where
   upd (City _) _            = hexReveal
   upd _ (Just AncientRuins) = hexReveal
@@ -230,8 +232,30 @@ initialTile noCheck addr l =
      let (gt,ms,l2) = populateTile t l1
      return (l2 { theMap = Map.insert addr gt (theMap l2) }, ms)
 
+-- | Update a location on the map.
+updateAddr :: Addr ->
+              (Terrain -> Maybe Feature -> HexContent -> HexContent) ->
+              Land -> Land
+updateAddr Addr { .. } f Land { .. } =
+  Land { theMap = Map.adjust (gameTileUpdateAt addrLocal f) addrGlobal theMap
+       , .. }
 
+-- | Place a player on the map.
+placePlayer :: Player -> Land -> Land
+placePlayer p = updateAddr (playerLocation p) (\_ _ -> hexAddPlayer p)
 
+-- | Remove a player from the map.
+removePlayer :: Player -> Land -> Land
+removePlayer p = updateAddr (playerLocation p) (\_ _ -> hexRemovePlayer p)
+
+-- | Move a player in the given direction.
+-- XXX: Remember last safe location
+movePlayer :: Player -> Dir -> Land -> (Player, Land)
+movePlayer p d l = (p1, placePlayer p1 (removePlayer p l))
+  where p1 = p { playerLocation = neighbour (playerLocation p) d }
+
+addrOnMap :: Addr -> Land -> Bool
+addrOnMap Addr { .. } Land { .. } = addrGlobal `Map.member` theMap
 
 --------------------------------------------------------------------------------
 
@@ -244,11 +268,15 @@ gameTileUpdateAt :: HexAddr ->
                     (Terrain -> Maybe Feature -> HexContent -> HexContent) ->
                     GameTile -> GameTile
 gameTileUpdateAt a f GameTile { .. } =
-  GameTile { gameTileContent = Map.adjust g a gameTileContent, .. }
+  GameTile { gameTileContent =
+               case Map.updateLookupWithKey upd a gameTileContent of
+                 (Nothing, _)  -> Map.insert a (g hexEmpty) gameTileContent
+                 (Just _, gtc) -> gtc
+           , .. }
     where g = case tileTerrain gameTile a of
                 (x,y) -> f x y
 
-
+          upd _ h = Just (g h)
 
 --------------------------------------------------------------------------------
 

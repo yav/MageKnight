@@ -7,6 +7,7 @@ import MageKnight.Cards
 import MageKnight.Terrain
 import MageKnight.JSON
 import MageKnight.Game
+import MageKnight.Player
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)
@@ -15,6 +16,7 @@ import           Snap.Util.FileServe(serveDirectory, serveFile)
 
 
 import           Data.Char(toLower, isAlphaNum, isAscii)
+import           Data.Maybe ( fromMaybe )
 import           Data.List(find)
 import           Data.ByteString(ByteString)
 import qualified Data.ByteString as BS
@@ -155,10 +157,16 @@ clickHex s =
      g <- liftIO (atomicModifyIORef' s (go a))
      sendJSON g
   where
-  go a g = case explore a NW g of
-             Just g1 -> (g1, g1)
-             Nothing -> (g,g)
+  go a g
+    | Just d <- find ((a ==) . neighbour loc) allDirections =
+      let g1 = if addrOnMap a g then movePlayer d g
+               else fromMaybe g (explore loc d g)
+      in (g1,g1)
 
+    | otherwise = (g,g)
+
+      where loc = playerLocation p
+            p = player g
 
 
 

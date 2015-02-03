@@ -228,7 +228,7 @@ function drawTileContent(m,x,y,dir,c) {
   }
 
   jQuery.each (c.players, function(ix,player) {
-    items.push (characterToken(m,player.name));
+    items.push (characterToken(m,player));
   });
 
   jQuery.each (c.enemies, function(ix,enemy) {

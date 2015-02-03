@@ -3,8 +3,9 @@ module MageKnight.Player where
 
 import MageKnight.Common
 import MageKnight.Cards
-import MageKnight.Bag
 import MageKnight.Units
+import MageKnight.Bag
+import MageKnight.Terrain
 
 import           Data.Text (Text)
 
@@ -21,7 +22,25 @@ data Player = Player
   , playerDeedDeck    :: [ PlayerCard ]
   , playerHand        :: Bag PlayerCard
   , playerDiscardPile :: [ PlayerCard ]
+  , playerLocation    :: Addr
   }
+
+
+newPlayer :: Text -> Player
+newPlayer name = Player
+  { playerName        = name
+  , playerFame        = 0
+  , playerReputation  = 0
+  , playerArmor       = 2
+  , playerCardLimit   = 5
+  , playerUnits       = [ Nothing ]
+  , playerCrystals    = bagEmpty
+  , playerDeedDeck    = []
+  , playerHand        = bagEmpty
+  , playerDiscardPile = []
+  , playerLocation    = Addr { addrGlobal = (0,0), addrLocal = Center }
+  }
+
 
 data PlayerCard = Wound | NormalCard Card
                   deriving (Eq,Ord)

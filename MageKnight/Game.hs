@@ -8,6 +8,7 @@ import           MageKnight.Random
 import           MageKnight.Bag
 import           MageKnight.Terrain
 import           MageKnight.JSON
+import           MageKnight.Player
 
 
 
@@ -16,12 +17,14 @@ testGame :: StdGen -> Game
 testGame g =
   Game { theSource  = bagFromList [ BasicMana Red, BasicMana Green, Gold ]
        , offers     = iterate newMonastery offers0 !! ms
-       , theLand    = l
+       , theLand    = placePlayer pl l
+       , player     = pl
        }
   where
   offers0     = setupOffers offerRand (defaultOfferSetup 1 True)
   Just (l,ms) = setupLand landRand (defaultLandSetup Wedge 7 2 [3,5])
   (offerRand,landRand) = split g
+  pl = newPlayer "arythea"
 
 
 
@@ -30,8 +33,17 @@ data Game = Game
   { theSource   :: Bag Mana
   , offers      :: Offers
   , theLand     :: Land
+  , player      :: Player
   }
 
+movePlayer :: Dir -> Game -> Game
+movePlayer d Game { .. } =
+  let (p1,l1) = MageKnight.Land.movePlayer player d theLand
+  in Game { theLand = l1, player = p1, .. }
+
+
+addrOnMap :: Addr -> Game -> Bool
+addrOnMap a g = MageKnight.Land.addrOnMap a (theLand g)
 
 
 -- | Try to explore from the given position in the given direction.
