@@ -58,7 +58,7 @@ instance Export EnemyType where
             Guardian    -> "guardian"
             Mage        -> "mage"
             Underworld  -> "underworld"
-            Citizen     -> "citizens"
+            Citizen     -> "citizen"
             Draconum    -> "draconum"
 
 
