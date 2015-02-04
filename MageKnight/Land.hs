@@ -7,6 +7,7 @@ module MageKnight.Land
   , removePlayer
   , movePlayer
   , addrOnMap
+  , setTime
   ) where
 
 import           MageKnight.Terrain
@@ -190,7 +191,7 @@ populateTile gameTile g = (GameTile { .. }, mons, g1)
          _ -> nothing
 
 
--- | Check the neighbours of a tile, to see if anything should be reveal.
+-- | Check the neighbours of a tile, to see if anything should be revealed.
 revealHiddenNeighbours :: Addr -> Land -> Land
 revealHiddenNeighbours a Land { .. } =
   Land { theMap = foldr checkAt theMap (map (neighbour a) allDirections), .. }
@@ -242,7 +243,10 @@ updateAddr Addr { .. } f Land { .. } =
 
 -- | Place a player on the map.
 placePlayer :: Player -> Land -> Land
-placePlayer p = updateAddr (playerLocation p) (\_ _ -> hexAddPlayer p)
+placePlayer p = revealHidden loc
+              . revealHiddenNeighbours loc
+              . updateAddr loc (\_ _ -> hexAddPlayer p)
+  where loc = playerLocation p
 
 -- | Remove a player from the map.
 removePlayer :: Player -> Land -> Land
@@ -257,6 +261,9 @@ movePlayer p d l = (p1, placePlayer p1 (removePlayer p l))
 addrOnMap :: Addr -> Land -> Bool
 addrOnMap Addr { .. } Land { .. } = addrGlobal `Map.member` theMap
 
+
+setTime :: Time -> Land -> Land
+setTime t Land { .. } = Land { timeOfDay = t, .. }
 --------------------------------------------------------------------------------
 
 data GameTile = GameTile
