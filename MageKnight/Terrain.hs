@@ -98,10 +98,10 @@ globalDelta dir =
   case dir of
     E  -> (1,0)
     W  -> (-1,0)
-    NE -> (1,1)
-    NW -> (0,1)
-    SE -> (0,-1)
-    SW -> (-1,-1)
+    NE -> (0,1)
+    NW -> (-1,1)
+    SE -> (1,-1)
+    SW -> (0,-1)
 
 globalNeighbours :: TileAddr -> [TileAddr]
 globalNeighbours (x,y) =
