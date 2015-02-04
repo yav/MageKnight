@@ -192,9 +192,9 @@ validPlacement sh explored t backup pt =
   isOnMap sh pt && not (explored pt) &&
   (case (t, neighboursOf pt) of
      (BasicTile, _ : _ : xs) -> backupCheck xs
-     (BasicTile, [b])        -> case neighboursOf b of
-                                 _ : _ : _ -> True
-                                 _         -> False
+     (BasicTile, [b]) | not backup -> case neighboursOf b of
+                                        _ : _ : _ -> True
+                                        _         -> False
      (CoreTile, _ : _ : xs)  -> not (isCoastal sh pt) && backupCheck xs
      _                       -> False)
   where
