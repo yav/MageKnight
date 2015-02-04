@@ -62,7 +62,8 @@ instance Export Game where
       [ "source" .= bagToList theSource
       , "offers" .= offers
       , "land"   .= theLand
+      , "focus"  .= object [ "x" .= x, "y" .= y ]
       ]
-
+    where (x,y) = addrGlobal (playerLocation player)
 
 
