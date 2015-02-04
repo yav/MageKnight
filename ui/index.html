@@ -281,13 +281,13 @@ function drawMap(map) {
     div.append(drawTile(m,tile));
   });
 
-  return div;
+  return { dom: div, focus: function(x,y) { focusMap(m,div,x,y); } };
 }
 
 
 function focusMap(m,map,x,y) {
   var c = tilePos(m,x,y);
-  map.scrollTop(c.top).scrollLeft(c.left);
+  map.scrollTop(c.top - m.tileWidth).scrollLeft(c.left + m.tileWidth);
 }
 
 
@@ -308,8 +308,9 @@ function drawSource(manas) {
 }
 
 function drawGame(game) {
-  $('body').empty()
-           .append(drawLand(game.land));
+  var l = drawLand(game.land, game.focus);
+  $('body').empty().append(l.dom);
+  l.focus(game.focus.x, game.focus.y);
 }
 
 function drawLand(land) {
@@ -336,7 +337,7 @@ function drawLand(land) {
     next.append(t);
   });
 
-  return [map,time,next];
+  return { dom: [map.dom,time,next], focus: map.focus }
 }
 
 

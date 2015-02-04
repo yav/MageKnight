@@ -299,13 +299,33 @@ instance Export Land where
   toJS Land { .. } =
     object [ "time"      .= timeOfDay
            , "mapShape"  .= mapShape
-           , "map"       .= map expTile (Map.toList theMap)
+           , "map"       .= map expTile (Map.toList addBounds)
            , "nextTiles" .= map tileType (unexploredTiles ++ backupTiles)
            ]
     where
     expTile ((x,y),t) = object [ "x" .= x, "y" .= y, "tile" .= t ]
 
+    mbPlace = case (unexploredTiles, backupTiles) of
+               ([],[]) -> Nothing
+               (Tile { .. } : _, _) ->
+                  Just (placeHolder tileType, valid tileType False)
+               (_, Tile { .. } : _) ->
+                  Just (placeHolder tileType, valid tileType True)
 
+    placeHolder t = GameTile { gameTileContent = Map.empty
+                             , gameTile        = placeHolderTile t
+                             }
 
+    valid = validPlacement mapShape (`Map.member` theMap)
+
+    addBounds =
+      case mbPlace of
+        Nothing -> theMap
+        Just (pl,isValid) -> foldr addBoundsAt theMap (Map.keys theMap)
+          where
+          addBoundsAt x m = foldr addBound m (globalNeighbours x)
+          addBound x m
+            | isValid x   = Map.insertWith (\_ old -> old) x pl m
+            | otherwise   = m
 
 

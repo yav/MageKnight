@@ -46,6 +46,12 @@ data Tile           = Tile { tileName    :: Text
                            , tileTerrain :: HexAddr -> (Terrain, Maybe Feature)
                            }
 
+placeHolderTile :: TileType -> Tile
+placeHolderTile ty = Tile { tileName = "placeholder"
+                          , tileType = ty
+                          , tileTerrain = \_ -> (Ocean, Nothing)
+                          }
+
 allDirections :: [Dir]
 allDirections = [ minBound .. maxBound ]
 
