@@ -200,7 +200,7 @@ dungeon = concat
       }
 
   , replicate 2 Enemy
-      { enemyName      = "Minoutaur"
+      { enemyName      = "Minotaur"
       , enemyType      = Underworld
       , enemyArmour    = 5
       , enemyAbilities = Set.fromList [ Brutal ]
