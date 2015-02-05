@@ -156,7 +156,7 @@ instance Export HexContent where
     object [ "shields" .= map toImage (reverse hexShields)
            , "enemies" .= fmap enemy      (bagToList hexEnemies)
            , "players" .= fmap (toImage . playerName) (Set.toList hexPlayers)
-           , "ruins"   .= fmap ruins      hexRuins
+           , "ruins"   .= fmap jsruins     hexRuins
            ]
       where
       jsEnemy ty name = object [ "type" .= toJS ty
@@ -168,9 +168,9 @@ instance Export HexContent where
                       Hidden   -> "back"
                       Revealed -> enemyName e
 
-      ruins (v,r) = case v of
-                      Hidden   -> "back"
-                      Revealed -> toImage (ruinsName r)
+      jsruins (v,r) = case v of
+                        Hidden   -> "back"
+                        Revealed -> toImage (ruinsName r)
 
       toImage = Text.map cvt
 
