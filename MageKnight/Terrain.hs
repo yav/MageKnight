@@ -1,7 +1,32 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
-module MageKnight.Terrain where
+module MageKnight.Terrain
+  ( -- * Addressing
+    Addr(..), TileAddr,
+
+    HexAddr(..), allHexAddrs,
+    Dir(..), allDirections,
+    IsHexAddr(..),
+
+    neighbour, globalNeighbours,
+
+    -- * Tile Description
+    Tile(..),
+    Terrain(..),
+    Feature(..),
+    TileType(..),
+    terrainCost,
+
+    -- * Tiles
+    tileA, tileB, basicTiles, coreNonCityTiles, cityTiles,
+    placeHolderTile,
+
+    -- * Map Shape
+    MapShape(..),
+    openMap3, openMap4, openMap5,
+    validPlacement
+  ) where
 
 import MageKnight.Common
 import MageKnight.Enemies(EnemyType(Orc,Draconum))
