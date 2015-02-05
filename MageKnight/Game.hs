@@ -33,7 +33,7 @@ data Game = Game
   { theSource   :: Bag Mana
   , offers      :: Offers
   , theLand     :: Land
-  , player      :: Player
+  , player      :: Player   -- just one for now
   }
 
 movePlayer :: Dir -> Game -> Game
@@ -62,7 +62,7 @@ instance Export Game where
       [ "source" .= bagToList theSource
       , "offers" .= offers
       , "land"   .= theLand
-      , "focus"  .= object [ "x" .= x, "y" .= y ]
+      , "player" .= player
       ]
     where (x,y) = addrGlobal (playerLocation player)
 

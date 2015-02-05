@@ -10,6 +10,7 @@ module MageKnight.Land
   , setTime
   ) where
 
+import           MageKnight.Bag
 import           MageKnight.Terrain
 import           MageKnight.HexContent
 import           MageKnight.Enemies( Enemy(..), EnemyType(..)
@@ -24,6 +25,7 @@ import           MageKnight.JSON
 
 import           Data.Map ( Map )
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import           Control.Monad(guard,foldM)
 
 
@@ -253,17 +255,40 @@ removePlayer :: Player -> Land -> Land
 removePlayer p = updateAddr (playerLocation p) (\_ _ -> hexRemovePlayer p)
 
 -- | Move a player in the given direction.
--- XXX: Remember last safe location
 movePlayer :: Player -> Dir -> Land -> (Player, Land)
-movePlayer p d l = (p1, placePlayer p1 (removePlayer p l))
-  where p1 = p { playerLocation = neighbour (playerLocation p) d }
+movePlayer p d l = (p1, placePlayer p1 l1)
+  where
+  l1      = removePlayer p l
+  p1      = p { playerLocation = newLoc
+              , playerOnUnsafe =
+                  if isSafe (playerName p) newLoc l1
+                    then Nothing
+                    else Just $ case playerOnUnsafe p of
+                                  Nothing      -> (playerLocation p, 0)
+                                  Just (sl,ws) -> let ws' = ws + 1
+                                                  in seq ws' (sl,ws')
+              }
+  newLoc  = neighbour (playerLocation p) d
+
 
 addrOnMap :: Addr -> Land -> Bool
 addrOnMap Addr { .. } Land { .. } = addrGlobal `Map.member` theMap
 
 
+-- | Set the current time for the land.
 setTime :: Time -> Land -> Land
 setTime t Land { .. } = Land { timeOfDay = t, .. }
+
+
+-- | Is this a safe location for the given player.
+isSafe :: PlayerName -> Addr -> Land -> Bool
+isSafe p Addr { .. } Land { .. } =
+  case Map.lookup addrGlobal theMap of
+    Nothing -> False
+    Just gt -> gameTileIsSafe gt addrLocal p
+
+
+
 --------------------------------------------------------------------------------
 
 data GameTile = GameTile
@@ -284,6 +309,26 @@ gameTileUpdateAt a f GameTile { .. } =
                 (x,y) -> f x y
 
           upd _ h = Just (g h)
+
+-- | Is this a safe location for the given player.
+gameTileIsSafe :: GameTile -> HexAddr -> PlayerName -> Bool
+gameTileIsSafe GameTile { .. } loc p =
+  case tileTerrain gameTile loc of
+    (City _, _)    -> False
+    (Lake, _)      -> False
+    (Mountain, _)  -> False
+    (Ocean, _)     -> False
+    (_, Nothing)   -> True
+    (_, Just f)    ->
+      case Map.lookup loc gameTileContent of
+        Nothing                -> True
+        Just HexContent { .. } ->
+          Set.null hexPlayers &&
+          (case f of
+             Keep             -> p `elem` hexShields
+             MageTower        -> bagIsEmpty hexEnemies
+             RampagingEnemy _ -> bagIsEmpty hexEnemies
+             _                -> True)
 
 --------------------------------------------------------------------------------
 

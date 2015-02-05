@@ -231,6 +231,13 @@ instance Export MapShape where
                                         , "down"  .= down
                                         ]
 
+instance Export Addr where
+  toJS Addr { addrGlobal = (x,y), .. } = object [ "x"   .= x
+                                                , "y"   .= y
+                                                , "hex" .= addrLocal
+                                                ]
+
+
 instance Export HexAddr where
   toJS addr = case addr of
                 Center   -> toJS ("C" :: Text)

@@ -308,9 +308,11 @@ function drawSource(manas) {
 }
 
 function drawGame(game) {
-  var l = drawLand(game.land, game.focus);
+  var l = drawLand(game.land);
   $('body').empty().append(l.dom);
-  l.focus(game.focus.x, game.focus.y);
+  var loc = game.player.location;
+  l.focus(loc.x, loc.y);
+  console.log(game.player);
 }
 
 function drawLand(land) {

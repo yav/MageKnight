@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, OverloadedStrings #-}
 module MageKnight.Player where
 
 import MageKnight.Common
@@ -6,6 +6,7 @@ import MageKnight.Cards
 import MageKnight.Units
 import MageKnight.Bag
 import MageKnight.Terrain
+import MageKnight.JSON
 
 import           Data.Text (Text)
 
@@ -17,12 +18,16 @@ data Player = Player
   , playerReputation  :: Int      -- ^ Index on board, *NOT* same as influence
   , playerArmor       :: Int
   , playerCardLimit   :: Int
-  , playerUnits       :: [ Maybe Unit ]
+  , playerUnits       :: [ Maybe Unit ]   -- XXX: Replace With active units
   , playerCrystals    :: Bag BasicMana
   , playerDeedDeck    :: [ PlayerCard ]
   , playerHand        :: Bag PlayerCard
   , playerDiscardPile :: [ PlayerCard ]
   , playerLocation    :: Addr
+
+  , playerOnUnsafe    :: Maybe (Addr, Int)
+    -- ^ `Nothing`, if we are currently safe.
+    -- If unsafe, then last safe location, and how many wounds to get there.
   }
 
 
@@ -39,6 +44,8 @@ newPlayer name = Player
   , playerHand        = bagEmpty
   , playerDiscardPile = []
   , playerLocation    = Addr { addrGlobal = (0,0), addrLocal = Center }
+
+  , playerOnUnsafe    = Nothing
   }
 
 
@@ -51,23 +58,62 @@ instance Eq Player where
 instance Ord Player where
   compare x y = compare (playerName x) (playerName y)
 
-assignDamage :: Int -> Player -> (Player,Bool)
-assignDamage d Player { .. }
-  | totalWounds >= playerCardLimit =
-      (Player { playerHand        = bagAdd totalWounds Wound bagEmpty
-              , playerDiscardPile = bagToList (bagRemoveAll Wound hand1)
-              , ..
-              }, True)
 
-  | otherwise =
-      ( Player { playerHand = hand1, .. }
-      , False
-      )
+-- | Check if this player passed out.  If so, return the new, passed out player.
+-- Otherwise, return nothing.
+checkPassOut :: Player -> (Player, Bool)
+checkPassOut Player { .. }
+  | wounds >= playerCardLimit =
+      (Player
+       { playerHand = bagAdd wounds Wound bagEmpty
+       , playerDiscardPile = bagToList (bagRemoveAll Wound playerHand)
+       , ..
+       }, True)
+  | otherwise = (Player { .. }, False)
   where
-  woundNum    = div (max 0 d + playerArmor - 1) playerArmor
-  hand1       = bagAdd woundNum Wound playerHand
-  totalWounds = bagLookup Wound hand1
+  wounds = bagLookup Wound playerHand
+
+-- | Assign combat damage to a player.  Returns 'True' if the player passed out.
+assignDamage :: Int -> Player -> (Player,Bool)
+assignDamage d p = checkPassOut
+                      p { playerHand = bagAdd woundNum Wound (playerHand p) }
+  where
+  armor       = playerArmor p
+  woundNum    = div (max 0 d + armor - 1) armor
 
 
+-- | Move the player back to their last safe location.
+-- Return 'True' if the player passed out in the process.
+backToSafety :: Player -> (Player, Bool)
+backToSafety p =
+  case playerOnUnsafe p of
+    Nothing    -> (p, False)
+    Just (a,w) -> checkPassOut p { playerLocation = a
+                                 , playerHand = bagAdd w Wound (playerHand p)
+                                 }
+
+instance Export Player where
+  toJS Player { .. } =
+    object
+      [ "name"        .= playerName
+      , "fame"        .= playerFame
+      , "reputation"  .= playerReputation
+      , "armor"       .= playerArmor
+      , "cardLimit"   .= playerCardLimit
+      , "units"       .= playerUnits
+      , "crystals"    .= bagToList playerCrystals
+      , "cards"       .= bagToList playerHand
+      , "location"    .= playerLocation
+      , "unsafe"      .= (case playerOnUnsafe of
+                            Nothing -> jsNull
+                            Just (a,w) -> object [ "safe"   .= a
+                                                 , "wounds" .= w
+                                                 ])
+      ]
+
+instance Export PlayerCard where
+  toJS c = toJS (case c of
+                   Wound        -> "wound"
+                   NormalCard x -> cardName x)
 
 
