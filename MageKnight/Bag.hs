@@ -1,4 +1,17 @@
-module MageKnight.Bag where
+module MageKnight.Bag
+  ( Bag
+  , bagEmpty, bagSingleton, bagAdd, bagUnion, bagMap
+
+  , bagRemove, bagRemoveAll
+
+  , bagLookup
+
+  , bagIsEmpty
+  , bagKeys
+  , bagToListGrouped, flatGrouped
+  , bagToList
+  , bagFromList
+  ) where
 
 import           Data.Map ( Map )
 import qualified Data.Map as Map

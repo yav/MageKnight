@@ -59,22 +59,22 @@ instance Ord Player where
   compare x y = compare (playerName x) (playerName y)
 
 
--- | Check if this player passed out.  If so, return the new, passed out player.
--- Otherwise, return nothing.
-checkPassOut :: Player -> (Player, Bool)
+-- | Check if this player passed out.
+-- The blloean indicates if the player passed out.
+checkPassOut :: Player -> (Bool, Player)
 checkPassOut Player { .. }
   | wounds >= playerCardLimit =
-      (Player
-       { playerHand = bagAdd wounds Wound bagEmpty
-       , playerDiscardPile = bagToList (bagRemoveAll Wound playerHand)
-       , ..
-       }, True)
-  | otherwise = (Player { .. }, False)
+      ( True, Player
+                { playerHand = bagAdd wounds Wound bagEmpty
+                , playerDiscardPile = bagToList (bagRemoveAll Wound playerHand)
+                , ..
+                } )
+  | otherwise = (False, Player { .. })
   where
   wounds = bagLookup Wound playerHand
 
 -- | Assign combat damage to a player.  Returns 'True' if the player passed out.
-assignDamage :: Int -> Player -> (Player,Bool)
+assignDamage :: Int -> Player -> (Bool, Player)
 assignDamage d p = checkPassOut
                       p { playerHand = bagAdd woundNum Wound (playerHand p) }
   where
@@ -84,10 +84,10 @@ assignDamage d p = checkPassOut
 
 -- | Move the player back to their last safe location.
 -- Return 'True' if the player passed out in the process.
-backToSafety :: Player -> (Player, Bool)
+backToSafety :: Player -> (Bool, Player)
 backToSafety p =
   case playerOnUnsafe p of
-    Nothing    -> (p, False)
+    Nothing    -> (False, p)
     Just (a,w) -> checkPassOut p { playerLocation = a
                                  , playerHand = bagAdd w Wound (playerHand p)
                                  }
