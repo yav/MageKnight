@@ -4,6 +4,7 @@ module MageKnight.JSON
   , jsonBytes
   , (.=)
   , object
+  , jsNull
   , JS.Value
   ) where
 
@@ -21,6 +22,9 @@ x .= y = x JS..= toJS y
 
 object :: [ JS.Pair ] -> JS.Value
 object = JS.object
+
+jsNull :: JS.Value
+jsNull = JS.Null
 
 jsonBytes :: Export a => a -> LBS.ByteString
 jsonBytes = JS.encode . toJS
