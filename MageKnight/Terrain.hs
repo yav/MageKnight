@@ -9,7 +9,7 @@ module MageKnight.Terrain
     Dir(..), allDirections,
     IsHexAddr(..),
 
-    neighbour, globalNeighbours,
+    neighbour, neighboursUpTo, globalNeighbours,
 
     -- * Tile Description
     Tile(..),
@@ -34,6 +34,7 @@ import MageKnight.JSON
 
 import Data.Text (Text)
 import Data.Array (array, (!))
+import qualified Data.Set as Set
 
 type TileAddr       = (Int,Int)
 
@@ -47,7 +48,7 @@ data HexNeighbour   = Local HexAddr | Foreign Int Int Dir
                       deriving (Eq,Ord,Show)
 
 data Addr           = Addr { addrGlobal :: TileAddr, addrLocal :: HexAddr }
-                      deriving (Eq,Show)
+                      deriving (Eq,Ord,Show)
 
 data Terrain        = Plains | Hills | Forest | Wasteland | Desert | Swamp
                     | City BasicMana
@@ -100,8 +101,15 @@ terrainCost terra time =
 
 
 
+-- | Locations that are up to the given distance.
+neighboursUpTo :: Int -> Addr -> [ Addr ]
+neighboursUpTo n a = Set.toList (iterate step (Set.singleton a) !! n)
+  where
+  neighbours x = Set.fromList [ neighbour x d | d <- allDirections ]
+  step s       = Set.unions (map neighbours (Set.toList s))
 
 
+-- | Location of hex one move in the given direction.
 neighbour :: Addr -> Dir -> Addr
 neighbour Addr { .. } dir =
   case tileGraph addrLocal dir of
@@ -111,17 +119,6 @@ neighbour Addr { .. } dir =
                                            )
                             , addrLocal = Border a
                             }
-
-oppositeDir :: Dir -> Dir
-oppositeDir dir =
-  case dir of
-    NE -> SW
-    E  -> W
-    SE -> NW
-    SW -> NE
-    W  -> E
-    NW -> SE
-
 
 -- | 'E' is in the direction of the increasing @x@ coordinate
 globalDelta :: Dir -> TileAddr
