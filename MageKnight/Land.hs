@@ -2,7 +2,7 @@
 module MageKnight.Land
   ( LandSetup(..), defaultLandSetup, setupLand
   , Land
-  , exploreInDir
+  , exploreAt
   , placePlayer
   , removePlayer
   , movePlayer
@@ -220,13 +220,12 @@ revealHidden a l = updateAddr a upd l
   upd _ _                   = id
 
 
--- | Try to explore from the given position in the given direction.
--- If successful, returns the new land and the number of new monasteries.
-exploreInDir :: Addr -> Dir -> Land -> Maybe (Land, Int)
-exploreInDir addr dir l =
-  do let newTilePos = addrGlobal (neighbour addr dir)
-     (l1,ms) <- initialTile False newTilePos l
-     return (revealHiddenNeighbours addr l1, ms)
+-- | Try to explore.
+-- Fails of the address is explored, or there is no suitable land to put there.
+exploreAt :: Addr -> TileAddr -> Land -> Maybe (Land, Int)
+exploreAt loc newTilePos l =
+  do (l,m) <- initialTile False newTilePos l
+     return (revealHiddenNeighbours loc l, m)
 
 -- | Setup a new tile at the given position.
 initialTile :: Bool -> TileAddr -> Land -> Maybe (Land, Int)
@@ -329,6 +328,7 @@ gameTileIsSafe GameTile { .. } loc p =
              MageTower        -> bagIsEmpty hexEnemies
              RampagingEnemy _ -> bagIsEmpty hexEnemies
              _                -> True)
+
 
 --------------------------------------------------------------------------------
 

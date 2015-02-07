@@ -160,7 +160,7 @@ clickHex s =
   go a g
     | Just d <- find ((a ==) . neighbour loc) allDirections =
       let g1 = if addrOnMap a g then movePlayer d g
-               else fromMaybe g (explore loc d g)
+               else fromMaybe g (explore a g)
       in (g1,g1)
 
     | otherwise = (g,g)

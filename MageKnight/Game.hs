@@ -36,6 +36,7 @@ data Game = Game
   , player      :: Player   -- just one for now
   }
 
+-- | Move the player 1 unit the given direction.
 movePlayer :: Dir -> Game -> Game
 movePlayer d Game { .. } =
   let (p1,l1) = MageKnight.Land.movePlayer player d theLand
@@ -46,10 +47,13 @@ addrOnMap :: Addr -> Game -> Bool
 addrOnMap a g = MageKnight.Land.addrOnMap a (theLand g)
 
 
--- | Try to explore from the given position in the given direction.
-explore :: Addr -> Dir -> Game -> Maybe Game
-explore addr dir g0 =
-  do (l,ms) <- exploreInDir addr dir (theLand g0)
+-- | The player tries to explore the given address.
+explore :: Addr -> Game -> Maybe Game
+explore addr g0 =
+  -- XXX: check distance
+  do (l,ms) <- exploreAt (playerLocation (player g0))
+                         (addrGlobal addr)
+                         (theLand g0)
      let addMon g = g { offers = newMonastery (offers g) }
      return (iterate addMon g0 { theLand = l } !! ms)
 
