@@ -16,7 +16,7 @@ module MageKnight.Terrain
     Terrain(..),
     Feature(..),
     TileType(..),
-    terrainCost,
+    terrainCostsDuring,
 
     -- * Tiles
     tileA, tileB, basicTiles, coreNonCityTiles, cityTiles,
@@ -35,6 +35,8 @@ import MageKnight.JSON
 import Data.Text (Text)
 import Data.Array (array, (!))
 import qualified Data.Set as Set
+import           Data.Map ( Map )
+import qualified Data.Map as Map
 
 type TileAddr       = (Int,Int)
 
@@ -54,7 +56,7 @@ data Terrain        = Plains | Hills | Forest | Wasteland | Desert | Swamp
                     | City BasicMana
                     | Lake | Mountain
                     | Ocean {- for tile A and B -}
-                      deriving (Eq,Show)
+                      deriving (Eq,Ord,Show)
 
 data Feature        = MagicalGlade | Mine BasicMana
                     | Village | Monastery
@@ -85,19 +87,16 @@ allHexAddrs :: [HexAddr]
 allHexAddrs = Center : map Border allDirections
 
 
-terrainCost :: Terrain -> Time -> Maybe Int
-terrainCost terra time =
-  case terra of
-    Plains    -> Just 2
-    Hills     -> Just 3
-    Forest    -> Just (if time == Day then 3 else 5)
-    Wasteland -> Just 4
-    Desert    -> Just (if time == Day then 5 else 3)
-    Swamp     -> Just 5
-    City _    -> Just 2
-    Lake      -> Nothing
-    Mountain  -> Nothing
-    Ocean     -> Nothing
+terrainCostsDuring :: Time -> Map Terrain Int
+terrainCostsDuring time = Map.fromList $
+  [ (Plains, 2)
+  , (Hills,  3)
+  , (Forest, if time == Day then 3 else 5)
+  , (Wasteland, 4)
+  , (Desert, if time == Day then 5 else 3)
+  , (Swamp, 5)
+  ] ++
+  [ (City m, 2) | m <- anyBasicMana ]
 
 
 

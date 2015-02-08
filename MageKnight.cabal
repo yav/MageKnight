@@ -14,6 +14,7 @@ cabal-version:       >=1.10
 library
   exposed-modules:
     MageKnight.Units,
+    MageKnight.Turn,
     MageKnight.Ruins,
     MageKnight.Artifact,
     MageKnight.JSON,
