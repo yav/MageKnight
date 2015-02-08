@@ -8,6 +8,7 @@ module MageKnight.Land
   , movePlayer
   , addrOnMap
   , setTime
+  , getTime
   ) where
 
 import           MageKnight.Bag
@@ -224,8 +225,8 @@ revealHidden a l = updateAddr a upd l
 -- Fails of the address is explored, or there is no suitable land to put there.
 exploreAt :: Addr -> TileAddr -> Land -> Maybe (Land, Int)
 exploreAt loc newTilePos l =
-  do (l,m) <- initialTile False newTilePos l
-     return (revealHiddenNeighbours loc l, m)
+  do (l1,m) <- initialTile False newTilePos l
+     return (revealHiddenNeighbours loc l1, m)
 
 -- | Setup a new tile at the given position.
 initialTile :: Bool -> TileAddr -> Land -> Maybe (Land, Int)
@@ -277,6 +278,10 @@ addrOnMap Addr { .. } Land { .. } = addrGlobal `Map.member` theMap
 -- | Set the current time for the land.
 setTime :: Time -> Land -> Land
 setTime t Land { .. } = Land { timeOfDay = t, .. }
+
+-- | Is it day or night?
+getTime :: Land -> Time
+getTime Land { .. } = timeOfDay
 
 
 -- | Is this a safe location for the given player.

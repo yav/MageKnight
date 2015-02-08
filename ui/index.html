@@ -23,7 +23,8 @@ function boardToken(wi,url) {
 }
 
 function characterToken(m,ch) {
-  return boardToken(m.charWidth, charUrl(ch,'figure'));
+  return boardToken(m.charWidth, charUrl(ch,'figure'))
+         .css('z-index', '3');
 }
 
 function shieldToken(m,ch) {
@@ -31,7 +32,8 @@ function shieldToken(m,ch) {
 }
 
 function enemyToken(m,ty,ch) {
-  return boardToken(m.enemyWidth, enemyUrl(ty,ch));
+  return boardToken(m.enemyWidth, enemyUrl(ty,ch))
+         .css('z-index', '2');
 }
 
 function ruinsToken(m,name) {
@@ -121,7 +123,8 @@ function positionItems(m, items, x, y, dir, lower) {
   jQuery.each(items,function(ix,item) {
     var h = lower ? (3/4) : (1/2);
     item.css('left', left)
-        .css('top',  c.top + h * (m.hexHeight - item.height()));
+        .css('top',  c.top + h * (m.hexHeight - item.height()))
+        .click(function () { tileClicked(m,x,y,dir); });
     left += item.width() * scaling;
   });
 
@@ -256,7 +259,7 @@ function tileClicked(m,x,y,dir) {
 }
 
 
-function drawMap(map) {
+function drawMap(map, p, lastSafe) {
   var div = $('<div/>')
             .css('position', 'fixed')
             .css('top', '0px')
@@ -281,13 +284,27 @@ function drawMap(map) {
     div.append(drawTile(m,tile));
   });
 
+  if (lastSafe !== null) {
+    var x = lastSafe.x;
+    var y = lastSafe.y;
+    var dir = lastSafe.hex;
+    var deco = characterToken(m, p)
+               .css('opacity', '0.75');
+    positionItems(m, [deco], x, y, dir, false);
+    div.append(deco);
+  }
+
   return { dom: div, focus: function(x,y) { focusMap(m,div,x,y); } };
 }
 
 
 function focusMap(m,map,x,y) {
   var c = tilePos(m,x,y);
-  map.scrollTop(c.top - m.tileWidth).scrollLeft(c.left + m.tileWidth);
+  console.log(c.top, c.left);
+  var w = map.width();
+  var h = map.height();
+  map.scrollTop(c.top   - (h - m.tileWidth) / 2)
+     .scrollLeft(c.left - (w - m.tileWidth) / 2);
 }
 
 
@@ -308,22 +325,24 @@ function drawSource(manas) {
 }
 
 function drawGame(game) {
-  var l = drawLand(game.land);
-  $('body').empty().append(l.dom);
-  var loc = game.player.location;
+  var p = game.player;
+  var l = drawLand(game.land, p.name, p.unsafe);
+  $('body').empty().append(l.dom, drawPlayer(p));
+  var loc = p.location;
   l.focus(loc.x, loc.y);
   console.log(game.player);
 }
 
-function drawLand(land) {
+function drawLand(land, p, lastSafe) {
   var time = $('<img/>')
              .attr('src', timeUrl(land.time))
              .css('position','fixed')
+             .css('width', '5em')
              .css('right', '0px')
              .css('top', '  0px')
              .css('z-index', '0');
 
-  var map  = drawMap(land.map);
+  var map  = drawMap(land.map, p, lastSafe);
 
   var next = $('<div/>')
              .css('position','fixed')
@@ -340,6 +359,58 @@ function drawLand(land) {
   });
 
   return { dom: [map.dom,time,next], focus: map.focus }
+}
+
+function drawPlayer(player) {
+
+  var me = $('<table/>')
+           .css('position', 'fixed')
+           .css('left', $(window).width() / 2)
+           .css('top',  0)
+           .append($('<tr/>').append($('<th/>')
+                                     .attr('colspan','2')
+                                     .text(player.name)));
+  function addStat(x,y) {
+    me.append($('<tr/>')
+             .append($('<td/>').text(x))
+             .append($('<td/>').text(y)));
+  }
+
+  function oneCell() {
+    var x = $('<td/>').attr('colspan','2');
+    me.append($('<tr/>').append(x));
+    return x;
+  }
+
+  jQuery.each(['fame','reputation','armor','cardLimit'], function(ix,a) {
+    addStat(a, player[a]);
+  });
+
+  // XXX: units
+  // XXX: cards
+
+  var x = oneCell();
+  jQuery.each(player.crystals, function(ix,c) { x.append(drawCrystal(c)); });
+
+  return me;
+}
+
+function drawCrystal(color) {
+  var me = $('<div/>')
+           .css('display','inline-block')
+           .css('width',  '1em')
+           .css('height', '1em')
+           .css('border-radius', '1em');
+  var c;
+  switch (color) {
+    case 'red':   c = 'rgba(200,0,0,0.5)'; break;
+    case 'blue':  c = 'rgba(0,0,200,,0.5)'; break; 
+    case 'green': c = 'rgba(0,200,0,0.5)'; break;
+    case 'white': c = 'rgba(200,200,200,0.5)'; break;
+  }
+
+  me.css('box-shadow', '0 0 10 1 ' + c);
+  return me;
 }
 
 

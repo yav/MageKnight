@@ -104,11 +104,7 @@ instance Export Player where
       , "crystals"    .= bagToList playerCrystals
       , "cards"       .= bagToList playerHand
       , "location"    .= playerLocation
-      , "unsafe"      .= (case playerOnUnsafe of
-                            Nothing -> jsNull
-                            Just (a,w) -> object [ "safe"   .= a
-                                                 , "wounds" .= w
-                                                 ])
+      , "unsafe"      .= fmap fst playerOnUnsafe
       ]
 
 instance Export PlayerCard where

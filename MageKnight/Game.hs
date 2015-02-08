@@ -9,6 +9,7 @@ import           MageKnight.Bag
 import           MageKnight.Terrain
 import           MageKnight.JSON
 import           MageKnight.Player
+import           MageKnight.Turn
 
 
 
@@ -19,6 +20,7 @@ testGame g =
        , offers     = iterate newMonastery offers0 !! ms
        , theLand    = placePlayer pl l
        , player     = pl
+       , playerTurn = newTurn (getTime l)
        }
   where
   offers0     = setupOffers offerRand (defaultOfferSetup 1 True)
@@ -34,6 +36,7 @@ data Game = Game
   , offers      :: Offers
   , theLand     :: Land
   , player      :: Player   -- just one for now
+  , playerTurn  :: Turn     -- ^ current player's turn
   }
 
 -- | Move the player 1 unit the given direction.
@@ -67,7 +70,7 @@ instance Export Game where
       , "offers" .= offers
       , "land"   .= theLand
       , "player" .= player
+      , "turn"   .= playerTurn
       ]
-    where (x,y) = addrGlobal (playerLocation player)
 
 
