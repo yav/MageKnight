@@ -129,27 +129,50 @@ ppResources = vcat . map ppEntry . bagToListGrouped
 
 --------------------------------------------------------------------------------
 
+instance ExportAsKey Time where
+  toKeyJS t = case t of
+                Day   -> "day"
+                Night -> "night"
+
 instance Export Time where
-  toJS t = toJS (txt :: Text)
-    where
-    txt = case t of
-            Day   -> "day"
-            Night -> "night"
+  toJS = jsKey
+
+instance ExportAsKey BasicMana where
+  toKeyJS m = case m of
+                White -> "white"
+                Red   -> "red"
+                Blue  -> "blue"
+                Green -> "green"
 
 instance Export BasicMana where
-  toJS m = toJS (txt :: Text)
-    where
-    txt = case m of
-            White -> "white"
-            Red   -> "red"
-            Blue  -> "blue"
-            Green -> "green"
+  toJS = jsKey
+
+instance ExportAsKey Mana where
+  toKeyJS m = case m of
+                Gold        -> "gold"
+                Black       -> "black"
+                BasicMana b -> toKeyJS b
 
 instance Export Mana where
-  toJS m = case m of
-             Gold        -> toJS ("gold" :: Text)
-             Black       -> toJS ("black" :: Text)
-             BasicMana b -> toJS b
+  toJS = jsKey
 
 
+instance ExportAsKey Element where
+  toKeyJS m = case m of
+                Physycal    -> "physical"
+                Fire        -> "fire"
+                Ice         -> "ice"
+                ColdFire    -> "cold_fire"
+
+instance Export Element where
+  toJS = jsKey
+
+instance ExportAsKey AttackType where
+  toKeyJS m = case m of
+                Melee   -> "melee"
+                Ranged  -> "ranged"
+                Siege   -> "siege"
+
+instance Export AttackType where
+  toJS = jsKey
 

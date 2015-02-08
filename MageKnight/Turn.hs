@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
 module MageKnight.Turn
   ( -- * New turn
     Turn, newTurn
@@ -26,7 +26,7 @@ module MageKnight.Turn
   , endOfMoveMode
 
   -- * Bending space
-  , bendSpace, isBentSpace
+  , bendSpace, oneMoveLimit
 
   ) where
 
@@ -35,10 +35,12 @@ import MageKnight.Common ( Element(..), AttackType(..), Mana(..)
                          )
 import MageKnight.Terrain (Terrain(..), terrainCostsDuring)
 import MageKnight.Bag
+import MageKnight.JSON
 
 import           Data.Maybe ( fromMaybe )
 import           Data.Map ( Map )
 import qualified Data.Map as Map
+import qualified Data.Text as Text
 import           Control.Monad ( guard )
 
 
@@ -50,7 +52,7 @@ data Resource = Move
               | Heal
                 -- Heal
 
-              | Attack AttackType
+              | Attack AttackType Element
                 -- Make attacks
 
               | Block Element
@@ -68,7 +70,7 @@ data Turn = Turn
   { turnResources :: Bag Resource
   , terrainCosts  :: Map Terrain Int
   , moveMode      :: MoveMode
-  , bentSpace     :: Bool
+  , moveRadious   :: Int
   , spentCrystals :: Bag BasicMana
   }
 
@@ -78,7 +80,7 @@ newTurn t = Turn
   { turnResources = bagAdd 1 ManaDie bagEmpty
   , terrainCosts  = terrainCostsDuring t
   , moveMode      = Walking
-  , bentSpace     = False
+  , moveRadious   = 1
   , spentCrystals = bagEmpty
   }
 
@@ -167,11 +169,12 @@ endOfMoveMode Turn { .. } =
 
 -- | Switch to "bent space" mode
 bendSpace :: Turn -> Turn
-bendSpace Turn { .. } = Turn { bentSpace = True, .. }
+bendSpace Turn { .. } = Turn { moveRadious = 2, .. }
 
--- | Is space bent?
-isBentSpace :: Turn -> Bool
-isBentSpace Turn { .. } = bentSpace
+-- | How far from the player can they move/explore in a single turn.
+-- Used for "Bend Space"
+oneMoveLimit :: Turn -> Int
+oneMoveLimit Turn { .. } = moveRadious
 
 --------------------------------------------------------------------------------
 
@@ -189,6 +192,36 @@ decreaseTerrainCost t c mbLim Turn { .. } =
         lim          = fromMaybe 0 mbLim
 
 
+--------------------------------------------------------------------------------
 
+instance ExportAsKey Resource where
+  toKeyJS r =
+    case r of
+      Move        -> "move"
+      Heal        -> "heal"
+      Attack t e  -> Text.concat [ "attack_", toKeyJS t, "_", toKeyJS e ]
+      Block e     -> Text.append "block_" (toKeyJS e)
+      ManaToken m -> toKeyJS m
+      ManaDie     -> "mana_die"
 
+instance Export Turn where
+  toJS Turn { .. } = object
+    [ "resources"       .= object [ toKeyJS r .= x
+                                    | (r,x) <- bagToListGrouped turnResources ]
+
+    , "terrainCosts"    .= object [ toKeyJS t .= c
+                                    | (t,c) <- Map.toList terrainCosts ]
+
+    , "move_mode"       .= (case moveMode of
+                              Walking                -> "Normal"
+                              UsingWingsOfWind n     ->
+                                Text.pack ("Song of wind " ++ show n)
+                              UsingUndergroundTravel n ->
+                                Text.pack ("Underground " ++ show n)
+                           )
+
+    , "move_limit"      .= moveRadious
+
+    , "spent_crystals"  .= bagToList spentCrystals
+    ]
 

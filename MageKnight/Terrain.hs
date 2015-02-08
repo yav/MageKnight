@@ -32,8 +32,9 @@ import MageKnight.Common
 import MageKnight.Enemies(EnemyType(Orc,Draconum))
 import MageKnight.JSON
 
-import Data.Text (Text)
-import Data.Array (array, (!))
+import           Data.Array (array, (!))
+import           Data.Text (Text)
+import qualified Data.Text as Text
 import qualified Data.Set as Set
 import           Data.Map ( Map )
 import qualified Data.Map as Map
@@ -274,7 +275,19 @@ instance Export TileType where
 instance Export Tile where
   toJS Tile { .. } = object [ "name" .= tileName, "type" .= tileType ]
 
-
+instance ExportAsKey Terrain where
+  toKeyJS t =
+    case t of
+      Plains    -> "plains"
+      Hills     -> "hills"
+      Forest    -> "forest"
+      Wasteland -> "wasteland"
+      Desert    -> "desert"
+      Swamp     -> "swamp"
+      City m    -> Text.append "city_" (toKeyJS m)
+      Lake      -> "lake"
+      Mountain  -> "mountain"
+      Ocean     -> "ocean"
 
 
 
