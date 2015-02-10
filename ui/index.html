@@ -2,6 +2,12 @@
 <html>
 <head>
 <title>Mage Knight</title>
+<style>
+@font-face {
+  font-family: 'Almendra';
+  src: url('/fonts/Almendra-Bold.ttf');
+}
+</style>
 <script src="jquery.js"></script>
 <script>
 
@@ -13,6 +19,7 @@ function enemyUrl(ty,ch)  { return imgUrl('enemies/' + ty + '/' + ch); }
 function ruinsUrl(name)   { return imgUrl('ruins/' + name); }
 function manaUrl(mana)    { return imgUrl('mana/' + mana); }
 function timeUrl(when)    { return imgUrl('time/' + when); }
+function levelUrl(which)  { return imgUrl('level/' + which); }
 
 function boardToken(wi,url) {
   return $('<img/>')
@@ -300,7 +307,6 @@ function drawMap(map, p, lastSafe) {
 
 function focusMap(m,map,x,y) {
   var c = tilePos(m,x,y);
-  console.log(c.top, c.left);
   var w = map.width();
   var h = map.height();
   map.scrollTop(c.top   - (h - m.tileWidth) / 2)
@@ -392,13 +398,26 @@ function drawPlayer(player) {
   var x = oneCell();
   jQuery.each(player.crystals, function(ix,c) { x.append(drawCrystal(c)); });
 
-  return me;
+  var rep = drawReputation(player);
+  var fam = drawFame(0,0,2,'up_skill');
+
+
+  var stats = $('<div/>')
+              .css('position', 'fixed')
+              .css('top', '1em')
+              .css('right', '10em')
+              .css('border', '2px solid black')
+              .css('padding', '1em')
+              .append([rep,fam]);
+
+  return [me,stats];
 }
 
 function drawCrystal(color) {
   var me = $('<div/>')
            .css('display','inline-block')
            .css('width',  '1em')
+           .css('height', '2.5ex')
            .css('height', '1em')
            .css('border-radius', '1em');
   var c;
@@ -411,6 +430,78 @@ function drawCrystal(color) {
 
   me.css('box-shadow', '0 0 10 1 ' + c);
   return me;
+}
+
+function drawFame(cur,lvlStart,lvlEnd,lvlReward) {
+
+  var me = $('<div/>')
+           .css('position', 'relative')
+           .css('font-family', 'Almendra')
+           .css('text-align', 'center')
+           .css('color', 'white')
+           .css('background-color', 'black')
+           .text(cur + ' / ' + lvlEnd);
+
+  var done = $('<div/>')
+             .css('position', 'absolute')
+             .css('left', '0')
+             .css('top', '0')
+             .css('background-color', 'rgba(255,0,0,0.5)')
+             .css('width', 100 * (1 + cur - lvlStart)
+                         / (lvlEnd - lvlStart + 1) + '%')
+             .css('height', '100%');
+
+  var award = $('<img/>')
+              .attr('src', levelUrl(lvlReward))
+              .css('position', 'absolute')
+              .css('right', '0');
+
+  if (lvlReward === 'up_skill')
+    award.css('top','-1ex').css('height', '5ex').css('width', '1.5em');
+  else
+    award.css('top','-0.2em')
+         .css('height', '1.5em').css('width', '1.5em');
+
+  return me.append([done,award]);
+}
+
+
+function drawReputation(player) {
+  player.reputation = 0;
+
+  var inf = [ 'x', '-5', '-3', '-2', '-1', '-1', '0', '0', '0'
+            , '+1', '+1', '+2', '+2', '+3', '+5' ];
+
+  var me = $('<div/>')
+           .css('font-family', 'Almendra')
+           .css('text-align', 'center')
+           .css('width', 2 * inf.length + 'em')
+           .css('background-image', 'linear-gradient(to right,#900,#ff9,#fff)')
+           .css('border', '1px solid black');
+
+  jQuery.each(inf, function(ix,i) {
+    var d = $('<div/>')
+            .css('display','inline-block')
+            .css('margin', '0.5em')
+            .text(i);
+    if (ix - 7 === player.reputation)
+        d.css('padding', '0.5em')
+         .css('background-color', 'rgba(0,0,0,0.3)')
+         .css('border-radius', '1em');
+
+
+    me.append(d);
+  });
+  
+  /*
+  var img = $('<img/>')
+            .attr('src', charUrl(player.name, 'shield'))
+            .css('width','1em')
+            .css('height','1em')
+            .css('position','absolute')
+            .css('left', (Math.max(-7,player.reputation) + 8) + 'em')
+            .css('top', '0'); */
+  return me; // .append(img);
 }
 
 
