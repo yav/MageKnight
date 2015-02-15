@@ -15,7 +15,6 @@ type EnemyPool = Map EnemyType (ResourceQ Enemy)
 data EnemyAbility =
 
     Fortified
-  | FortifiedX2
   | Resists Element
   | Swift
   | Brutal
