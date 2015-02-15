@@ -46,6 +46,8 @@ name === rule = rule { ruleName = name }
 
 rules :: [ Rule ]
 rules =
+
+  -- XXX: Only during the day
   [ Text.pack ("gold -> " ++ show (ppBasicMana b)) ===
     [ ManaToken Gold ] --> [ ManaToken (BasicMana b) ]
   | b <- anyBasicMana
@@ -57,7 +59,7 @@ rules =
   ]
   ++
   [ Text.pack ("use " ++ show (ppBasicMana b) ++ " crystal") ===
-    [ ManaCrystal b ] --> [ ManaToken (BasicMana b), SpentManaCrystal b ]
+    [ ManaCrystal b ] --> [ ManaToken (BasicMana b) ]
   | b <- anyBasicMana
   ]
 

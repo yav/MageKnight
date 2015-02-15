@@ -22,11 +22,12 @@ data Element    = Physycal | Fire | Ice | ColdFire
 
 type CardName = Text
 
+
+
 data Resource =
 
     ManaToken Mana
   | ManaCrystal BasicMana
-  | SpentManaCrystal BasicMana
 
   | ManaSource Mana
   | ManaDie
@@ -82,7 +83,6 @@ ppResource resource =
   case resource of
     ManaToken m -> ppMana m <+> text "token"
     ManaCrystal m -> ppBasicMana m <+> text "crystal"
-    SpentManaCrystal m -> ppBasicMana m <+> text "crystal (spent)"
     RegainUsedCrystals -> text "regain unused crystals"
     ManaSource m -> ppMana m <+> text "source"
     ManaSourceFixed m -> ppMana m <+> text "source (fixed)"
