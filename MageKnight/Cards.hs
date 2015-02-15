@@ -65,6 +65,11 @@ arytheaDeck = "Battle Versatility" : filter (/= "Improvisation") basicDeck
 goldyxDeck :: [ CardName ]
 goldyxDeck = "Will Focus" : filter (/= "Concentration") basicDeck
 
+tovakDeck :: [ CardName ]
+tovakDeck = "Cold Toughness" : filter (/= "Determination") basicDeck
+
+norowasDeck :: [ CardName ]
+norowasDeck = "Noble manners" : filter (/= "Promise") basicDeck
 
 coldToughnessBlockBonus :: Enemy -> Int
 coldToughnessBlockBonus Enemy  { .. } = fromAttack + fromAbilities
@@ -211,7 +216,13 @@ cards =
                   ]
     }
 
---    XXX: Noble Manners
+  , Card
+    { cardName  = "Noble Manners"
+    , cardColor = White
+    , cardBasic = [ [] --> FameGainIfInteract : replicate 2 Influence ]
+    , cardPower = [ [] --> FameGainIfInteract : ReputationGainIfInteract
+                         : replicate 4 Influence ]
+    }
 
   , Card
       { cardName = "Promise"

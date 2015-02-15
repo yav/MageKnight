@@ -48,7 +48,8 @@ data Resource =
   | ReputationLoss
   | RegainUsedCrystals
   | ManaSourceFixed Mana    -- Not re-rolled
-
+  | FameGainIfInteract        -- ^ Noble Manners
+  | ReputationGainIfInteract  -- ^ Noble Manners
     deriving (Eq,Ord,Show)
 
 data AttackType = Melee | Ranged | Siege
@@ -102,6 +103,8 @@ ppResource resource =
 
     ReputationLoss -> text "reputation -1"
     DrawCard -> text "draw a card"
+    FameGainIfInteract -> text "fame +1 (if interacted)"
+    ReputationGainIfInteract -> text "reputation + 1 (if interacted)"
 
 ppElement :: Element -> Doc
 ppElement el =
