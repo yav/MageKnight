@@ -58,6 +58,9 @@ data Resource = Move
               | Block Element
                 -- ^ Block attacks
 
+              | Influence
+                -- ^ For interacting
+
               | ManaToken Mana
                 -- ^ Power-up stuff
 
@@ -70,7 +73,7 @@ data Turn = Turn
   { turnResources :: Bag Resource
   , terrainCosts  :: Map Terrain Int
   , moveMode      :: MoveMode
-  , moveRadious   :: Int
+  , moveRadius    :: Int
   , spentCrystals :: Bag BasicMana
   }
 
@@ -80,7 +83,7 @@ newTurn t = Turn
   { turnResources = bagAdd 1 ManaDie bagEmpty
   , terrainCosts  = terrainCostsDuring t
   , moveMode      = Walking
-  , moveRadious   = 1
+  , moveRadius    = 1
   , spentCrystals = bagEmpty
   }
 
@@ -169,12 +172,12 @@ endOfMoveMode Turn { .. } =
 
 -- | Switch to "bent space" mode
 bendSpace :: Turn -> Turn
-bendSpace Turn { .. } = Turn { moveRadious = 2, .. }
+bendSpace Turn { .. } = Turn { moveRadius = 2, .. }
 
 -- | How far from the player can they move/explore in a single turn.
 -- Used for "Bend Space"
 oneMoveLimit :: Turn -> Int
-oneMoveLimit Turn { .. } = moveRadious
+oneMoveLimit Turn { .. } = moveRadius
 
 --------------------------------------------------------------------------------
 
@@ -199,6 +202,7 @@ instance ExportAsKey Resource where
     case r of
       Move        -> "move"
       Heal        -> "heal"
+      Influence   -> "influence"
       Attack t e  -> Text.concat [ "attack_", toKeyJS t, "_", toKeyJS e ]
       Block e     -> Text.append "block_" (toKeyJS e)
       ManaToken m -> toKeyJS m
@@ -220,7 +224,7 @@ instance Export Turn where
                                 Text.pack ("Underground " ++ show n)
                            )
 
-    , "move_limit"      .= moveRadious
+    , "move_limit"      .= moveRadius
 
     , "spent_crystals"  .= bagToList spentCrystals
     ]
