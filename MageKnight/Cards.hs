@@ -10,6 +10,7 @@ import MageKnight.Bag
 import MageKnight.JSON
 
 import qualified Data.Text as Text
+import qualified Data.Set  as Set
 
 
 
@@ -27,6 +28,7 @@ instance Ord Card where
 
 instance Export Card where
   toJS Card { .. } = toJS cardName
+
 
 
 
@@ -64,6 +66,15 @@ goldyxDeck :: [ CardName ]
 goldyxDeck = "Will Focus" : filter (/= "Concentration") basicDeck
 
 
+coldToughnessBlockBonus :: Enemy -> Int
+coldToughnessBlockBonus Enemy  { .. } = fromAttack + fromAbilities
+  where
+  fromAttack    = case enemyAttack of
+                    AttcaksWith e _ | e /= Physycal -> 1
+                    _                               -> 0
+
+  fromAbilities = Set.size enemyAbilities
+
 cards :: [Card]
 cards =
 
@@ -96,7 +107,17 @@ cards =
       }
 
 
--- XXX: Cold Toughness
+  , Card
+      { cardName  = "Cold Toughness"
+      , cardColor = Blue
+      , cardBasic = [ [] --> replicate 2 (Attack Melee Ice)
+                    , [] --> replicate 3 (Block Ice)
+                    ]
+      , cardPower = [ [] --> replicate (5 + coldToughnessBlockBonus e)
+                                       (Block Ice)
+                    | e <- allEnemies
+                    ]
+      }
 
 
 
