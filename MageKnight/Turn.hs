@@ -71,10 +71,12 @@ data Resource = Move
 -- | The state of a player's turn.
 data Turn = Turn
   { turnResources :: Bag Resource
+  , spentCrystals :: Bag BasicMana
+
+  -- Movement phase
   , terrainCosts  :: Map Terrain Int
   , moveMode      :: MoveMode
   , moveRadius    :: Int
-  , spentCrystals :: Bag BasicMana
   }
 
 -- | Make a new turn, for the given time.
