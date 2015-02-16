@@ -1,7 +1,11 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
-
-module MageKnight.Action where
+{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
+module MageKnight.Action
+  ( blueSpecial
+  , redSpecial
+  , greenSpecial
+  , whiteSpecial
+  , deeds
+  ) where
 
 import MageKnight.Common
 import MageKnight.Enemies
@@ -9,33 +13,58 @@ import MageKnight.Rule
 import MageKnight.Deed
 import MageKnight.Bag
 
+import {-# SOURCE #-} MageKnight.DeedDecks (allDeeds)
+
 import qualified Data.Set  as Set
 
+blueSpecial :: Deed
+blueSpecial =
+  actionDeed Blue "Cold Toughness"
+    [ [] --> replicate 2 (Attack Melee Ice)
+    , [] --> replicate 3 (Block Ice)
+    ]
+    [ [ Blocking name ] -->
+        Blocking name : replicate (5 + coldToughnessBlockBonus e) (Block Ice)
+      | e <- allEnemies, let name = enemyName e
+    ]
+
+
+greenSpecial :: Deed
+greenSpecial =
+  actionDeed Green "Will Focus"
+    ( ( [] --> [ ManaCrystal Green ] )
+    : [ [] --> [ ManaToken (BasicMana b) ] | b <- [ Blue, White, Red ] ])
+    [ r | c <- allDeeds, r <- concentrate 3 c ]
+
+
+redSpecial :: Deed
+redSpecial =
+  actionDeed Red "Battle Versatility"
+    [ [] --> replicate 2 (Attack Melee Physycal)
+    , [] --> replicate 2 (Block Physycal)
+    , [] --> [ Attack Ranged Physycal ]
+    ]
+    [ [] --> replicate 4 (Attack Melee Physycal)
+    , [] --> replicate 4 (Block Physycal)
+    , [] --> replicate 3 (Attack Melee Fire)
+    , [] --> replicate 3 (Block Fire)
+    , [] --> replicate 3 (Attack Ranged Physycal)
+    , [] --> replicate 2 (Attack Siege Physycal)
+    ]
+
+whiteSpecial :: Deed
+whiteSpecial =
+  actionDeed White "Noble Manners"
+      [ [] --> FameGainIfInteract
+             : replicate 2 Influence ]
+      [ [] --> FameGainIfInteract
+             : ReputationGainIfInteract
+             : replicate 4 Influence ]
 
 
 
-basicDeck :: [ DeedName ]
-basicDeck = [ "Stamina", "Stamina", "Determination", "Crystalize"
-            , "March", "March", "Concentration", "Tranquility"
-            , "Rage", "Rage", "Improvisation", "Threaten"
-            , "Swiftness", "Swiftness", "Promise", "Mana Draw"
-            ]
-
-arytheaDeck :: [ DeedName ]
-arytheaDeck = "Battle Versatility" : filter (/= "Improvisation") basicDeck
-
-goldyxDeck :: [ DeedName ]
-goldyxDeck = "Will Focus" : filter (/= "Concentration") basicDeck
-
-tovakDeck :: [ DeedName ]
-tovakDeck = "Cold Toughness" : filter (/= "Determination") basicDeck
-
-norowasDeck :: [ DeedName ]
-norowasDeck = "Noble manners" : filter (/= "Promise") basicDeck
-
-
-actions :: [Deed] -> [Deed]
-actions allDeeds =
+deeds :: [Deed]
+deeds =
 
   -- Blue
 
@@ -52,15 +81,6 @@ actions allDeeds =
   , actionDeed Blue "Crystalize"
       [ [ ManaToken (BasicMana b) ] --> [ ManaCrystal b ] | b <- anyBasicMana ]
       [ []                          --> [ ManaCrystal b ] | b <- anyBasicMana ]
-
-  , actionDeed Blue "Cold Toughness"
-      [ [] --> replicate 2 (Attack Melee Ice)
-      , [] --> replicate 3 (Block Ice)
-      ]
-      [ [ Blocking name ] -->
-          Blocking name : replicate (5 + coldToughnessBlockBonus e) (Block Ice)
-        | e <- allEnemies, let name = enemyName e
-      ]
 
 
 
@@ -82,29 +102,11 @@ actions allDeeds =
       , [] --> replicate 2 DrawDeed
       ]
 
-  , actionDeed Green "Will Focus"
-      ( ( [] --> [ ManaCrystal Green ] )
-      : [ [] --> [ ManaToken (BasicMana b) ] | b <- [ Blue, White, Red ] ])
-      [ r | c <- allDeeds, r <- concentrate 3 c ]
-
 
 
   -- Red
 
-  , actionDeed Red "Battle Versatility"
-      [ [] --> replicate 2 (Attack Melee Physycal)
-      , [] --> replicate 2 (Block Physycal)
-      , [] --> [ Attack Ranged Physycal ]
-      ]
-      [ [] --> replicate 4 (Attack Melee Physycal)
-      , [] --> replicate 4 (Block Physycal)
-      , [] --> replicate 3 (Attack Melee Fire)
-      , [] --> replicate 3 (Block Fire)
-      , [] --> replicate 3 (Attack Ranged Physycal)
-      , [] --> replicate 2 (Attack Siege Physycal)
-      ]
-
-  , actionDeed Red "Improvisation"
+ , actionDeed Red "Improvisation"
      (concatMap (improvise 3) allDeeds)
      (concatMap (improvise 5) allDeeds)
 
@@ -127,13 +129,6 @@ actions allDeeds =
                   (ManaSourceFixed n : replicate 3 (ManaToken n))
       | m <- anyMana, n <- filter (/= Gold) anyMana
       ]
-
-  , actionDeed White "Noble Manners"
-      [ [] --> FameGainIfInteract
-             : replicate 2 Influence ]
-      [ [] --> FameGainIfInteract
-             : ReputationGainIfInteract
-             : replicate 4 Influence ]
 
   , actionDeed White "Promise"
       [ [] --> replicate 2 Influence ]

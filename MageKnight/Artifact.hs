@@ -1,8 +1,8 @@
-module MageKnight.Artifact where
+module MageKnight.Artifact (deeds) where
 
 import MageKnight.Deed
 
 -- XXX
-artifacts :: [Deed]
-artifacts = []
+deeds :: [Deed]
+deeds = []
 

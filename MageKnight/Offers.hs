@@ -30,11 +30,8 @@ import           MageKnight.ResourceQ (ResourceQ)
 import qualified MageKnight.ResourceQ as RQ
 import           MageKnight.Random
 import           MageKnight.Units
-import           MageKnight.Deed
-import           MageKnight.Action
-import           MageKnight.AdvancedAction
-import           MageKnight.Spell
-import           MageKnight.Artifact
+import           MageKnight.DeedDecks
+                   ( Deed,advancedActions, spells, interactiveSpell, artifacts)
 import           MageKnight.JSON
 
 import Control.Monad(guard)
@@ -229,7 +226,7 @@ defaultOfferSetup :: Int {- ^ Number of players -} ->
 defaultOfferSetup playerNum coop = OfferSetup
   { useSpellNum = 3
   , useSpells   = if playerNum == 1 || coop
-                      then filter (not . isInteract) spells
+                      then filter (not . interactiveSpell) spells
                       else spells
 
   , useAdvancedActionNum = 3
@@ -242,8 +239,6 @@ defaultOfferSetup playerNum coop = OfferSetup
   , useArtifacts    = artifacts
 
   }
-  where
-  isInteract x = deedName x `elem` [ "17","18","19","20" ]
 
 
 

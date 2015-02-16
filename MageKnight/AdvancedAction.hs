@@ -1,12 +1,12 @@
 {-# LANGUAGE Safe, OverloadedStrings #-}
-module MageKnight.AdvancedAction where
+module MageKnight.AdvancedAction (deeds) where
 
 import MageKnight.Common
 import MageKnight.Deed
 import MageKnight.Rule
 
-advancedActions :: [Deed]
-advancedActions =
+deeds :: [Deed]
+deeds =
   [
     -- blue
     actionDeed Blue "Crystal Mastery"

@@ -1,5 +1,14 @@
 {-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
-module MageKnight.Deed where
+module MageKnight.Deed
+  ( Deed (..)
+  , DeedName
+  , wound
+  , actionDeed
+  , spellDeed
+  , artifactDeed
+
+  , deedRules
+  ) where
 
 import MageKnight.Common
 import MageKnight.Rule
