@@ -121,6 +121,7 @@ ppResource resource =
     ChangeTerrainCost t c -> text "change terrain cost"
 
     Blocking x -> text "blocking" <+> text (Text.unpack x)
+    ThrowAway x -> text "throw away" <+> text (show x)
 
     ReputationLoss -> text "reputation -1"
     DrawDeed -> text "draw a card"
