@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, OverloadedStrings #-}
+{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
 module MageKnight.Offers
   ( -- * Setup
     Offers
@@ -30,7 +30,10 @@ import           MageKnight.ResourceQ (ResourceQ)
 import qualified MageKnight.ResourceQ as RQ
 import           MageKnight.Random
 import           MageKnight.Units
-import           MageKnight.Cards
+import           MageKnight.Deed
+import           MageKnight.Action
+import           MageKnight.AdvancedAction
+import           MageKnight.Spell
 import           MageKnight.Artifact
 import           MageKnight.JSON
 
@@ -88,36 +91,36 @@ offeringLength Offer { .. } = length offering
 --------------------------------------------------------------------------------
 
 -- | Setup a new card offer.
-newCardOffer :: StdGen {-^ Some randomness -}             ->
+newDeedOffer :: StdGen {-^ Some randomness -}             ->
                 Int    {-^ How many cards are on offer -} ->
-                [Card] {-^ The deck for this offer -}     ->
-                Offer Card
-newCardOffer r n cs = offerNewItems n (offerNothing r cs)
+                [Deed] {-^ The deck for this offer -}     ->
+                Offer Deed
+newDeedOffer r n cs = offerNewItems n (offerNothing r cs)
 
 -- | Recycle the oldest offering and pick a fresh one, if possible.
-refreshCardOffer :: Offer Card -> Offer Card
-refreshCardOffer Offer { .. } =
+refreshDeedOffer :: Offer Deed -> Offer Deed
+refreshDeedOffer Offer { .. } =
   case reverse offering of
     []     -> Offer { .. }
     x : xs -> offerNewItem
             $ offerReturnItem x Offer { offering  = reverse xs, .. }
 
 -- | Take the oldest offering, and pick a fresh one.
-refreshCardOfferDummy :: Offer Card -> (Maybe Card, Offer Card)
-refreshCardOfferDummy Offer { .. } =
+refreshDeedOfferDummy :: Offer Deed -> (Maybe Deed, Offer Deed)
+refreshDeedOfferDummy Offer { .. } =
   case reverse offering of
     [] -> (Nothing, Offer { .. })
     x : xs -> (Just x, offerNewItem Offer { offering = reverse xs, .. })
 
 -- | Take one of the cards on offer.
-offerTakeCard :: Int -> Offer Card -> Maybe (Card, Offer Card)
-offerTakeCard n o =
+offerTakeDeed :: Int -> Offer Deed -> Maybe (Deed, Offer Deed)
+offerTakeDeed n o =
   do (c,o1) <- offerTakeItem n o
      return (c, offerNewItem o1)
 
 -- | Recycle the given cards.
-offerReturnCards :: [Card] -> Offer Card -> Offer Card
-offerReturnCards cs o = foldr offerReturnItem o cs
+offerReturnDeeds :: [Deed] -> Offer Deed -> Offer Deed
+offerReturnDeeds cs o = foldr offerReturnItem o cs
 
 --------------------------------------------------------------------------------
 
@@ -181,11 +184,11 @@ offerDisbandUnit u UnitOffer { .. } =
 --------------------------------------------------------------------------------
 
 data Offers = Offers
-  { advancedActionOffer :: Offer Card
-  , spellOffer          :: Offer Card
+  { advancedActionOffer :: Offer Deed
+  , spellOffer          :: Offer Deed
   , unitOffer           :: UnitOffer
-  , monasteryTech       :: [Card]   -- part of unit offer
-  , artifactDeck        :: ResourceQ Artifact
+  , monasteryTech       :: [Deed]   -- part of unit offer
+  , artifactDeck        :: ResourceQ Deed
   , activeMonasteries   :: Int
     -- ^ Revealed monasteries that have not been burnt.
 
@@ -197,13 +200,13 @@ data OfferSetup = OfferSetup
   { useSpellNum           :: Int
     -- ^ How many cards in the spell offer.
 
-  , useSpells             :: [Card]
+  , useSpells             :: [Deed]
     -- ^ Which spell cards to use.
 
   , useAdvancedActionNum  :: Int
     -- ^ How many cards in the advanced action offer.
 
-  , useAdvancedActions    :: [Card]
+  , useAdvancedActions    :: [Deed]
     -- ^ Use these advanced action cards.
 
   , useUnitNum            :: Int
@@ -215,7 +218,7 @@ data OfferSetup = OfferSetup
   , useEliteUnits         :: [Unit]
     -- ^ Use these elite units.
 
-  , useArtifacts          :: [Artifact]
+  , useArtifacts          :: [Deed]
     -- ^ Use this artifact deck.
   }
 
@@ -226,11 +229,11 @@ defaultOfferSetup :: Int {- ^ Number of players -} ->
 defaultOfferSetup playerNum coop = OfferSetup
   { useSpellNum = 3
   , useSpells   = if playerNum == 1 || coop
-                      then filter (not . isInteract) spellCards
-                      else spellCards
+                      then filter (not . isInteract) spells
+                      else spells
 
   , useAdvancedActionNum = 3
-  , useAdvancedActions  = advancedActionCards
+  , useAdvancedActions  = advancedActions
 
   , useUnitNum      = playerNum + 2
   , useRegularUnits = regularUnits
@@ -240,16 +243,16 @@ defaultOfferSetup playerNum coop = OfferSetup
 
   }
   where
-  isInteract x = cardName x `elem` [ "17","18","19","20" ]
+  isInteract x = deedName x `elem` [ "17","18","19","20" ]
 
 
 
 
 setupOffers :: StdGen -> OfferSetup -> Offers
 setupOffers r0 OfferSetup { .. } = Offers
-  { advancedActionOffer = newCardOffer randAct useAdvancedActionNum
+  { advancedActionOffer = newDeedOffer randAct useAdvancedActionNum
                                                useAdvancedActions
-  , spellOffer          = newCardOffer randSpell useSpellNum useSpells
+  , spellOffer          = newDeedOffer randSpell useSpellNum useSpells
 
   , unitNumber          = useUnitNum
   , unitOffer           = stockUpRegulars useUnitNum
@@ -267,27 +270,27 @@ setupOffers r0 OfferSetup { .. } = Offers
   (randSpell,r2)      = split r1
   (randUnit,randArt)  = split r2
 
-offeringAdvancedActions :: Offers -> [Card]
+offeringAdvancedActions :: Offers -> [Deed]
 offeringAdvancedActions = offering . advancedActionOffer
 
-offeringSpells :: Offers -> [Card]
+offeringSpells :: Offers -> [Deed]
 offeringSpells = offering . spellOffer
 
 offeringUnits :: Offers -> [Unit]
 offeringUnits = unitsOnOffer . unitOffer
 
-offeringMonasteries :: Offers -> [Card]
+offeringMonasteries :: Offers -> [Deed]
 offeringMonasteries = monasteryTech
 
 
-takeAdvancedAction :: Int -> Offers -> Maybe (Card, Offers)
+takeAdvancedAction :: Int -> Offers -> Maybe (Deed, Offers)
 takeAdvancedAction n Offers { .. } =
-  do (card, offer) <- offerTakeCard n advancedActionOffer
+  do (card, offer) <- offerTakeDeed n advancedActionOffer
      return (card, Offers { advancedActionOffer = offer, .. })
 
-takeSpell :: Int -> Offers -> Maybe (Card, Offers)
+takeSpell :: Int -> Offers -> Maybe (Deed, Offers)
 takeSpell n Offers { .. } =
-  do (card, offer) <- offerTakeCard n spellOffer
+  do (card, offer) <- offerTakeDeed n spellOffer
      return (card, Offers { spellOffer = offer, .. })
 
 takeUnit :: Int -> Offers -> Maybe (Unit, Offers)
@@ -295,7 +298,7 @@ takeUnit n Offers { .. } =
   do (unit , offer) <- offerTakeUnit n unitOffer
      return (unit, Offers { unitOffer = offer, .. })
 
-takeMonasteryTech :: Int -> Offers -> Maybe (Card, Offers)
+takeMonasteryTech :: Int -> Offers -> Maybe (Deed, Offers)
 takeMonasteryTech n Offers { .. } =
   do guard (n >= 0 && n < length monasteryTech)
      let (as,b:bs) = splitAt n monasteryTech
@@ -331,7 +334,7 @@ refreshUnitOffer useElite Offers { .. } =
   where
   stockUpUnits = if useElite then stockUpMixed else stockUpRegulars
 
-  returned = offerReturnCards monasteryTech advancedActionOffer
+  returned = offerReturnDeeds monasteryTech advancedActionOffer
   saved    = offering returned
 
   newMons  = offerNewItems activeMonasteries returned { offering = [] }
@@ -339,8 +342,8 @@ refreshUnitOffer useElite Offers { .. } =
 
 refreshOffers :: Bool {- ^ Should we use elite troops -} -> Offers -> Offers
 refreshOffers useElite o0 =
-  Offers { advancedActionOffer = refreshCardOffer advancedActionOffer
-         , spellOffer          = refreshCardOffer spellOffer
+  Offers { advancedActionOffer = refreshDeedOffer advancedActionOffer
+         , spellOffer          = refreshDeedOffer spellOffer
          , ..
          }
   where
@@ -349,7 +352,7 @@ refreshOffers useElite o0 =
 
 refreshOffersDummy :: Bool {- ^ Should we use elite troops -} ->
                       Offers ->
-                      (Maybe Card, Maybe Card, Offers)
+                      (Maybe Deed, Maybe Deed, Offers)
                       -- ^ (last advacned action, last spell, new offers)
 refreshOffersDummy useElite o0 =
   ( lastAction
@@ -361,8 +364,8 @@ refreshOffersDummy useElite o0 =
   )
   where
   Offers { .. } = refreshUnitOffer useElite o0
-  (lastAction,newActions) = refreshCardOfferDummy advancedActionOffer
-  (lastSpell,newSpells)   = refreshCardOfferDummy spellOffer
+  (lastAction,newActions) = refreshDeedOfferDummy advancedActionOffer
+  (lastSpell,newSpells)   = refreshDeedOfferDummy spellOffer
 
 
 --------------------------------------------------------------------------------

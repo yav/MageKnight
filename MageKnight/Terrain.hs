@@ -53,12 +53,6 @@ data HexNeighbour   = Local HexAddr | Foreign Int Int Dir
 data Addr           = Addr { addrGlobal :: TileAddr, addrLocal :: HexAddr }
                       deriving (Eq,Ord,Show)
 
-data Terrain        = Plains | Hills | Forest | Wasteland | Desert | Swamp
-                    | City BasicMana
-                    | Lake | Mountain
-                    | Ocean {- for tile A and B -}
-                      deriving (Eq,Ord,Show)
-
 data Feature        = MagicalGlade | Mine BasicMana
                     | Village | Monastery
                     | Keep | MageTower
@@ -274,20 +268,6 @@ instance Export TileType where
 
 instance Export Tile where
   toJS Tile { .. } = object [ "name" .= tileName, "type" .= tileType ]
-
-instance ExportAsKey Terrain where
-  toKeyJS t =
-    case t of
-      Plains    -> "plains"
-      Hills     -> "hills"
-      Forest    -> "forest"
-      Wasteland -> "wasteland"
-      Desert    -> "desert"
-      Swamp     -> "swamp"
-      City m    -> Text.append "city_" (toKeyJS m)
-      Lake      -> "lake"
-      Mountain  -> "mountain"
-      Ocean     -> "ocean"
 
 
 

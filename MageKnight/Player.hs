@@ -2,7 +2,7 @@
 module MageKnight.Player where
 
 import MageKnight.Common
-import MageKnight.Cards
+import MageKnight.Deed
 import MageKnight.Units
 import MageKnight.Bag
 import MageKnight.Terrain
@@ -20,9 +20,9 @@ data Player = Player
   , playerCardLimit   :: Int
   , playerUnits       :: [ Maybe Unit ]   -- XXX: Replace With active units
   , playerCrystals    :: Bag BasicMana
-  , playerDeedDeck    :: [ PlayerCard ]
-  , playerHand        :: Bag PlayerCard
-  , playerDiscardPile :: [ PlayerCard ]
+  , playerDeedDeck    :: [ Deed ]
+  , playerHand        :: Bag Deed
+  , playerDiscardPile :: [ Deed ]
   , playerLocation    :: Addr
 
   , playerOnUnsafe    :: Maybe (Addr, Int)
@@ -49,9 +49,6 @@ newPlayer name = Player
   }
 
 
-data PlayerCard = Wound | NormalCard Card
-                  deriving (Eq,Ord)
-
 instance Eq Player where
   x == y = playerName x == playerName y
 
@@ -63,20 +60,20 @@ instance Ord Player where
 -- The blloean indicates if the player passed out.
 checkPassOut :: Player -> (Bool, Player)
 checkPassOut Player { .. }
-  | wounds >= playerCardLimit =
+  | woundNum >= playerCardLimit =
       ( True, Player
-                { playerHand = bagAdd wounds Wound bagEmpty
-                , playerDiscardPile = bagToList (bagRemoveAll Wound playerHand)
+                { playerHand = bagAdd woundNum wound bagEmpty
+                , playerDiscardPile = bagToList (bagRemoveAll wound playerHand)
                 , ..
                 } )
   | otherwise = (False, Player { .. })
   where
-  wounds = bagLookup Wound playerHand
+  woundNum = bagLookup wound playerHand
 
 -- | Assign combat damage to a player.  Returns 'True' if the player passed out.
 assignDamage :: Int -> Player -> (Bool, Player)
 assignDamage d p = checkPassOut
-                      p { playerHand = bagAdd woundNum Wound (playerHand p) }
+                      p { playerHand = bagAdd woundNum wound (playerHand p) }
   where
   armor       = playerArmor p
   woundNum    = div (max 0 d + armor - 1) armor
@@ -89,7 +86,7 @@ backToSafety p =
   case playerOnUnsafe p of
     Nothing    -> (False, p)
     Just (a,w) -> checkPassOut p { playerLocation = a
-                                 , playerHand = bagAdd w Wound (playerHand p)
+                                 , playerHand = bagAdd w wound (playerHand p)
                                  }
 
 instance Export Player where
@@ -107,9 +104,5 @@ instance Export Player where
       , "unsafe"      .= fmap fst playerOnUnsafe
       ]
 
-instance Export PlayerCard where
-  toJS c = toJS (case c of
-                   Wound        -> "wound"
-                   NormalCard x -> cardName x)
 
 

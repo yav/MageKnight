@@ -3,7 +3,7 @@
 module Main where
 
 import MageKnight.Enemies
-import MageKnight.Cards
+import MageKnight.Action
 import MageKnight.Terrain
 import MageKnight.JSON
 import MageKnight.Game
@@ -39,11 +39,10 @@ main =
   do r <- newStdGen
      s <- newIORef (testGame r)
      quickHttpServe $ Snap.route
-       [ ("/card/img/:name", sendCard)
-       , ("/enemy/img/:name", sendEnemy)
+       [
 
        -- testing
-       , ("/newGame",                    newGame s)
+         ("/newGame",                    newGame s)
        , ("/click", clickHex s)
        ] <|> serveDirectory "ui"
 
@@ -103,21 +102,6 @@ sendJSON a =
 
 --------------------------------------------------------------------------------
 
-cardImagePath :: Card -> FilePath
-cardImagePath Card { .. } =
-  "ui" </> "img" </> "cards" </> "deck" </> color </> name <.> "jpg"
-  where
-  color = nameToPath $ Text.pack $ show cardColor
-  name  = nameToPath cardName
-
-
-enemyImagePath :: Enemy -> FilePath
-enemyImagePath Enemy { .. } =
-  "ui" </> "img" </> "enemies" </> loc </> name <.> "png"
-  where
-  loc  = nameToPath $ Text.pack $ show enemyType
-  name = nameToPath enemyName
-
 
 nameToPath :: Text -> String
 nameToPath = Text.unpack . Text.map cvt
@@ -125,21 +109,6 @@ nameToPath = Text.unpack . Text.map cvt
   cvt c | isAscii c && isAlphaNum c = toLower c
   cvt _                             = '_'
 
---------------------------------------------------------------------------------
-
-sendCard :: Snap ()
-sendCard =
-  do name <- textParam "name"
-     case find ((name ==) . cardName) cards of
-       Just card -> serveFile (cardImagePath card)
-       Nothing   -> notFound
-
-sendEnemy :: Snap ()
-sendEnemy =
-  do name <- textParam "name"
-     case find ((name ==) . enemyName) allEnemies of
-       Just enemy -> serveFile (enemyImagePath enemy)
-       Nothing    -> notFound
 
 --------------------------------------------------------------------------------
 

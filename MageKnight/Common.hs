@@ -4,9 +4,10 @@ module MageKnight.Common where
 import MageKnight.Bag
 import MageKnight.JSON
 
-import Data.Text ( Text )
-import Text.PrettyPrint
-import Data.Char(toLower)
+import           Data.Text ( Text )
+import qualified Data.Text as Text
+import           Text.PrettyPrint
+import           Data.Char(toLower)
 
 
 type PlayerId   = Int
@@ -18,9 +19,20 @@ data Visibility = Revealed | Hidden
 data Element    = Physycal | Fire | Ice | ColdFire
                   deriving (Eq,Ord,Show)
 
+data Terrain    = Plains | Hills | Forest | Wasteland | Desert | Swamp
+                | City BasicMana
+                | Lake | Mountain
+                | Ocean {- for tile A and B -}
+                  deriving (Eq,Ord,Show)
+
+data TerrainCostChange =
+    DecreaseTo Int      -- ^ Decrease to the given value
+  | DecreaseBy Int Int  -- ^ Decrease by amount, to minimum
+    deriving (Eq,Ord,Show)
 
 
-type CardName = Text
+type DeedName = Text
+type EnemyName = Text
 
 
 
@@ -39,10 +51,13 @@ data Resource =
 
   | Healing
 
-  | ACard CardName
+  | ADeed DeedName
 
+  | Blocking EnemyName
 
-  | DrawCard
+  | ChangeTerrainCost Terrain TerrainCostChange
+
+  | DrawDeed
 
   -- End of turn
   | ReputationLoss
@@ -50,6 +65,7 @@ data Resource =
   | ManaSourceFixed Mana    -- Not re-rolled
   | FameGainIfInteract        -- ^ Noble Manners
   | ReputationGainIfInteract  -- ^ Noble Manners
+  | ThrowAway DeedName
     deriving (Eq,Ord,Show)
 
 data AttackType = Melee | Ranged | Siege
@@ -99,10 +115,15 @@ ppResource resource =
                       Siege  -> text "siege"
     Block e  -> ppElement e
     Healing  -> text "healing"
-    ACard x  -> text (show x) <+> text "card"
+    ADeed x  -> text (show x) <+> text "card"
+
+    -- XXX
+    ChangeTerrainCost t c -> text "change terrain cost"
+
+    Blocking x -> text "blocking" <+> text (Text.unpack x)
 
     ReputationLoss -> text "reputation -1"
-    DrawCard -> text "draw a card"
+    DrawDeed -> text "draw a card"
     FameGainIfInteract -> text "fame +1 (if interacted)"
     ReputationGainIfInteract -> text "reputation + 1 (if interacted)"
 
@@ -178,4 +199,19 @@ instance ExportAsKey AttackType where
 
 instance Export AttackType where
   toJS = jsKey
+
+instance ExportAsKey Terrain where
+  toKeyJS t =
+    case t of
+      Plains    -> "plains"
+      Hills     -> "hills"
+      Forest    -> "forest"
+      Wasteland -> "wasteland"
+      Desert    -> "desert"
+      Swamp     -> "swamp"
+      City m    -> Text.append "city_" (toKeyJS m)
+      Lake      -> "lake"
+      Mountain  -> "mountain"
+      Ocean     -> "ocean"
+
 

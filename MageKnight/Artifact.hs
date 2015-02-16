@@ -1,11 +1,8 @@
 module MageKnight.Artifact where
 
-import Data.Text (Text)
+import MageKnight.Deed
 
 -- XXX
-data Artifact = Artifact { artifactName :: Text }
-
--- XXX
-artifacts :: [Artifact]
+artifacts :: [Deed]
 artifacts = []
 
