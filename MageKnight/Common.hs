@@ -66,6 +66,8 @@ data Resource =
   | FameGainIfInteract        -- ^ Noble Manners
   | ReputationGainIfInteract  -- ^ Noble Manners
   | ThrowAway DeedName
+  | ToDeedDeckBottom DeedName
+  | ToDeedDeckTop DeedName
     deriving (Eq,Ord,Show)
 
 data AttackType = Melee | Ranged | Siege
@@ -121,12 +123,19 @@ ppResource resource =
     ChangeTerrainCost t c -> text "change terrain cost"
 
     Blocking x -> text "blocking" <+> text (Text.unpack x)
-    ThrowAway x -> text "throw away" <+> text (show x)
 
     ReputationLoss -> text "reputation -1"
     DrawDeed -> text "draw a card"
     FameGainIfInteract -> text "fame +1 (if interacted)"
     ReputationGainIfInteract -> text "reputation + 1 (if interacted)"
+    ThrowAway x -> text "throw away" <+> text (show x)
+    ToDeedDeckBottom x -> text "place" <+> text (show x) <+>
+                          text "at the bottom of the deed deck"
+
+    ToDeedDeckTop x -> text "place" <+> text (show x) <+>
+                       text "at the top of the deed deck"
+
+
 
 ppElement :: Element -> Doc
 ppElement el =
