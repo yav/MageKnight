@@ -125,7 +125,7 @@ successfulAttack attackTypes enemies =
   totalAttack             = sum (div (sum inefficient) 2 : efficient)
 
 
--- | Check if the given amounts of block are suffivient to block an enemy.
+-- | Check if the given amounts of block are sufficient to block an enemy.
 successfulBlock :: Bag Element -> ActiveEnemy -> Bool
 successfulBlock blocks enemy =
   case enemyAttack (enemyStats enemy) of
