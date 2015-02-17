@@ -171,8 +171,13 @@ coldToughnessBlockBonus :: Enemy -> Int
 coldToughnessBlockBonus Enemy  { .. } = fromAttack + fromAbilities
   where
   fromAttack    = case enemyAttack of
-                    AttcaksWith e _ | e /= Physycal -> 1
-                    _                               -> 0
+                    Summoner -> 0 -- Shouldn't be blocking this
+                    AttcaksWith e _ ->
+                      case e of
+                        Physycal -> 0
+                        Fire     -> 1
+                        Ice      -> 1
+                        ColdFire -> 2
 
   fromAbilities = Set.size enemyAbilities
 
