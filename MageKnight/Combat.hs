@@ -129,8 +129,12 @@ successfulAttack attackTypes enemies =
 successfulBlock :: Bag Element -> ActiveEnemy -> Bool
 successfulBlock blocks enemy =
   case enemyAttack (enemyStats enemy) of
-    AttcaksWith ty amt -> sum (div (sum inefficient) 2 : efficient) >= amt
+    AttcaksWith ty amt -> sum (div (sum inefficient) 2 : efficient) >= attack
       where
+      attack
+        | enemyHasAbility Swift enemy = 2 * amt
+        | otherwise                   = amt
+
       (inefficient,efficient) = partitionEithers $ map classify
                                                  $ bagToListGrouped blocks
       classify (bt,a) = if isEfficient bt then Right a else Left a
