@@ -1,0 +1,31 @@
+Tactics:
+Day 4 (Planning): Wording slightly changed: At the end of each turn, if you have at least 2 deed cards in your hand, draw your next hand as if your hand limit is increased by one.
+
+Spells:
+Time Bending: At the end of your turn, set this card aside for the rest of the round. Put all other cards you played this turn (not those discarded or thrown away) except his one back in your hand. Skip the "draw new cards" portion of your end of turn step. Immediately take another turn.
+Energy Flow: Identical to the text on the Mage Knight Wiki
+Disintegrate: Play this only during in the Attack phase of combat. Destroy target enemy token. Other enemies get Armor -1 (to a minimum of 1). 
+Tornado: Play this only during in the Attack phase of combat. Destroy target enemy. 
+Wings of Night: Original text replaced by: Target enemy does not attack this combat. You may target additional enemies: pay 1 Move point for the second enemy, 2 Move points for the third enemy, etc.
+
+Enemies:
+Altem Mages lose fortified.
+Altem Guardians lose 1 Attack (for Attack 5).
+
+Basic Actions:
+Cold Toughness: Ice Attack 2 or Ice Block 3. With blue mana: Ice Block 5. Get +1 Ice Block for each special ability or color of attack and resistance depicted on the blocked enemy token you block (unless it has Arcane Immunity), (or for each mana spent by an opponent during the attack).
+
+Advanced Actions:
+Agility: Wording changed: Move 2. During combat this turn, you may spend Move points to get Attack 1 for each.left from Move phase as Attack points one for one. With white mana: Move 4. During combat this turn, you may spend any amount of move points. 1 to get Attack 1 and/or 2 to get Ranged Attack 1.Move points left from Move phase as Attack points one for one, or 2 Move points for 1 point of Ranged Attack. 
+In Need: Influence 32. Get an additional Influence 1 for each Wound card in your hand and/or on a Unit you control. With green mana: Influence 54. Get an additional Influence 2 for each Wound card in your hand and/or on a Unit you control. 
+Magic Talent: Discard a card of any colorfrom your hand. You may play one Spell card of the same color in the Spells offer this turn as if it were in your hand. That card remains in the Spells offer. With blue mana: unchanged.
+Blood Ritual: Take a Wound. Gain a red mana token crystal to your inventory and a mana token of any color (including non-basic). With red mana: Take a Wound. Gain three mana tokens of any colors (including non-basic). You may pay one mana of a basic color to gain a crystal of that color to your inventory
+Refreshing Walk: Added sentence "If played during combat, Move 2/4 only".
+
+Units:
+Utem Guardsmen, Altem Guardians: Block option changed: Block 4/8. Any enemy blocked this way loses Swiftness. Counts twice against an attack with Swiftness.
+
+Artifacts:
+Banner of Fear: Standard unchanged. One-time ability: "Up tp 3 enemies do not attack this combat."
+
+Horn of Wrath: Siege Attack 5 6. Roll a mana die. If you roll black or red, you get a Wound. /// Siege Attack 5 6. You may add up to +5 +6 to this Siege Attack. For each +1 you added roll a mana die. You get a Wound for each black or red rolled. 
