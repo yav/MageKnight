@@ -50,7 +50,7 @@ data Resource =
   | Block Element
 
   | Healing
-  | ReadyUnit Int   -- ^ Ready a unit if this level
+  | ReadyUnit Int   -- ^ Ready a unit of this level
 
   | ADeed DeedName
 
