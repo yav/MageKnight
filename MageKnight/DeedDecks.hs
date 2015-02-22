@@ -3,6 +3,7 @@ module MageKnight.DeedDecks
   ( Deed
   , advancedActions
   , spells
+  , actions
   , Spell.interactiveSpell
   , artifacts
 
@@ -33,6 +34,9 @@ basicActions = BasicAction.blueSpecial
 
 advancedActions :: [Deed]
 advancedActions = AdvancedAction.deeds
+
+actions :: [Deed]
+actions = basicActions ++ advancedActions
 
 spells :: [Deed]
 spells = Spell.deeds

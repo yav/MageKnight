@@ -13,7 +13,7 @@ import MageKnight.Rule
 import MageKnight.Deed
 import MageKnight.Bag
 
-import {-# SOURCE #-} MageKnight.DeedDecks (allDeeds)
+import {-# SOURCE #-} MageKnight.DeedDecks (allDeeds, actions)
 
 import qualified Data.Set  as Set
 
@@ -34,7 +34,7 @@ greenSpecial =
   actionDeed Green "Will Focus"
     ( ( [] --> [ ManaCrystal Green ] )
     : [ [] --> [ ManaToken (BasicMana b) ] | b <- [ Blue, White, Red ] ])
-    [ r | c <- allDeeds, r <- concentrate 3 c ]
+    [ r | c <- actions, r <- concentrate 3 c ]
 
 
 redSpecial :: Deed
@@ -88,7 +88,7 @@ deeds =
 
   , actionDeed Green "Concentration"
       [ [] --> [ ManaToken (BasicMana b) ] | b <- [ Blue, White, Red ] ]
-      [ r | c <- allDeeds, r <- concentrate 2 c ]
+      [ r | c <- actions, r <- concentrate 2 c ]
 
   , actionDeed Green "March"
       [ [] --> replicate 2 Movement ]
