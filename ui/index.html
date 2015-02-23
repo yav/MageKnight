@@ -493,7 +493,7 @@ function drawReputation(player) {
 
     me.append(d);
   });
-  
+
   /*
   var img = $('<img/>')
             .attr('src', charUrl(player.name, 'shield'))
@@ -510,7 +510,8 @@ function deedCardImage(name) {
   var me = $('<img/>')
            .css('box-shadow', '0px 0px 2px 2px orange')
            .css('position', 'absolute')
-           .attr('src',deedUrl(name));
+           .attr('src',deedUrl(name))
+           .data('name', name);
 
   me.click(function(ev) {
     if (me.css('z-index') == '1') {
@@ -532,12 +533,13 @@ function drawCardContainer(vscale) {
   var me = $('<div/>')
            .css('padding', '0')
            .css('margin',  '0')
-           .css('border',  '0')
            .css('position', 'relative');
+
+  function imgs() { return me.children(); }
 
   function setW() {
     var w = sizes[curW];
-    var cs = me.children();
+    var cs = imgs();
     cs.width(w)
       .height(1.5 * w);
     jQuery.each(cs, function(ix,x) {
@@ -556,18 +558,47 @@ function drawCardContainer(vscale) {
   me.addCard = function(img) {
     var it = img.css('z-index', '2')
                 .css('top',     '0');
-    me.children().css('z-index','1');
+    imgs().css('z-index','1');
     me.append(it);
     setW();
   }
 
+  me.curCard = function() {
+    var res = null;
+    jQuery.each(imgs(), function(ix,img) {
+      img = $(img);
+      if (img.css('z-index') == '2') { res = img.data('name'); return false; }
+    });
+    return res;
+  }
+
+  setW();
   return me;
+  ;
 }
 
 function drawHand(cardNames) {
   var me = drawCardContainer(1.7);
   jQuery.each(cardNames, function(ix,cardName) {
-    me.addCard(deedCardImage(cardName));
+    me.addCard(deedCardImage(cardName))
+  });
+  return me;
+}
+
+
+function drawPlayArea(hand) {
+  var me = $('<div/>')
+           .css('background-color', 'rgba(0,0,0,0.7)')
+           .css('border', '1px solid black')
+           .css('min-width',  '250px')
+           .css('min-height', '250px')
+           .css('position', 'fixed')
+           .css('right', '10px')
+           .css('top',   '10px');
+  me.click(function() {
+    var it = hand.curCard();
+    if (it === null) return;
+    console.log(it);
   });
   return me;
 }
@@ -575,9 +606,12 @@ function drawHand(cardNames) {
 $(document).ready(function() {
 
   var body = $('body');
-  body.append(drawHand(
-    [ 'March', 'Crystallize', 'Wound' ]
-  ));
+  var h = drawHand(
+    [ 'Wound',  'Wound', 'March', 'Crystallize' ]
+  );
+
+  body.append(h);
+  body.append(drawPlayArea(h));
 
   return;
   jQuery.getJSON('/newGame', {}, function(game) {
