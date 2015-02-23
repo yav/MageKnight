@@ -7,7 +7,8 @@ module MageKnight.DeedDecks
   , Spell.interactiveSpell
   , artifacts
 
-  , makeDeck
+  , makeCustomDeck
+  , makeDeckFor
   , arytheaDeck
   , goldyxDeck
   , norowasDeck
@@ -22,6 +23,7 @@ import qualified MageKnight.Action         as BasicAction
 import qualified MageKnight.AdvancedAction as AdvancedAction
 import qualified MageKnight.Spell          as Spell
 import qualified MageKnight.Artifact       as Artifact
+import           MageKnight.Player (PlayerName)
 
 import           Data.Maybe (mapMaybe)
 import           Data.List (find)
@@ -57,8 +59,18 @@ allDeeds = wound : basicActions ++ advancedActions ++ spells ++ artifacts
 
 -- | Make a deck, feature the given cards.  If we don't know about a card,
 -- we ignore it.
-makeDeck :: [DeedName] -> [Deed]
-makeDeck = mapMaybe (\x -> find ((x ==) . deedName) allDeeds)
+makeCustomDeck :: [DeedName] -> [Deed]
+makeCustomDeck = mapMaybe (\x -> find ((x ==) . deedName) allDeeds)
+
+makeDeckFor :: PlayerName -> Maybe [Deed]
+makeDeckFor name =
+  do deedNames <- case name of
+                    "Arythea" -> Just arytheaDeck
+                    "Tovak"   -> Just tovakDeck
+                    "Goldyx"  -> Just goldyxDeck
+                    "Norowas" -> Just norowasDeck
+                    _         -> Nothing
+     return (makeCustomDeck deedNames)
 
 -- | A started deck with no special cards.
 basicDeck :: [ DeedName ]

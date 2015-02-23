@@ -34,7 +34,6 @@ import MageKnight.JSON
 
 import           Data.Array (array, (!))
 import           Data.Text (Text)
-import qualified Data.Text as Text
 import qualified Data.Set as Set
 import           Data.Map ( Map )
 import qualified Data.Map as Map

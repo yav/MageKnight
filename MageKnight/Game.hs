@@ -10,6 +10,7 @@ import           MageKnight.Terrain
 import           MageKnight.JSON
 import           MageKnight.Player
 import           MageKnight.Turn
+import           MageKnight.DeedDecks(makeCustomDeck, arytheaDeck)
 
 
 
@@ -26,7 +27,7 @@ testGame g =
   offers0     = setupOffers offerRand (defaultOfferSetup 1 True)
   Just (l,ms) = setupLand landRand (defaultLandSetup Wedge 7 2 [3,5])
   (offerRand,landRand) = split g
-  pl = newPlayer "arythea"
+  pl = newPlayer "Arythea" (makeCustomDeck arytheaDeck)
 
 
 

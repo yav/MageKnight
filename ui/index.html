@@ -507,60 +507,77 @@ function drawReputation(player) {
 
 function deedCardImage(name) {
 
-  var me = $('<img/>')
+  // var sizes = [ 160, 264 ];
+  var sizes = [ 264 ];
+  var curW  = 0;
+
+
+  var me = $('<div/>')
            .css('box-shadow', '0px 0px 2px 2px orange')
            .css('position', 'absolute')
-           .attr('src',deedUrl(name))
+           .css('background-image', 'url("' + deedUrl(name) + '")')
            .data('name', name);
+
+  function setW() {
+    var w = sizes[curW];
+    var h = 1.5 * h;
+    me.width(w).height(h)
+      .css('background-size', w + ' ' + h);
+  }
+
+  var playBtn = $('<div/>')
+                .text('play')
+
+  function focus() {
+    me.css('z-index', '2')
+    me.siblings()
+      .css('z-index', '1')
+  }
+
+  setW();
 
   me.click(function(ev) {
     if (me.css('z-index') == '1') {
-      me.css('z-index', '2')
-      me.siblings()
-        .css('z-index', '1')
-      return false;
-   }
+      focus();
+    } else {
+     curW = (curW + 1) % sizes.length;
+     setW();
+    }
+   return false;
   });
+
+  me.chooseCard = function() { focus(); }
 
   return me;
 }
 
 
-function drawCardContainer(vscale) {
-  var sizes = [ 120, 160, 264 ];
-  var curW  = 0;
+function sidewaysCardImage(name) {
+  var me = deedCardImage(name)
+           .css('transform', 'rotate(90deg)');
+  return me;
+}
 
+
+function drawCardContainer(vscale) {
   var me = $('<div/>')
            .css('padding', '0')
            .css('margin',  '0')
            .css('position', 'relative');
-
   function imgs() { return me.children(); }
 
   function setW() {
-    var w = sizes[curW];
-    var cs = imgs();
-    cs.width(w)
-      .height(1.5 * w);
-    jQuery.each(cs, function(ix,x) {
+    jQuery.each(me.children(), function(ix,x) {
       var x = $(x);
       x.css('top', (ix * x.height() / vscale));
     });
   };
 
 
-
-  me.click(function(ev) {
-    curW = (curW + 1) % sizes.length;
-    setW();
-  });
-
   me.addCard = function(img) {
-    var it = img.css('z-index', '2')
-                .css('top',     '0');
-    imgs().css('z-index','1');
-    me.append(it);
+    me.append(img);
     setW();
+    img.chooseCard();
   }
 
   me.curCard = function() {
@@ -572,7 +589,6 @@ function drawCardContainer(vscale) {
     return res;
   }
 
-  setW();
   return me;
   ;
 }
@@ -584,6 +600,8 @@ function drawHand(cardNames) {
   });
   return me;
 }
+
+
 
 
 function drawPlayArea(hand) {
@@ -598,8 +616,10 @@ function drawPlayArea(hand) {
   me.click(function() {
     var it = hand.curCard();
     if (it === null) return;
-    console.log(it);
+    alert(it);
   });
+
+  me.append(sidewaysCardImage('Mana Draw'));
   return me;
 }
 

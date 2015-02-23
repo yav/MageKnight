@@ -31,8 +31,8 @@ data Player = Player
   }
 
 
-newPlayer :: Text -> Player
-newPlayer name = Player
+newPlayer :: Text -> [Deed] -> Player
+newPlayer name deeds = Player
   { playerName        = name
   , playerFame        = 0
   , playerReputation  = 0
@@ -40,7 +40,7 @@ newPlayer name = Player
   , playerCardLimit   = 5
   , playerUnits       = [ Nothing ]
   , playerCrystals    = bagEmpty
-  , playerDeedDeck    = []
+  , playerDeedDeck    = deeds
   , playerHand        = bagEmpty
   , playerDiscardPile = []
   , playerLocation    = Addr { addrGlobal = (0,0), addrLocal = Center }
