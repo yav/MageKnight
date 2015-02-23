@@ -14,6 +14,7 @@ module MageKnight.DeedDecks
   , tovakDeck
 
   , allDeeds
+  , findDeed
   ) where
 
 import           MageKnight.Deed
@@ -24,6 +25,10 @@ import qualified MageKnight.Artifact       as Artifact
 
 import           Data.Maybe (mapMaybe)
 import           Data.List (find)
+
+
+findDeed :: DeedName -> Maybe Deed
+findDeed name = find ((name ==) . deedName) allDeeds
 
 basicActions :: [Deed]
 basicActions = BasicAction.blueSpecial
@@ -44,9 +49,9 @@ spells = Spell.deeds
 artifacts :: [Deed]
 artifacts = Artifact.deeds
 
--- | All cards that may appear in the deed deck, except for wounds.
+-- | All cards that may appear in the deed deck
 allDeeds :: [Deed]
-allDeeds = basicActions ++ advancedActions ++ spells ++ artifacts
+allDeeds = wound : basicActions ++ advancedActions ++ spells ++ artifacts
 
 
 

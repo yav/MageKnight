@@ -2,12 +2,13 @@
 {-# LANGUAGE RecordWildCards #-}
 module Main where
 
-import MageKnight.Enemies
-import MageKnight.Action
+import MageKnight.Common
+import MageKnight.Deed
 import MageKnight.Terrain
 import MageKnight.JSON
 import MageKnight.Game
 import MageKnight.Player
+import MageKnight.DeedDecks(findDeed)
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)
@@ -39,10 +40,10 @@ main =
   do r <- newStdGen
      s <- newIORef (testGame r)
      quickHttpServe $ Snap.route
-       [
+       [ ("/deed/:deed", getDeedImage)
 
        -- testing
-         ("/newGame",                    newGame s)
+       , ("/newGame",                    newGame s)
        , ("/click", clickHex s)
        ] <|> serveDirectory "ui"
 
@@ -93,6 +94,12 @@ addrParam =
               _    -> badInput "Malformed parameter: hex"
      return Addr { addrGlobal = (x,y), addrLocal = loc }
 
+deedParam :: ByteString -> Snap Deed
+deedParam pname =
+  do x <- textParam pname
+     case findDeed x of
+       Just d  -> return d
+       Nothing -> badInput (BS.append "Invalid deed parameter: " pname)
 
 sendJSON :: Export a => a -> Snap ()
 sendJSON a =
@@ -109,6 +116,21 @@ nameToPath = Text.unpack . Text.map cvt
   cvt c | isAscii c && isAlphaNum c = toLower c
   cvt _                             = '_'
 
+deedPath :: Deed -> FilePath
+deedPath Deed { .. } = dir </> nameToPath deedName <.> "png"
+  where
+  dir = case deedType of
+          Wound            -> pref
+          Action c         -> pref </> "basic_actions" </> color c
+          AdvancedAction c -> pref </> "advanced_actions" </> color c
+          Spell c          -> pref </> "spells" </> color c
+          Artifact         -> pref </> "artifacts"
+  pref = "ui" </> "img" </> "cards"
+  color c = case c of
+              Red   -> "red"
+              Blue  -> "blue"
+              Green -> "green"
+              White -> "white"
 
 --------------------------------------------------------------------------------
 
@@ -137,5 +159,8 @@ clickHex s =
       where loc = playerLocation p
             p = player g
 
-
+getDeedImage :: Snap ()
+getDeedImage =
+  do deed <- deedParam "deed"
+     serveFile (deedPath deed)
 

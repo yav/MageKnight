@@ -106,9 +106,10 @@ deeds =
 
   -- Red
 
- , actionDeed Red "Improvisation"
-     (concatMap (improvise 3) allDeeds)
-     (concatMap (improvise 5) allDeeds)
+ , let nonWounds = filter (/= wound) allDeeds
+   in actionDeed Red "Improvisation"
+        (concatMap (improvise 3) nonWounds)
+        (concatMap (improvise 5) nonWounds)
 
   , actionDeed Red "Rage"
     [ [] --> replicate 2 (Attack Melee Physycal)

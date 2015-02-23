@@ -1,9 +1,11 @@
 {-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
 module MageKnight.Deed
   ( Deed (..)
+  , DeedType(..)
   , DeedName
   , wound
   , actionDeed
+  , advancedActionDeed
   , spellDeed
   , artifactDeed
 
@@ -26,7 +28,8 @@ data Deed     = Deed { deedName      :: DeedName
                      , deedPower     :: [ Rule ]
                      }
 
-data DeedType = Wound | Action BasicMana | Spell BasicMana | Artifact
+data DeedType = Wound | Action BasicMana | AdvancedAction BasicMana
+              | Spell BasicMana | Artifact
 
 instance Eq Deed where
   x == y = deedName x == deedName y
@@ -52,6 +55,15 @@ actionDeed color deedName deedBasic deedPower =
        , deedType      = Action color
        , ..
        }
+
+advancedActionDeed :: BasicMana -> DeedName -> [Rule] -> [Rule] -> Deed
+advancedActionDeed color deedName deedBasic deedPower =
+  Deed { deedNamePower = Nothing
+       , deedType      = AdvancedAction color
+       , ..
+       }
+
+
 
 spellDeed :: BasicMana -> DeedName -> DeedName -> [Rule] -> [Rule] -> Deed
 spellDeed color deedName powerName deedBasic deedPower =

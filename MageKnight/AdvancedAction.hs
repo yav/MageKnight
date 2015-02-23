@@ -51,7 +51,7 @@ blueDeeds =
   ]
 
   where
-  deed = actionDeed Blue
+  deed = advancedActionDeed Blue
 
 -- XXX: green
 greenDeeds :: [Deed]
@@ -67,7 +67,7 @@ greenDeeds =
 
   ]
   where
-  deed = actionDeed Green
+  deed = advancedActionDeed Green
 
 -- XXX: red
 redDeeds :: [Deed]
@@ -75,7 +75,7 @@ redDeeds =
   [
   ]
   where
-  deed = actionDeed Red
+  deed = advancedActionDeed Red
 
 -- XXX: white
 whiteDeeds :: [Deed]
@@ -83,4 +83,4 @@ whiteDeeds =
   [
   ]
   where
-  deed = actionDeed White
+  deed = advancedActionDeed White
