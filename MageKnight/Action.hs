@@ -78,7 +78,7 @@ deeds =
       ]
       [ [] --> replicate 5 (Block Physycal) ]
 
-  , actionDeed Blue "Crystalize"
+  , actionDeed Blue "Crystallize"
       [ [ ManaToken (BasicMana b) ] --> [ ManaCrystal b ] | b <- anyBasicMana ]
       [ []                          --> [ ManaCrystal b ] | b <- anyBasicMana ]
 
