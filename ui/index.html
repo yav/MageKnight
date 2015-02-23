@@ -11,7 +11,7 @@
 <script src="jquery.js"></script>
 <script>
 
-function imgUrl(x) { return '/img/' + x + '.png'; }
+function imgUrl(x)        { return '/img/' + x + '.png'; }
 
 function tileUrl(ty,n )   { return imgUrl('maps/' + ty + '/' + n); }
 function charUrl(ch,ty)   { return imgUrl('characters/' + ch + '/' + ty); }
@@ -20,6 +20,7 @@ function ruinsUrl(name)   { return imgUrl('ruins/' + name); }
 function manaUrl(mana)    { return imgUrl('mana/' + mana); }
 function timeUrl(when)    { return imgUrl('time/' + when); }
 function levelUrl(which)  { return imgUrl('level/' + which); }
+function deedUrl(nm)      { return '/deed/' + nm; }
 
 function boardToken(wi,url) {
   return $('<img/>')
@@ -504,9 +505,81 @@ function drawReputation(player) {
   return me; // .append(img);
 }
 
+function deedCardImage(name) {
+
+  var me = $('<img/>')
+           .css('box-shadow', '0px 0px 2px 2px orange')
+           .css('position', 'absolute')
+           .attr('src',deedUrl(name));
+
+  me.click(function(ev) {
+    if (me.css('z-index') == '1') {
+      me.css('z-index', '2')
+      me.siblings()
+        .css('z-index', '1')
+      return false;
+   }
+  });
+
+  return me;
+}
+
+
+function drawCardContainer(vscale) {
+  var sizes = [ 120, 160, 264 ];
+  var curW  = 0;
+
+  var me = $('<div/>')
+           .css('padding', '0')
+           .css('margin',  '0')
+           .css('border',  '0')
+           .css('position', 'relative');
+
+  function setW() {
+    var w = sizes[curW];
+    var cs = me.children();
+    cs.width(w)
+      .height(1.5 * w);
+    jQuery.each(cs, function(ix,x) {
+      var x = $(x);
+      x.css('top', (ix * x.height() / vscale));
+    });
+  };
+
+
+
+  me.click(function(ev) {
+    curW = (curW + 1) % sizes.length;
+    setW();
+  });
+
+  me.addCard = function(img) {
+    var it = img.css('z-index', '2')
+                .css('top',     '0');
+    me.children().css('z-index','1');
+    me.append(it);
+    setW();
+  }
+
+  return me;
+}
+
+function drawHand(cardNames) {
+  var me = drawCardContainer(1.7);
+  jQuery.each(cardNames, function(ix,cardName) {
+    me.addCard(deedCardImage(cardName));
+  });
+  return me;
+}
 
 $(document).ready(function() {
 
+  var body = $('body');
+  body.append(drawHand(
+    [ 'March', 'Crystallize', 'Wound' ]
+  ));
+
+  return;
   jQuery.getJSON('/newGame', {}, function(game) {
     console.log(game);
     drawGame(game);
