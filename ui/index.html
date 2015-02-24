@@ -21,6 +21,7 @@ function manaUrl(mana)    { return imgUrl('mana/' + mana); }
 function timeUrl(when)    { return imgUrl('time/' + when); }
 function levelUrl(which)  { return imgUrl('level/' + which); }
 function deedUrl(nm)      { return '/deed/' + nm; }
+function cardIconUrl(nm)  { return imgUrl('cards/' + nm); }
 
 function boardToken(wi,url) {
   return $('<img/>')
@@ -507,8 +508,8 @@ function drawReputation(player) {
 
 function deedCardImage(name) {
 
-  // var sizes = [ 160, 264 ];
-  var sizes = [ 264 ];
+  var sizes = [ 160, 264 ];
+  // var sizes = [ 264 ];
   var curW  = 0;
 
 
@@ -520,21 +521,15 @@ function deedCardImage(name) {
 
   function setW() {
     var w = sizes[curW];
-    var h = 1.5 * h;
-    me.width(w).height(h)
-      .css('background-size', w + ' ' + h);
+    var h = 1.5 * w;
+    me.width(w).height(h);
+    me.css('background-size', w + 'px ' + h + 'px')
   }
-
-  var playBtn = $('<div/>')
-                .text('play')
 
   function focus() {
     me.css('z-index', '2')
-    me.siblings()
-      .css('z-index', '1')
+    me.siblings().css('z-index', '1');
   }
-
-  setW();
 
   me.click(function(ev) {
     if (me.css('z-index') == '1') {
@@ -546,8 +541,9 @@ function deedCardImage(name) {
    return false;
   });
 
-  me.chooseCard = function() { focus(); }
+  me.selectCard = function() { focus(); }
 
+  setW();
   return me;
 }
 
@@ -564,25 +560,20 @@ function drawCardContainer(vscale) {
            .css('padding', '0')
            .css('margin',  '0')
            .css('position', 'relative');
-  function imgs() { return me.children(); }
-
-  function setW() {
-    jQuery.each(me.children(), function(ix,x) {
-      var x = $(x);
-      x.css('top', (ix * x.height() / vscale));
-    });
-  };
 
 
   me.addCard = function(img) {
     me.append(img);
-    setW();
-    img.chooseCard();
+    jQuery.each(me.children(), function(ix,x) {
+      var x = $(x);
+      x.css('top', (ix * x.height() / vscale));
+    });
+    img.selectCard();
   }
 
   me.curCard = function() {
     var res = null;
-    jQuery.each(imgs(), function(ix,img) {
+    jQuery.each(me.children(), function(ix,img) {
       img = $(img);
       if (img.css('z-index') == '2') { res = img.data('name'); return false; }
     });
@@ -596,7 +587,44 @@ function drawCardContainer(vscale) {
 function drawHand(cardNames) {
   var me = drawCardContainer(1.7);
   jQuery.each(cardNames, function(ix,cardName) {
-    me.addCard(deedCardImage(cardName))
+    var c = deedCardImage(cardName);
+    var playMenu = $('<div/>')
+                   .css('text-align', 'center')
+                   .css('background-color', 'rgba(0,0,0,0.5)')
+                   .css('color', 'white');
+
+    var playButton = $('<div/>')
+                     .text('play')
+                     .css('margin-right', '16px')
+                     .css('cursor', 'pointer')
+                     .css('color', 'black')
+                     .css('font-family', 'Almendra')
+                     .css('height', '18px')
+                     .css('display','inline-block');
+
+    var sidewaysMenu = $('<div/>')
+                       .css('text-align','right')
+                       .css('background-color', 'rgba(255,255,255,0.5)');
+
+   function sideButton(name) {
+      var btn = $('<img/>')
+                .attr('src', cardIconUrl(name))
+                .css('cursor', 'pointer')
+                .css('margin', '2px')
+                .css('width','16px')
+                .css('height','18px');
+      sidewaysMenu.append(btn);
+   }
+
+   sidewaysMenu.append(playButton);
+   sideButton('move_icon');
+   sideButton('influence_icon');
+   sideButton('attack_icon');
+   sideButton('block_icon');
+
+
+    c.append(sidewaysMenu);
+    me.addCard(c);
   });
   return me;
 }
