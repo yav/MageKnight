@@ -21,7 +21,7 @@ function manaUrl(mana)    { return imgUrl('mana/' + mana); }
 function timeUrl(when)    { return imgUrl('time/' + when); }
 function levelUrl(which)  { return imgUrl('level/' + which); }
 function deedUrl(nm)      { return '/deed/' + nm; }
-function cardIconUrl(nm)  { return imgUrl('cards/' + nm); }
+function cardIconUrl(nm)  { return imgUrl('cards/icons/' + nm); }
 
 function boardToken(wi,url) {
   return $('<img/>')
@@ -611,35 +611,49 @@ function drawHand(cardNames) {
              .click(click);
     }
 
-    playMenu
-      .append(
-        textButton('&#x21b7;', function(ev) {
-          playMenu.hide();
-          sidewaysMenu.show();
-          c.css('transform', 'rotate(90deg)');
-          return false;
-        })
-        .css('position', 'absolute')
-        .css('right', '0')
-      )
-      .append (
-        textButton('&#x27a1;', function(ev) {
-          console.log('play ' + cardName);
+    if (cardName === 'Wound') {
+      playMenu.append(
+        $('<img/>')
+        .attr('src', cardIconUrl('heal'))
+        .css('cursor', 'pointer')
+        .css('margin', '2px')
+        .css('width','16px')
+        .css('height','18px')
+        .click(function(ev) {
+          console.log('heal wound')
           return false;
         })
       );
-
+    } else {
+      playMenu
+        .append(
+          textButton('&#x21b7;', function(ev) {
+            playMenu.hide();
+            sidewaysMenu.show();
+            c.css('transform', 'rotate(90deg)');
+            return false;
+          })
+          .css('position', 'absolute')
+          .css('right', '0')
+        )
+        .append (
+          textButton('&#x27a1;', function(ev) {
+            console.log('play ' + cardName);
+            return false;
+          })
+        );
+    }
    function sideButton(name) {
       var sideways = 0;
       var btn = $('<img/>')
-                .attr('src', cardIconUrl(name + '_icon'))
+                .attr('src', cardIconUrl(name))
                 .css('cursor', 'pointer')
                 .css('margin', '2px')
                 .css('width','16px')
                 .css('height','18px')
                 .css('transform', 'rotate(-90deg)')
                 .click(function(ev) {
-                  console.log('play sideays ' + name);
+                  console.log('play ' + cardName + ' for ' + name);
                   return false;
                 });
       sidewaysMenu.append(btn);
