@@ -593,37 +593,74 @@ function drawHand(cardNames) {
                    .css('background-color', 'rgba(0,0,0,0.5)')
                    .css('color', 'white');
 
-    var playButton = $('<div/>')
-                     .text('play')
-                     .css('margin-right', '16px')
-                     .css('cursor', 'pointer')
-                     .css('color', 'black')
-                     .css('font-family', 'Almendra')
-                     .css('height', '18px')
-                     .css('display','inline-block');
+    var sidewaysMenu =
+        $('<div/>')
+        .css('text-align','right')
+        .css('background-color', 'rgba(0,0,0,0.5)')
+        .css('color', 'white')
+        .hide();
 
-    var sidewaysMenu = $('<div/>')
-                       .css('text-align','right')
-                       .css('background-color', 'rgba(255,255,255,0.5)');
+    function textButton(label, click) {
+      return $('<div/>')
+             .html(label)
+             .css('margin-right', '16px')
+             .css('cursor', 'pointer')
+             .css('font-family', 'Almendra')
+             .css('height', '18px')
+             .css('display','inline-block')
+             .click(click);
+    }
+
+    playMenu
+      .append(
+        textButton('&#x21b7;', function(ev) {
+          playMenu.hide();
+          sidewaysMenu.show();
+          c.css('transform', 'rotate(90deg)');
+          return false;
+        })
+        .css('position', 'absolute')
+        .css('right', '0')
+      )
+      .append (
+        textButton('&#x27a1;', function(ev) {
+          console.log('play ' + cardName);
+          return false;
+        })
+      );
 
    function sideButton(name) {
+      var sideways = 0;
       var btn = $('<img/>')
-                .attr('src', cardIconUrl(name))
+                .attr('src', cardIconUrl(name + '_icon'))
                 .css('cursor', 'pointer')
                 .css('margin', '2px')
                 .css('width','16px')
-                .css('height','18px');
+                .css('height','18px')
+                .css('transform', 'rotate(-90deg)')
+                .click(function(ev) {
+                  console.log('play sideays ' + name);
+                  return false;
+                });
       sidewaysMenu.append(btn);
    }
 
-   sidewaysMenu.append(playButton);
-   sideButton('move_icon');
-   sideButton('influence_icon');
-   sideButton('attack_icon');
-   sideButton('block_icon');
+   sidewaysMenu.append(
+    textButton('&#x21b6;', function(ev) {
+      sidewaysMenu.hide();
+      playMenu.show();
+      c.css('transform', 'rotate(0deg)');
+      return false;
+    })
+   );
+   sideButton('move');
+   sideButton('influence');
+   sideButton('attack');
+   sideButton('block');
 
+    c.append(playMenu)
+     .append(sidewaysMenu);
 
-    c.append(sidewaysMenu);
     me.addCard(c);
   });
   return me;
