@@ -47,7 +47,6 @@ data CombatPhase = RangedAttackPhase (Set ActiveEnemy)
                    -- ^ Enemies that we are attacking at the moment
 
 -- XXX: Some cards make enemies not attack;  we need to rememebr that
--- XXX: Some crads decrease armor when used to block
 data Battle = Battle
   { activeEnemies   :: Map Int ActiveEnemy
   , defeatedEnemies :: Set ActiveEnemy
