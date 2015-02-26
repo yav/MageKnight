@@ -508,8 +508,8 @@ function drawReputation(player) {
 
 function deedCardImage(name) {
 
-  var sizes = [ 160, 264 ];
-  // var sizes = [ 264 ];
+  // var sizes = [ 160, 264 ];
+  var sizes = [ 264 ];
   var curW  = 0;
 
 
@@ -553,6 +553,37 @@ function sidewaysCardImage(name) {
            .css('transform', 'rotate(90deg)');
   return me;
 }
+
+
+function actionCard(name, poweredUp) {
+  var me = deedCardImage(name);
+  var pos = poweredUp ? (7/12) : (9/11);
+
+  var screen = $('<div/>')
+               .width(me.width())
+               .height(me.height()/7)
+               .css('position','absolute')
+               .css('left','0px')
+               .css('top', (pos * me.height()) + 'px')
+               .css('background-color', 'rgba(0,0,0,0.75)');
+  return me.append(screen);
+}
+
+function spellCard(name, poweredUp) {
+  var me = deedCardImage(name);
+  var pos = poweredUp ? 0 : (1/2);
+
+  var screen = $('<div/>')
+               .width(me.width())
+               .height(me.height()/2)
+               .css('position','absolute')
+               .css('left','0px')
+               .css('top', (pos * me.height()) + 'px')
+               .css('background-color', 'rgba(0,0,0,0.75)');
+  return me.append(screen);
+}
+
+
 
 
 function drawCardContainer(vscale) {
@@ -698,7 +729,9 @@ function drawPlayArea(hand) {
     alert(it);
   });
 
-  me.append(sidewaysCardImage('Mana Draw'));
+  //me.append(sidewaysCardImage('Mana Draw'));
+  me.append(spellCard('Burning Shield', false));
+  me.append(actionCard('March', false));
   return me;
 }
 

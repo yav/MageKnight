@@ -33,6 +33,8 @@ library
     MageKnight.Player,
     MageKnight.DummyPlayer,
     MageKnight.Turn,
+    MageKnight.Movement,
+    MageKnight.Combat,
 
     MageKnight.Game,
     MageKnight.Common,
