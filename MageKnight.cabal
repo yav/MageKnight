@@ -39,6 +39,7 @@ library
     MageKnight.Game,
     MageKnight.Common,
     MageKnight.Offers,
+    MageKnight.Source,
 
     MageKnight.JSON,
     MageKnight.Random,

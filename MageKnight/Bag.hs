@@ -6,7 +6,7 @@ module MageKnight.Bag
 
   , bagLookup
 
-  , bagIsEmpty
+  , bagIsEmpty, bagSize
   , bagKeys
   , bagToListGrouped, flatGrouped
   , bagToList
@@ -73,4 +73,8 @@ flatGrouped xs = [ x | (a,n) <- xs, x <- replicate n a ]
 bagMap :: Ord b => (a -> b) -> Bag a -> Bag b
 bagMap f = bagFromList . map f . bagToList
 
+-- | Number of elements in the bag.
+-- Linear in the number of element types.
+bagSize :: Bag a -> Int
+bagSize = sum . map snd . bagToListGrouped
 

@@ -1,11 +1,10 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
 module MageKnight.Game where
 
-import           MageKnight.Common
 import           MageKnight.Offers
+import           MageKnight.Source
 import           MageKnight.Land
 import           MageKnight.Random
-import           MageKnight.Bag
 import           MageKnight.Terrain
 import           MageKnight.JSON
 import           MageKnight.Player
@@ -16,34 +15,32 @@ import           MageKnight.DeedDecks(makeCustomDeck, arytheaDeck)
 
 testGame :: StdGen -> Game
 testGame g =
-  Game { theSource  = bagFromList [ BasicMana Red, BasicMana Green, Gold ]
+  Game { theSource  = newSource sourceRNG 3
        , offers     = iterate newMonastery offers0 !! ms
        , theLand    = placePlayer pl l
        , player     = pl
-       , gameRNG    = gameRand
        }
   where
-  offers0     = setupOffers offerRand (defaultOfferSetup 1 True)
-  Just (l,ms) = setupLand landRand (defaultLandSetup Wedge 7 2 [3,5])
-  (offerRand, g1)     = split g
-  (landRand,gameRand) = split g1
+  offers0     = setupOffers offerRNG (defaultOfferSetup 1 True)
+  Just (l,ms) = setupLand landRNG (defaultLandSetup Wedge 7 2 [3,5])
+  (offerRNG, g1)     = split g
+  (landRNG,sourceRNG) = split g1
   pl = newPlayer "Arythea" (makeCustomDeck arytheaDeck)
 
 
 
 
 data Game = Game
-  { theSource   :: Bag Mana
+  { theSource   :: Source
   , offers      :: Offers
   , theLand     :: Land
   , player      :: Player   -- just one for now
-  , gameRNG     :: StdGen
   }
 
 updatePlayer :: Functor f => (Player -> f Player) -> Game -> f Game
 updatePlayer f Game { .. } = fmap (\p1 -> Game { player = p1, .. }) (f player)
 
-updateSource :: Functor f => (Bag Mana -> f (Bag Mana)) -> Game -> f Game
+updateSource :: Functor f => (Source -> f Source) -> Game -> f Game
 updateSource f Game { .. } = fmap (\p1 -> Game { theSource = p1, .. })
                                   (f theSource)
 
@@ -74,7 +71,7 @@ explore addr g0 =
 instance Export Game where
   toJS Game { .. } =
     object
-      [ "source" .= bagToList theSource
+      [ "source" .= theSource
       , "offers" .= offers
       , "land"   .= theLand
       , "player" .= player

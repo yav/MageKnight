@@ -33,11 +33,11 @@ module MageKnight.Turn
 import MageKnight.Common ( Element(..), AttackType(..), Mana(..)
                          , BasicMana(..), Time(..)
                          )
+import MageKnight.Source
 import MageKnight.Terrain (Terrain(..))
 import MageKnight.Game
 import MageKnight.Player
 import MageKnight.Land
-import MageKnight.Random
 import MageKnight.Bag
 import MageKnight.JSON
 import MageKnight.Movement
@@ -133,7 +133,7 @@ useManaDie m t =
      guard (case turnTime t of
               Day   -> m /= Black
               Night -> m /= Gold)
-     Turn { .. } <- updateGame (updateSource (bagRemove 1 m)) t
+     Turn { .. } <- updateGame (updateSource (takeMana m)) t
      return Turn { manaDies   = manaDies - 1
                  , manaTokens = bagAdd 1 m manaTokens
                  , .. }

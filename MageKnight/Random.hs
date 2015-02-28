@@ -3,6 +3,7 @@ module MageKnight.Random
   ( StdGen
   , shuffle
   , rollDie
+  , rollDice
   , split
   ) where
 
