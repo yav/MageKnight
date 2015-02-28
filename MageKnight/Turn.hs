@@ -31,15 +31,16 @@ module MageKnight.Turn
   ) where
 
 import MageKnight.Common ( Element(..), AttackType(..), Mana(..)
-                         , BasicMana(..), Time
+                         , BasicMana(..), Time(..)
                          )
-import MageKnight.Terrain (Terrain(..), terrainCostsDuring)
+import MageKnight.Terrain (Terrain(..))
+import MageKnight.Game
+import MageKnight.Land
+import MageKnight.Random
 import MageKnight.Bag
 import MageKnight.JSON
 import MageKnight.Movement
 
-import           Data.Map ( Map )
-import qualified Data.Map as Map
 import qualified Data.Text as Text
 import           Control.Monad ( guard )
 
@@ -64,14 +65,9 @@ data Resource = Move
               | Influence
                 -- ^ For interacting
 
-              | ManaToken Mana
-                -- ^ Power-up stuff
-
-              | ManaDie
-                -- ^ Take a die from the source
                 deriving (Eq,Ord,Show)
 
-data Phase    = TurnStart Time
+data Phase    = TurnStart
               | TurnMovement MovePhase
               | TurnInteract -- XXX
               | TurnCombat -- XXX
@@ -80,24 +76,38 @@ data Phase    = TurnStart Time
 
 -- | The state of a player's turn.
 data Turn = Turn
-  { turnResources :: Bag Resource
+  { turnGame      :: Game
+  , turnTime      :: Time     -- ^ May differ from the game, if in dungeon
+  , turnRNG       :: StdGen
+
+
+  , turnResources :: Bag Resource
   , spentCrystals :: Bag BasicMana
+  , manaTokens    :: Bag Mana
+  , manaDies      :: Int
   , turnPhase     :: Phase
   }
 
 -- | Make a new turn, for the given time.
-newTurn :: Time -> Turn
-newTurn t = Turn
-  { turnResources = bagAdd 1 ManaDie bagEmpty
+newTurn :: Game -> Turn
+newTurn g = Turn
+  { turnGame      = g { gameRNG = r1 }
+  , turnRNG       = r2
+  , turnTime      = getTime (theLand g)
+  , turnResources = bagEmpty
   , spentCrystals = bagEmpty
-  , turnPhase     = TurnStart t
+  , manaTokens    = bagEmpty
+  , manaDies      = 1
+  , turnPhase     = TurnStart
   }
+  where (r1,r2) = split (gameRNG g)
 
 -- | Add some amount of resources.
 addResource :: Int -> Resource -> Turn -> Turn
 addResource a r Turn { .. } =
   Turn { turnResources = bagAdd a r turnResources, .. }
 
+-- | Spend some amount of resources.
 spendResource :: Int -> Resource -> Turn -> Maybe Turn
 spendResource a r Turn { .. } =
   do rs <- bagRemove a r turnResources
@@ -106,20 +116,29 @@ spendResource a r Turn { .. } =
 -- | Convert a crystal to a mana token.
 useCrystal :: BasicMana -> Turn -> Turn
 useCrystal t Turn { .. } =
-  addResource 1 (ManaToken (BasicMana t))
-  Turn { spentCrystals = bagAdd 1 t spentCrystals, .. }
+  Turn { spentCrystals = bagAdd 1 t spentCrystals
+       , manaTokens    = bagAdd 1 (BasicMana t) manaTokens
+       , ..
+       }
 
 -- | Use a mana die from the source.
 useManaDie :: Mana -> Turn -> Maybe Turn
-useManaDie m t =
-  do t1 <- spendResource 1 ManaDie t
-     return (addResource 1 (ManaToken m) t1)
+useManaDie m Turn { .. } =
+  do guard (manaDies >= 1)
+     guard $ case turnTime of
+               Day   -> m /= Black
+               Night -> m /= Gold
+     return Turn { manaDies   = manaDies - 1
+                 , manaTokens = bagAdd 1 m manaTokens
+                 , ..
+                 }
 
 -- | Perform an exploration action.
 payToExplore :: Turn -> Maybe Turn
-payToExplore t =
-  case turnPhase t of
-    TurnStart s -> payToExplore t { turnPhase = TurnMovement (newMovePhase s) }
+payToExplore t@(Turn { .. }) =
+  case turnPhase of
+    TurnStart -> payToExplore
+                  Turn { turnPhase = TurnMovement (newMovePhase turnTime), .. }
     TurnMovement MovePhase { mpMode = Walking } -> spendResource 2 Move t
     _                                           -> Nothing
 
@@ -128,8 +147,8 @@ payToExplore t =
 payToMove :: Terrain -> Turn -> Maybe Turn
 payToMove terrain t0 =
   case turnPhase t0 of
-    TurnStart s -> payToMove terrain
-                              t0 { turnPhase = TurnMovement (newMovePhase s) }
+    TurnStart -> payToMove terrain
+                    t0 { turnPhase = TurnMovement (newMovePhase (turnTime t0)) }
     TurnMovement mp ->
       do (c,mp1) <- tryToMove terrain mp
          t1      <- spendResource c Move t0
@@ -144,11 +163,10 @@ instance ExportAsKey Resource where
     case r of
       Move        -> "move"
       Heal        -> "heal"
+      ReadyUnit n -> Text.concat [ "ready_unit_", Text.pack (show n) ]
       Influence   -> "influence"
       Attack t e  -> Text.concat [ "attack_", toKeyJS t, "_", toKeyJS e ]
       Block e     -> Text.append "block_" (toKeyJS e)
-      ManaToken m -> toKeyJS m
-      ManaDie     -> "mana_die"
 
 instance Export Turn where
   toJS Turn { .. } = object

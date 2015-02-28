@@ -9,7 +9,6 @@ import           MageKnight.Bag
 import           MageKnight.Terrain
 import           MageKnight.JSON
 import           MageKnight.Player
-import           MageKnight.Turn
 import           MageKnight.DeedDecks(makeCustomDeck, arytheaDeck)
 
 
@@ -21,12 +20,13 @@ testGame g =
        , offers     = iterate newMonastery offers0 !! ms
        , theLand    = placePlayer pl l
        , player     = pl
-       , playerTurn = newTurn (getTime l)
+       , gameRNG    = gameRand
        }
   where
   offers0     = setupOffers offerRand (defaultOfferSetup 1 True)
   Just (l,ms) = setupLand landRand (defaultLandSetup Wedge 7 2 [3,5])
-  (offerRand,landRand) = split g
+  (offerRand, g1)     = split g
+  (landRand,gameRand) = split g1
   pl = newPlayer "Arythea" (makeCustomDeck arytheaDeck)
 
 
@@ -37,7 +37,7 @@ data Game = Game
   , offers      :: Offers
   , theLand     :: Land
   , player      :: Player   -- just one for now
-  , playerTurn  :: Turn     -- ^ current player's turn
+  , gameRNG     :: StdGen
   }
 
 -- | Move the player 1 unit the given direction.
@@ -71,7 +71,6 @@ instance Export Game where
       , "offers" .= offers
       , "land"   .= theLand
       , "player" .= player
-      , "turn"   .= playerTurn
       ]
 
 

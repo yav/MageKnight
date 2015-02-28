@@ -77,11 +77,11 @@ tryToMove terrain MovePhase { .. } =
 
     UsingUndergroundTravel n ->
       do guard (n > 0 && terrain /= Lake && terrain /= Swamp)
-         return (0, MovePhase { mpMode = UsingUndergroundTravel (n-1) })
+         return (0, MovePhase { mpMode = UsingUndergroundTravel (n-1), .. })
 
     UsingWingsOfWind n ->
       do guard (n > 0)
-         return (1, MovePhase { mpMode = UsingWingsOfWind (n-1) })
+         return (1, MovePhase { mpMode = UsingWingsOfWind (n-1), .. })
 
 
 
