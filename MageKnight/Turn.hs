@@ -35,6 +35,7 @@ import MageKnight.Common ( Element(..), AttackType(..), Mana(..)
                          )
 import MageKnight.Terrain (Terrain(..))
 import MageKnight.Game
+import MageKnight.Player
 import MageKnight.Land
 import MageKnight.Random
 import MageKnight.Bag
@@ -78,9 +79,6 @@ data Phase    = TurnStart
 data Turn = Turn
   { turnGame      :: Game
   , turnTime      :: Time     -- ^ May differ from the game, if in dungeon
-  , turnRNG       :: StdGen
-
-
   , turnResources :: Bag Resource
   , spentCrystals :: Bag BasicMana
   , manaTokens    :: Bag Mana
@@ -91,8 +89,7 @@ data Turn = Turn
 -- | Make a new turn, for the given time.
 newTurn :: Game -> Turn
 newTurn g = Turn
-  { turnGame      = g { gameRNG = r1 }
-  , turnRNG       = r2
+  { turnGame      = g
   , turnTime      = getTime (theLand g)
   , turnResources = bagEmpty
   , spentCrystals = bagEmpty
@@ -100,7 +97,6 @@ newTurn g = Turn
   , manaDies      = 1
   , turnPhase     = TurnStart
   }
-  where (r1,r2) = split (gameRNG g)
 
 -- | Add some amount of resources.
 addResource :: Int -> Resource -> Turn -> Turn
@@ -113,25 +109,34 @@ spendResource a r Turn { .. } =
   do rs <- bagRemove a r turnResources
      return Turn { turnResources = rs, .. }
 
+-- | Modify the game.
+updateGame :: Functor f => (Game -> f Game) -> Turn -> f Turn
+updateGame f Turn { .. } = fmap (\g1 -> Turn { turnGame = g1, .. }) (f turnGame)
+
+
+--------------------------------------------------------------------------------
+
+
 -- | Convert a crystal to a mana token.
-useCrystal :: BasicMana -> Turn -> Turn
-useCrystal t Turn { .. } =
-  Turn { spentCrystals = bagAdd 1 t spentCrystals
-       , manaTokens    = bagAdd 1 (BasicMana t) manaTokens
-       , ..
-       }
+useCrystal :: BasicMana -> Turn -> Maybe Turn
+useCrystal c t =
+  do Turn { .. } <- (updateGame . updatePlayer) (removeCrystal c) t
+     return Turn { spentCrystals = bagAdd 1 c spentCrystals
+                 , manaTokens    = bagAdd 1 (BasicMana c) manaTokens
+                 , ..
+                 }
 
 -- | Use a mana die from the source.
 useManaDie :: Mana -> Turn -> Maybe Turn
-useManaDie m Turn { .. } =
-  do guard (manaDies >= 1)
-     guard $ case turnTime of
-               Day   -> m /= Black
-               Night -> m /= Gold
+useManaDie m t =
+  do guard (manaDies t >= 1)
+     guard (case turnTime t of
+              Day   -> m /= Black
+              Night -> m /= Gold)
+     Turn { .. } <- updateGame (updateSource (bagRemove 1 m)) t
      return Turn { manaDies   = manaDies - 1
                  , manaTokens = bagAdd 1 m manaTokens
-                 , ..
-                 }
+                 , .. }
 
 -- | Perform an exploration action.
 payToExplore :: Turn -> Maybe Turn

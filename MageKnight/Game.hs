@@ -40,6 +40,13 @@ data Game = Game
   , gameRNG     :: StdGen
   }
 
+updatePlayer :: Functor f => (Player -> f Player) -> Game -> f Game
+updatePlayer f Game { .. } = fmap (\p1 -> Game { player = p1, .. }) (f player)
+
+updateSource :: Functor f => (Bag Mana -> f (Bag Mana)) -> Game -> f Game
+updateSource f Game { .. } = fmap (\p1 -> Game { theSource = p1, .. })
+                                  (f theSource)
+
 -- | Move the player 1 unit the given direction.
 movePlayer :: Dir -> Game -> Game
 movePlayer d Game { .. } =

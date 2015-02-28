@@ -56,6 +56,13 @@ instance Ord Player where
   compare x y = compare (playerName x) (playerName y)
 
 
+-- | Use up one of the player's crystals.
+removeCrystal :: BasicMana -> Player -> Maybe Player
+removeCrystal c Player { .. } =
+  do cs <- bagRemove 1 c playerCrystals
+     return Player { playerCrystals = cs, .. }
+
+
 -- | Check if this player passed out.
 -- The blloean indicates if the player passed out.
 checkPassOut :: Player -> (Bool, Player)
