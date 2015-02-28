@@ -52,6 +52,9 @@ data Resource = Move
               | Heal
                 -- Heal
 
+              | ReadyUnit Int
+                -- ^ Ready unit of up to this level
+
               | Attack AttackType Element
                 -- Make attacks
 
