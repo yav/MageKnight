@@ -254,9 +254,11 @@ placePlayer p = revealHidden loc
 removePlayer :: Player -> Land -> Land
 removePlayer p = updateAddr (playerLocation p) (\_ _ -> hexRemovePlayer p)
 
--- | Move a player in the given direction.
-movePlayer :: Player -> Dir -> Land -> (Player, Land)
-movePlayer p d l = (p1, placePlayer p1 l1)
+-- | Move a player to the given address.  While most of the time, the address
+-- will be adjacent to the player, this might not be the case if
+-- "Space Bending" is activated.
+movePlayer :: Player -> Addr -> Land -> (Player, Land)
+movePlayer p newLoc l = (p1, placePlayer p1 l1)
   where
   l1      = removePlayer p l
   p1      = p { playerLocation = newLoc
@@ -268,7 +270,8 @@ movePlayer p d l = (p1, placePlayer p1 l1)
                                   Just (sl,ws) -> let ws' = ws + 1
                                                   in seq ws' (sl,ws')
               }
-  newLoc  = neighbour (playerLocation p) d
+
+
 
 
 addrOnMap :: Addr -> Land -> Bool

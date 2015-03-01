@@ -34,6 +34,7 @@ import MageKnight.JSON
 
 import           Data.Array (array, (!))
 import           Data.Text (Text)
+import           Data.Set ( Set )
 import qualified Data.Set as Set
 import           Data.Map ( Map )
 import qualified Data.Map as Map
@@ -95,8 +96,8 @@ terrainCostsDuring time = Map.fromList $
 
 
 -- | Locations that are up to the given distance.
-neighboursUpTo :: Int -> Addr -> [ Addr ]
-neighboursUpTo n a = Set.toList (iterate step (Set.singleton a) !! n)
+neighboursUpTo :: Int -> Addr -> Set Addr
+neighboursUpTo n a = iterate step (Set.singleton a) !! n
   where
   neighbours x = Set.fromList [ neighbour x d | d <- allDirections ]
   step s       = Set.unions (map neighbours (Set.toList s))

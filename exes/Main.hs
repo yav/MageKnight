@@ -7,6 +7,7 @@ import MageKnight.Deed
 import MageKnight.Terrain
 import MageKnight.JSON
 import MageKnight.Game
+import MageKnight.Turn
 import MageKnight.Player
 import MageKnight.DeedDecks(findDeed)
 
@@ -38,7 +39,7 @@ import           System.Random (newStdGen)
 main :: IO ()
 main =
   do r <- newStdGen
-     s <- newIORef (testGame r)
+     s <- newIORef (newTurn (testGame r))
      quickHttpServe $ Snap.route
        [ ("/deed/:deed", getDeedImage)
 
@@ -134,15 +135,15 @@ deedPath Deed { .. } = dir </> nameToPath deedName <.> "png"
 
 --------------------------------------------------------------------------------
 
-newGame :: IORef Game -> Snap ()
+newGame :: IORef Turn -> Snap ()
 newGame s = sendJSON =<< liftIO go
   where
   go = do r <- liftIO newStdGen
-          let g = testGame r
-          writeIORef s g
-          return g
+          let t = newTurn (testGame r)
+          writeIORef s t
+          return t
 
-clickHex :: IORef Game -> Snap ()
+clickHex :: IORef Turn -> Snap ()
 clickHex s =
   do a <- addrParam
      g <- liftIO (atomicModifyIORef' s (go a))

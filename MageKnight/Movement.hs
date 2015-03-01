@@ -17,6 +17,7 @@ data MovePhase = MovePhase
 data MoveMode = Walking
               | UsingWingsOfWind Int
               | UsingUndergroundTravel Int
+                deriving (Eq,Show)
 
 -- | Start movement phase at the given time of day.
 newMovePhase :: Time -> MovePhase
@@ -67,7 +68,7 @@ oneMoveLimit MovePhase { .. } = mpRadius
 {- | How much it would cost to move to this type of terrain.
 Assumes that the tile is actually accessible.
 Returns the cost the terrain, and and updated movement phase,
-to be use if there are enough resoutrces to move -}
+to be used if there are enough resources to move. -}
 tryToMove :: Terrain -> MovePhase -> Maybe (Int, MovePhase)
 tryToMove terrain MovePhase { .. } =
   case mpMode of

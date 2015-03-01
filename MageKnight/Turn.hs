@@ -12,8 +12,7 @@ module MageKnight.Turn
 
     -- ** Spending
   , useManaDie
-  , payToExplore
-  , payToMove
+  , explore
 
   -- * Adjusting terrain costs
   , setTerrainCost
@@ -34,7 +33,8 @@ import MageKnight.Common ( Element(..), AttackType(..), Mana(..)
                          , BasicMana(..), Time(..)
                          )
 import MageKnight.Source
-import MageKnight.Terrain (Terrain(..))
+import MageKnight.Offers
+import MageKnight.Terrain
 import MageKnight.Game
 import MageKnight.Player
 import MageKnight.Land
@@ -43,6 +43,7 @@ import MageKnight.JSON
 import MageKnight.Movement
 
 import qualified Data.Text as Text
+import qualified Data.Set  as Set
 import           Control.Monad ( guard )
 
 
@@ -139,27 +140,43 @@ useManaDie m t =
                  , .. }
 
 -- | Perform an exploration action.
-payToExplore :: Turn -> Maybe Turn
-payToExplore t@(Turn { .. }) =
-  case turnPhase of
-    TurnStart -> payToExplore
-                  Turn { turnPhase = TurnMovement (newMovePhase turnTime), .. }
-    TurnMovement MovePhase { mpMode = Walking } -> spendResource 2 Move t
-    _                                           -> Nothing
+explore :: Addr -> Turn -> Maybe Turn
+explore a t =
+  case turnPhase t of
+    TurnStart -> explore a
+                      t { turnPhase = TurnMovement (newMovePhase (turnTime t)) }
+    TurnMovement mp ->
+      do guard (mpMode mp == Walking)
+         t1 <- spendResource 2 Move t
+         let g   = turnGame t1
+             loc = playerLocation (player g)
+         guard (a `Set.member` neighboursUpTo (mpRadius mp) loc)
+         (newLand, newMons) <- exploreAt loc (addrGlobal a) (theLand g)
+         let g1 = g { theLand = newLand
+                    , offers  = iterate newMonastery (offers g) !! newMons
+                    }
+         return t1 { turnGame = g1 }
 
--- | Pay the price for moving onto the given tile.
--- Assumes that the tile is actually accessible.
-payToMove :: Terrain -> Turn -> Maybe Turn
-payToMove terrain t0 =
+
+    _ -> Nothing
+
+{-
+-- | Perform a movement.
+move :: Addr -> Turn -> Maybe Turn
+move a t0 =
   case turnPhase t0 of
-    TurnStart -> payToMove terrain
+    TurnStart -> move a
                     t0 { turnPhase = TurnMovement (newMovePhase (turnTime t0)) }
     TurnMovement mp ->
-      do (c,mp1) <- tryToMove terrain mp
+      do let g   = turnGame t0
+             loc = playerLocation (player g)
+         guard (a `Set.member` neighboursUpTo (mpRadius mp) loc)
+      
+      (c,mp1) <- tryToMove terrain mp
          t1      <- spendResource c Move t0
          return t1 { turnPhase = TurnMovement mp1 }
     _ -> Nothing
-
+-}
 --------------------------------------------------------------------------------
 
 
