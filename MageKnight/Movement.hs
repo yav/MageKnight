@@ -1,5 +1,17 @@
 {-# LANGUAGE Safe, RecordWildCards #-}
-module MageKnight.Movement where
+module MageKnight.Movement
+  ( MovePhase
+  , newMovePhase
+  , useWalking
+  , useWingsOfWind
+  , useUndergroundTravel
+  , bendSpace
+  , setTerrainCost
+  , decreaseTerrainCost
+  , isWalking
+  , oneMoveLimit
+  , tryToMove
+  ) where
 
 import MageKnight.Common
 import MageKnight.Terrain
@@ -16,8 +28,11 @@ data MovePhase = MovePhase
 
 data MoveMode = Walking
               | UsingWingsOfWind Int
-              | UsingUndergroundTravel Int
+              | UsingUnderground Int UndergroundMode
                 deriving (Eq,Show)
+
+data UndergroundMode = UndergroundTravel | UndergroundAttack
+                       deriving (Eq,Show)
 
 -- | Start movement phase at the given time of day.
 newMovePhase :: Time -> MovePhase
@@ -27,33 +42,28 @@ newMovePhase time = MovePhase
   , mpRadius       = 1
   }
 
--- | Switch to walking.
-useWalking :: MovePhase -> MovePhase
-useWalking MovePhase { .. } = MovePhase { mpMode = Walking, .. }
+-- | Switch to walking, unless we are doing an undergounrd attack, in which
+-- case we have to attack when done.
+useWalking :: MovePhase -> Maybe MovePhase
+useWalking MovePhase { .. } =
+  case mpMode of
+    UsingUnderground _ UndergroundAttack -> Nothing
+    _ -> Just MovePhase { mpMode = Walking, .. }
 
 -- | Start a special movement mode.  Used for "Wings of Wind".
 useWingsOfWind :: MovePhase -> Maybe MovePhase
 useWingsOfWind MovePhase { .. } =
   case mpMode of
-    Walking -> Just MovePhase { mpMode = UsingWingsOfWind 5, .. }
-    _       -> Nothing
+    UsingUnderground _ UndergroundAttack -> Nothing
+    _ -> Just MovePhase { mpMode = UsingWingsOfWind 5, .. }
 
 -- | Start a special moveMode mode.
 -- Used for "Underground Travel" and "Underground Attack" modes.
-useUndergroundTravel :: MovePhase -> Maybe MovePhase
-useUndergroundTravel MovePhase { .. } =
+useUndergroundTravel :: UndergroundMode -> MovePhase -> Maybe MovePhase
+useUndergroundTravel m MovePhase { .. } =
   case mpMode of
-    Walking -> Just MovePhase { mpMode = UsingUndergroundTravel 3, .. }
-    _       -> Nothing
-
--- | Is the current special movement mode at an end.
-endOfMoveMode :: MovePhase -> Bool
-endOfMoveMode MovePhase { .. } =
-  case mpMode of
-    Walking                  -> False
-    UsingWingsOfWind n       -> n == 0
-    UsingUndergroundTravel n -> n == 0
-
+    UsingUnderground _ UndergroundAttack -> Nothing
+    _ -> Just MovePhase { mpMode = UsingUnderground 3 m, .. }
 
 -- | Switch to "bent space" mode
 bendSpace :: MovePhase -> MovePhase
@@ -63,6 +73,9 @@ bendSpace MovePhase { .. } = MovePhase { mpRadius = 2, .. }
 -- Used for "Bend Space"
 oneMoveLimit :: MovePhase -> Int
 oneMoveLimit MovePhase { .. } = mpRadius
+
+isWalking :: MovePhase -> Bool
+isWalking MovePhase { .. } = mpMode == Walking
 
 
 {- | How much it would cost to move to this type of terrain.
@@ -76,13 +89,17 @@ tryToMove terrain MovePhase { .. } =
       do c <- Map.lookup terrain mpTerrainCosts
          return (c, MovePhase { .. })
 
-    UsingUndergroundTravel n ->
-      do guard (n > 0 && terrain /= Lake && terrain /= Swamp)
-         return (0, MovePhase { mpMode = UsingUndergroundTravel (n-1), .. })
+    UsingUnderground n m
+      | n > 0 && terrain /= Lake && terrain /= Swamp ->
+         return (0, MovePhase { mpMode = UsingUnderground (n-1) m, .. })
 
-    UsingWingsOfWind n ->
-      do guard (n > 0)
-         return (1, MovePhase { mpMode = UsingWingsOfWind (n-1), .. })
+      | otherwise ->
+        do guard (m /= UndergroundAttack)
+           tryToMove terrain MovePhase { mpMode = Walking, .. }
+
+    UsingWingsOfWind n
+      | n > 0  -> return (1, MovePhase { mpMode = UsingWingsOfWind (n-1), .. })
+      | otherwise -> tryToMove terrain MovePhase { mpMode = Walking, .. }
 
 
 

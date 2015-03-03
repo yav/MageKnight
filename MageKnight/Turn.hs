@@ -22,7 +22,6 @@ module MageKnight.Turn
   , useWalking
   , useWingsOfWind
   , useUndergroundTravel
-  , endOfMoveMode
 
   -- * Bending space
   , bendSpace, oneMoveLimit
@@ -41,10 +40,11 @@ import MageKnight.Land
 import MageKnight.Bag
 import MageKnight.JSON
 import MageKnight.Movement
+import MageKnight.Perhaps
 
+import           Data.Text ( Text )
 import qualified Data.Text as Text
 import qualified Data.Set  as Set
-import           Control.Monad ( guard )
 
 
 
@@ -117,7 +117,6 @@ updateGame f Turn { .. } = fmap (\g1 -> Turn { turnGame = g1, .. }) (f turnGame)
 
 --------------------------------------------------------------------------------
 
-
 -- | Convert a crystal to a mana token.
 useCrystal :: BasicMana -> Turn -> Maybe Turn
 useCrystal c t =
@@ -128,37 +127,45 @@ useCrystal c t =
                  }
 
 -- | Use a mana die from the source.
-useManaDie :: Mana -> Turn -> Maybe Turn
+useManaDie :: Mana -> Turn -> Perhaps Turn
 useManaDie m t =
-  do guard (manaDies t >= 1)
-     guard (case turnTime t of
-              Day   -> m /= Black
-              Night -> m /= Gold)
-     Turn { .. } <- updateGame (updateSource (takeMana m)) t
+  do checkThat (manaDies t >= 1) "You don't have access to the source."
+     case turnTime t of
+       Day   -> checkThat (m /= Black)
+                  "Black mana is not available during the day."
+       Night -> checkThat (m /= Gold)
+                  "Gold mana is not available during the night."
+     Turn { .. } <- perhaps "The source is empty."
+                  $ updateGame (updateSource (takeMana m)) t
      return Turn { manaDies   = manaDies - 1
                  , manaTokens = bagAdd 1 m manaTokens
                  , .. }
 
 -- | Perform an exploration action.
-explore :: Addr -> Turn -> Maybe Turn
+explore :: Addr -> Turn -> Perhaps Turn
 explore a t =
   case turnPhase t of
     TurnStart -> explore a
                       t { turnPhase = TurnMovement (newMovePhase (turnTime t)) }
-    TurnMovement mp ->
-      do guard (mpMode mp == Walking)
-         t1 <- spendResource 2 Move t
+
+    TurnMovement mp0 ->
+      do mp <- perhaps "The current movement mode does not allow exploration."
+               $ useWalking mp0
+         t1 <- perhaps "Insufficient movement points."
+               $ spendResource 2 Move t
          let g   = turnGame t1
              loc = playerLocation (player g)
-         guard (a `Set.member` neighboursUpTo (mpRadius mp) loc)
-         (newLand, newMons) <- exploreAt loc (addrGlobal a) (theLand g)
+             land = theLand g
+         checkThat (a `Set.member` neighboursUpTo (oneMoveLimit mp) loc)
+                   "The location is too far away."
+         (newLand, newMons) <- exploreAt loc (addrGlobal a) land
          let g1 = g { theLand = newLand
                     , offers  = iterate newMonastery (offers g) !! newMons
                     }
          return t1 { turnGame = g1 }
 
 
-    _ -> Nothing
+    _ -> fail "Exploration is only available during the movement phase."
 
 {-
 -- | Perform a movement.

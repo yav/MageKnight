@@ -44,7 +44,8 @@ library
     MageKnight.JSON,
     MageKnight.Random,
     MageKnight.ResourceQ,
-    MageKnight.Bag
+    MageKnight.Bag,
+    MageKnight.Perhaps
 
   build-depends:
     base,

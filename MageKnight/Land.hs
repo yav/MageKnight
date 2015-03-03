@@ -23,11 +23,12 @@ import           MageKnight.Random(shuffle, split, StdGen)
 import           MageKnight.ResourceQ(ResourceQ)
 import qualified MageKnight.ResourceQ as RQ
 import           MageKnight.JSON
+import           MageKnight.Perhaps
 
 import           Data.Map ( Map )
 import qualified Data.Map as Map
 import qualified Data.Set as Set
-import           Control.Monad(guard,foldM)
+import           Control.Monad(foldM)
 
 
 data LandSetup = LandSetup
@@ -61,7 +62,7 @@ defaultLandSetup shape basicNum coreNum cities = LandSetup
 
 -- | Setup an initial land.
 -- Returns the land and the number of moansteries in the original setup.
-setupLand :: StdGen -> LandSetup -> Maybe (Land, Int)
+setupLand :: StdGen -> LandSetup -> Perhaps (Land, Int)
 setupLand g0 LandSetup { .. } = foldM reveal (land0,0) revealPos
   where
   land0 = Land
@@ -138,17 +139,20 @@ data Land = Land
 
 -- | Check if there are any more tiles available.  If so, also check
 -- if the next tile may be placed at the given location.
-selectTile :: Bool -> TileAddr -> Land -> Maybe (Tile, Land)
+selectTile :: Bool -> TileAddr -> Land -> Perhaps (Tile, Land)
 selectTile noCheck pt Land { .. }
   | t : ts <- unexploredTiles =
-    do guard (noCheck || validPlacement mapShape explored (tileType t) False pt)
+    do checkThat (noCheck ||
+                    validPlacement mapShape explored (tileType t) False pt)
+         "The next tile does not fit the location."
        return (t, Land { unexploredTiles = ts, .. })
 
   | t : ts <- backupTiles =
-    do guard (validPlacement mapShape explored (tileType t) True pt)
+    do checkThat (validPlacement mapShape explored (tileType t) True pt)
+         "The next backup tile does not fit the location."
        return (t, Land { backupTiles = ts, .. })
 
-  | otherwise = Nothing
+  | otherwise = fail "No more map tiles."
   where
   explored a = a `Map.member` theMap
 
@@ -223,13 +227,13 @@ revealHidden a l = updateAddr a upd l
 
 -- | Try to explore.
 -- Fails of the address is explored, or there is no suitable land to put there.
-exploreAt :: Addr -> TileAddr -> Land -> Maybe (Land, Int)
+exploreAt :: Addr -> TileAddr -> Land -> Perhaps (Land, Int)
 exploreAt loc newTilePos l =
   do (l1,m) <- initialTile False newTilePos l
      return (revealHiddenNeighbours loc l1, m)
 
 -- | Setup a new tile at the given position.
-initialTile :: Bool -> TileAddr -> Land -> Maybe (Land, Int)
+initialTile :: Bool -> TileAddr -> Land -> Perhaps (Land, Int)
 initialTile noCheck addr l =
   do (t,l1) <- selectTile noCheck addr l
      let (gt,ms,l2) = populateTile t l1
