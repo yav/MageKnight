@@ -14,18 +14,6 @@ module MageKnight.Turn
   , useManaDie
   , explore
 
-  -- * Adjusting terrain costs
-  , setTerrainCost
-  , decreaseTerrainCost
-
-  -- * Transporation modes
-  , useWalking
-  , useWingsOfWind
-  , useUndergroundTravel
-
-  -- * Bending space
-  , bendSpace, oneMoveLimit
-
   ) where
 
 import MageKnight.Common ( Element(..), AttackType(..), Mana(..)
@@ -42,7 +30,6 @@ import MageKnight.JSON
 import MageKnight.Movement
 import MageKnight.Perhaps
 
-import           Data.Text ( Text )
 import qualified Data.Text as Text
 import qualified Data.Set  as Set
 
@@ -165,11 +152,11 @@ explore a t =
          return t1 { turnGame = g1 }
 
 
-    _ -> fail "Exploration is only available during the movement phase."
+    _ -> fail "Exploration is available only during the movement phase."
 
 {-
 -- | Perform a movement.
-move :: Addr -> Turn -> Maybe Turn
+move :: Addr -> Turn -> Perhaps Turn
 move a t0 =
   case turnPhase t0 of
     TurnStart -> move a

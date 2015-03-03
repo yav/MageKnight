@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe, RecordWildCards #-}
+{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
 module MageKnight.Movement
   ( MovePhase
   , newMovePhase
@@ -15,8 +15,8 @@ module MageKnight.Movement
 
 import MageKnight.Common
 import MageKnight.Terrain
+import MageKnight.Perhaps
 
-import           Control.Monad(guard)
 import           Data.Map ( Map )
 import qualified Data.Map as Map
 
@@ -82,11 +82,12 @@ isWalking MovePhase { .. } = mpMode == Walking
 Assumes that the tile is actually accessible.
 Returns the cost the terrain, and and updated movement phase,
 to be used if there are enough resources to move. -}
-tryToMove :: Terrain -> MovePhase -> Maybe (Int, MovePhase)
+tryToMove :: Terrain -> MovePhase -> Perhaps (Int, MovePhase)
 tryToMove terrain MovePhase { .. } =
   case mpMode of
     Walking ->
-      do c <- Map.lookup terrain mpTerrainCosts
+      do c <- perhaps "This terrain is inaccessable."
+              $ Map.lookup terrain mpTerrainCosts
          return (c, MovePhase { .. })
 
     UsingUnderground n m
@@ -94,7 +95,8 @@ tryToMove terrain MovePhase { .. } =
          return (0, MovePhase { mpMode = UsingUnderground (n-1) m, .. })
 
       | otherwise ->
-        do guard (m /= UndergroundAttack)
+        do checkThat (m /= UndergroundAttack)
+             "An underground attack must end in battle."
            tryToMove terrain MovePhase { mpMode = Walking, .. }
 
     UsingWingsOfWind n
