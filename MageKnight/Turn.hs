@@ -162,15 +162,16 @@ move a t0 =
     TurnStart -> move a
                     t0 { turnPhase = TurnMovement (newMovePhase (turnTime t0)) }
     TurnMovement mp ->
-      do let g   = turnGame t0
-             loc = playerLocation (player g)
-         guard (a `Set.member` neighboursUpTo (mpRadius mp) loc)
-      
+      do let g0   = turnGame t0
+             loc0 = playerLocation (player g0)
+         guard (a `Set.member` neighboursUpTo (mpRadius mp) loc0)
+         undefined
+
       (c,mp1) <- tryToMove terrain mp
          t1      <- spendResource c Move t0
          return t1 { turnPhase = TurnMovement mp1 }
-    _ -> Nothing
 -}
+    _ -> Nothing
 --------------------------------------------------------------------------------
 
 

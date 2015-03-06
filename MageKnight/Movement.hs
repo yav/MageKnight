@@ -91,9 +91,12 @@ tryToMove terrain MovePhase { .. } =
          return (c, MovePhase { .. })
 
     UsingUnderground n m
-      | n > 0 && terrain /= Lake && terrain /= Swamp ->
-         return (0, MovePhase { mpMode = UsingUnderground (n-1) m, .. })
+      | n > 0 ->
+         do checkThat (terrain /= Lake) "Cannot move under lakes."
+            checkThat (terrain /= Swamp) "Cannot move under swamps."
+            return (0, MovePhase { mpMode = UsingUnderground (n-1) m, .. })
 
+      -- XXX: Has to end on a safe space
       | otherwise ->
         do checkThat (m /= UndergroundAttack)
              "An underground attack must end in battle."
@@ -101,6 +104,9 @@ tryToMove terrain MovePhase { .. } =
 
     UsingWingsOfWind n
       | n > 0  -> return (1, MovePhase { mpMode = UsingWingsOfWind (n-1), .. })
+
+
+      -- XXX: Has to end on a safe space
       | otherwise -> tryToMove terrain MovePhase { mpMode = Walking, .. }
 
 
