@@ -11,7 +11,6 @@ module MageKnight.Land
   , getTime
   ) where
 
-import           MageKnight.Bag
 import           MageKnight.Terrain
 import           MageKnight.HexContent
 import           MageKnight.Enemies( Enemy(..), EnemyType(..)
@@ -27,7 +26,6 @@ import           MageKnight.Perhaps
 
 import           Data.Map ( Map )
 import qualified Data.Map as Map
-import qualified Data.Set as Set
 import           Control.Monad(foldM)
 
 
@@ -299,6 +297,8 @@ isSafe p Addr { .. } Land { .. } =
     Just gt -> gameTileIsSafe gt addrLocal p
 
 
+-- | Who would get provoked if we moved from the firt
+-- provoked :: Addr -> Addr -> Land -> [Addr]
 
 --------------------------------------------------------------------------------
 
@@ -332,13 +332,13 @@ gameTileIsSafe GameTile { .. } loc p =
     (_, Nothing)   -> True
     (_, Just f)    ->
       case Map.lookup loc gameTileContent of
-        Nothing                -> True
-        Just HexContent { .. } ->
-          Set.null hexPlayers &&
+        Nothing  -> True
+        Just hex ->
+          not (hexHasPlayers hex) &&
           (case f of
-             Keep             -> p `elem` hexShields
-             MageTower        -> bagIsEmpty hexEnemies
-             RampagingEnemy _ -> bagIsEmpty hexEnemies
+             Keep             -> hexHasShield p hex
+             MageTower        -> not (hexHasEnemies hex)
+             RampagingEnemy _ -> not (hexHasEnemies hex)
              _                -> True)
 
 

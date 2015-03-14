@@ -170,8 +170,8 @@ move a t0 =
       (c,mp1) <- tryToMove terrain mp
          t1      <- spendResource c Move t0
          return t1 { turnPhase = TurnMovement mp1 }
--}
     _ -> Nothing
+-}
 --------------------------------------------------------------------------------
 
 

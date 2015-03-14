@@ -1,5 +1,33 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
-module MageKnight.HexContent where
+module MageKnight.HexContent
+  ( -- * Basics
+    HexContent
+  , hexEmpty
+
+    -- * Enemies
+  , hexWithEnemy
+  , hexAddEnemyFromPool
+  , hexReveal
+  , hexRemoveEnemy
+  , hexHasEnemies
+
+    -- * Players
+  , hexAddPlayer
+  , hexRemovePlayer
+  , hexHasPlayers
+
+    -- * Shields
+  , hexAddShield
+  , hexRemoveShield
+  , hexHasShield
+
+    -- * Ruins
+  , hexWithRuins
+  , hexRemoveRuins
+
+    -- * Cities
+  , hexWithCity
+  ) where
 
 import           MageKnight.Common
 import           MageKnight.Enemies
@@ -10,13 +38,15 @@ import           MageKnight.ResourceQ (ResourceQ)
 import qualified MageKnight.ResourceQ as RQ
 import           MageKnight.JSON
 
-import           Data.Maybe (fromMaybe)
+import           Data.Maybe ( fromMaybe )
+import           Data.List ( delete )
 import           Data.Set ( Set )
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 import           Data.Char ( toLower, isAlphaNum )
 import qualified Data.Text as Text
 
+-- | The contents of a single hex cell.
 data HexContent = HexContent
   { hexShields  :: [ PlayerName ] -- in reversed order
   , hexEnemies  :: Bag (Visibility, Enemy)
@@ -24,6 +54,7 @@ data HexContent = HexContent
   , hexPlayers  :: Set Player
   }
 
+-- | An empty hex cell.
 hexEmpty :: HexContent
 hexEmpty = HexContent
   { hexShields = []
@@ -32,10 +63,21 @@ hexEmpty = HexContent
   , hexPlayers = Set.empty
   }
 
+-- | Add a shield for the given player.
 hexAddShield :: PlayerName -> HexContent -> HexContent
 hexAddShield s HexContent { .. } =
   HexContent { hexShields = s : hexShields, .. }
 
+-- | Remove a shield for the given player.
+hexRemoveShield :: PlayerName -> HexContent -> HexContent
+hexRemoveShield s HexContent { .. } =
+  HexContent { hexShields = delete s hexShields, .. }
+
+-- | Does the player have a shield.
+hexHasShield :: PlayerName -> HexContent -> Bool
+hexHasShield s HexContent { .. } = s `elem` hexShields
+
+-- | Reveal hidden enemies on this cell.
 hexReveal :: HexContent -> HexContent
 hexReveal HexContent { .. } =
   HexContent { hexEnemies = bagMap reveal hexEnemies
@@ -44,32 +86,46 @@ hexReveal HexContent { .. } =
              }
   where reveal (_,e) = (Revealed,e)
 
+-- | Add an enemy to a hex-cell.
 hexAddEnemy :: Visibility -> Enemy -> HexContent -> HexContent
 hexAddEnemy v e HexContent { .. } =
   HexContent { hexEnemies = bagAdd 1 (v,e) hexEnemies, .. }
 
+-- | Remove an enemy from a hex cell.
 hexRemoveEnemy :: Enemy -> HexContent -> HexContent
 hexRemoveEnemy e HexContent { .. } =
   HexContent { hexEnemies = fromMaybe hexEnemies
                                (bagRemove 1 (Revealed,e) hexEnemies), .. }
 
+-- | Are there any enemies on the hex?
+hexHasEnemies :: HexContent -> Bool
+hexHasEnemies HexContent { .. } = not (bagIsEmpty hexEnemies)
+
+-- | Add som eruins to the cell.
 hexSetRuins :: Visibility -> Ruins -> HexContent -> HexContent
 hexSetRuins v r HexContent { .. } = HexContent { hexRuins = Just (v,r), .. }
 
+-- | Remove ruins from the cell.
 hexRemoveRuins :: HexContent -> HexContent
 hexRemoveRuins HexContent { .. } = HexContent { hexRuins = Nothing, .. }
 
+-- | Add a player figure to the cell.
 hexAddPlayer :: Player -> HexContent -> HexContent
 hexAddPlayer p HexContent { .. } =
   HexContent { hexPlayers = Set.insert p hexPlayers, .. }
 
+-- | Remove a player figure.
 hexRemovePlayer :: Player -> HexContent -> HexContent
 hexRemovePlayer p HexContent { .. } =
   HexContent { hexPlayers = Set.delete p hexPlayers, .. }
 
+-- | Are there any players on this hex.
+hexHasPlayers :: HexContent -> Bool
+hexHasPlayers HexContent { .. } = Set.null hexPlayers
 
 --------------------------------------------------------------------------------
 
+-- | Make a new hex, with some ruins on it.
 hexWithRuins :: Time -> ResourceQ Ruins -> (HexContent, ResourceQ Ruins)
 hexWithRuins time q =
   case RQ.take q of
@@ -80,8 +136,11 @@ hexWithRuins time q =
     Nothing     -> (hexEmpty, q)
 
 
+-- | Make a new hex with some enemy of the given type on it.
+hexWithEnemy :: Visibility -> EnemyType -> EnemyPool -> (HexContent, EnemyPool)
+hexWithEnemy v et p = hexAddEnemyFromPool v et (hexEmpty, p)
 
-
+-- | Add an enemy to the given hex.
 hexAddEnemyFromPool :: Visibility -> EnemyType -> (HexContent, EnemyPool) ->
                                                   (HexContent, EnemyPool)
 hexAddEnemyFromPool v et (hex,pool) =
@@ -89,9 +148,7 @@ hexAddEnemyFromPool v et (hex,pool) =
                             (e,q1) <- RQ.take q
                             return (hexAddEnemy v e hex, Map.insert et q1 pool)
 
-hexWithEnemy :: Visibility -> EnemyType -> EnemyPool -> (HexContent, EnemyPool)
-hexWithEnemy v et p = hexAddEnemyFromPool v et (hexEmpty, p)
-
+-- | Make a new hex with a city on it.
 hexWithCity :: BasicMana -> Int -> EnemyPool -> (HexContent, EnemyPool)
 hexWithCity color level pool
   | level < 1  = hexWithCity color 1  pool

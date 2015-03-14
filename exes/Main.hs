@@ -144,12 +144,12 @@ newGame s = sendJSON =<< liftIO go
           return t
 
 clickHex :: IORef Turn -> Snap ()
-clickHex s =
+clickHex s = return () {-
   do a <- addrParam
      g <- liftIO (atomicModifyIORef' s (go a))
      sendJSON g
   where
-  go a g
+  go a g = undefined
     | Just d <- find ((a ==) . neighbour loc) allDirections =
       let g1 = if addrOnMap a g then movePlayer d g
                else fromMaybe g (explore a g)
@@ -159,7 +159,7 @@ clickHex s =
 
       where loc = playerLocation p
             p = player g
-
+-}
 getDeedImage :: Snap ()
 getDeedImage =
   do deed <- deedParam "deed"
