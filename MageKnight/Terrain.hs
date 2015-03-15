@@ -19,7 +19,7 @@ module MageKnight.Terrain
     terrainCostsDuring,
 
     -- * Tiles
-    tileA, tileB, basicTiles, coreNonCityTiles, cityTiles,
+    tileA, tileB, countryTiles, coreNonCityTiles, cityTiles,
     placeHolderTile,
 
     -- * Map Shape
@@ -263,7 +263,7 @@ instance Export TileType where
   toJS t = toJS (txt :: Text)
     where
     txt = case t of
-            BasicTile -> "basic"
+            BasicTile -> "country"
             CoreTile  -> "core"
 
 instance Export Tile where
@@ -334,8 +334,8 @@ tileB = tile "B" BasicTile [ NW     |-> Plains
                            , SE     |-> Plains
                            ]
 
-basicTiles :: [Tile]
-basicTiles = map basic
+countryTiles :: [Tile]
+countryTiles = map country
   [ ("1", [ NW     |-> (Forest, Orc)
           , NE     |-> Lake
           , W      |-> Forest
@@ -436,7 +436,7 @@ basicTiles = map basic
           ])
   ]
   where
-  basic (x,y) = tile x BasicTile y
+  country (x,y) = tile x BasicTile y
 
 
 

@@ -54,7 +54,7 @@ movePlayer d Game { .. } =
 -}
 
 addrOnMap :: Addr -> Game -> Bool
-addrOnMap a g = MageKnight.Land.addrOnMap a (theLand g)
+addrOnMap a g = MageKnight.Land.isRevealed a (theLand g)
 
 
 {-

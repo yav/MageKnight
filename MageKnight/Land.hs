@@ -1,12 +1,20 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
 module MageKnight.Land
-  ( LandSetup(..), defaultLandSetup, setupLand
-  , Land
+  ( -- * Setting up the land
+    Land
+  , LandSetup(..), defaultLandSetup, setupLand
+
+    -- * Exploration
   , exploreAt
+  , isRevealed
+
+    -- * Moving players
   , placePlayer
   , removePlayer
   , movePlayer
-  , addrOnMap
+  , provoked
+
+    -- * Time
   , setTime
   , getTime
   ) where
@@ -24,38 +32,41 @@ import qualified MageKnight.ResourceQ as RQ
 import           MageKnight.JSON
 import           MageKnight.Perhaps
 
+import           Data.Maybe ( mapMaybe )
 import           Data.Map ( Map )
 import qualified Data.Map as Map
-import           Control.Monad(foldM)
+import qualified Data.Set as Set
+import           Control.Monad( foldM, guard )
 
 
+-- | General setting for setting up the map.
 data LandSetup = LandSetup
-  { useShape      :: MapShape
-  , useBasicNum   :: Int
-  , useBasicTiles :: [ Tile ]
-  , useCoreNum    :: Int
-  , useCoreTiles  :: [ Tile ]
-  , useCityLevels :: [ Int ]
-  , useStartTime  :: Time
-  , useEnemies    :: [ Enemy ]
-  , useRuins      :: [ Ruins ]
+  { useShape        :: MapShape
+  , useCountryNum   :: Int
+  , useCountryTiles :: [ Tile ]
+  , useCoreNum      :: Int
+  , useCoreTiles    :: [ Tile ]
+  , useCityLevels   :: [ Int ]
+  , useStartTime    :: Time
+  , useEnemies      :: [ Enemy ]
+  , useRuins        :: [ Ruins ]
   }
 
 defaultLandSetup :: MapShape ->
-                    Int   {- ^ Number of basic tiles -} ->
+                    Int   {- ^ Number of coutryside tiles -} ->
                     Int   {- ^ Number of core tiles -} ->
                     [Int] {- ^ City levels -} ->
                     LandSetup
-defaultLandSetup shape basicNum coreNum cities = LandSetup
-  { useShape      = shape
-  , useBasicNum   = basicNum
-  , useBasicTiles = basicTiles
-  , useCoreNum    = coreNum
-  , useCoreTiles  = coreNonCityTiles
-  , useCityLevels = cities
-  , useStartTime  = Day
-  , useEnemies    = allEnemies
-  , useRuins      = ruins
+defaultLandSetup shape countryNum coreNum cities = LandSetup
+  { useShape        = shape
+  , useCountryNum   = countryNum
+  , useCountryTiles = countryTiles
+  , useCoreNum      = coreNum
+  , useCoreTiles    = coreNonCityTiles
+  , useCityLevels   = cities
+  , useStartTime    = Day
+  , useEnemies      = allEnemies
+  , useRuins        = ruins
   }
 
 -- | Setup an initial land.
@@ -66,8 +77,8 @@ setupLand g0 LandSetup { .. } = foldM reveal (land0,0) revealPos
   land0 = Land
             { mapShape        = useShape
             , theMap          = Map.empty
-            , unexploredTiles = startTile : questBasic ++ questCore
-            , backupTiles     = backupBasic ++ backupCore
+            , unexploredTiles = startTile : questCountry ++ questCore
+            , backupTiles     = backupCountry ++ backupCore
             , cityLevels      = useCityLevels
             , ruinsPool       = RQ.fromListRandom randRuins useRuins
             , enemyPool       = initialEnemyPool randEnemy useEnemies
@@ -80,11 +91,11 @@ setupLand g0 LandSetup { .. } = foldM reveal (land0,0) revealPos
   reveal (l,ms) addr            = do (l1,ms1) <- initialTile True addr l
                                      return (l1, ms + ms1)
 
-  (shuffledBasic,g1)            = shuffle g0 useBasicTiles
+  (shuffledCountry,g1)            = shuffle g0 useCountryTiles
   (shuffledCore, g2)            = shuffle g1 coreNonCityTiles
   (shuffledCities,g3)           = shuffle g2 cityTiles
 
-  (questBasic,backupBasic)      = splitAt useBasicNum shuffledBasic
+  (questCountry,backupCountry)      = splitAt useCountryNum shuffledCountry
   (questCoreNonCity,backupCore) = splitAt useCoreNum  shuffledCore
   cityNum                       = length useCityLevels
   (questCore,g4)                = shuffle g3 (take cityNum shuffledCities ++
@@ -118,7 +129,7 @@ data Land = Land
 
   , backupTiles     :: [ Tile ]
     -- ^ This is used if we run out of the scenario tiles.
-    -- Basic tiles should be before core ones.
+    -- Country tiles should be before core ones.
 
   , cityLevels      :: [Int]
     -- ^ The levels of the next cities to be reveled.
@@ -223,8 +234,10 @@ revealHidden a l = updateAddr a upd l
   upd _ _                   = id
 
 
--- | Try to explore.
--- Fails of the address is explored, or there is no suitable land to put there.
+-- | Try to explore the given address.
+-- If successful, returns an updated land, and the number of
+-- monasteries that were revealed, so that the units offer can be updated.
+-- Fails if the address is explored, or there is no suitable land to put there.
 exploreAt :: Addr -> TileAddr -> Land -> Perhaps (Land, Int)
 exploreAt loc newTilePos l =
   do (l1,m) <- initialTile False newTilePos l
@@ -274,10 +287,25 @@ movePlayer p newLoc l = (p1, placePlayer p1 l1)
               }
 
 
+-- | Compute which addresses get provoked, if we move from one lcaotion
+-- to another.
+provoked :: Land -> Addr -> Addr -> [Addr]
+provoked Land { .. } from to =
+    mapMaybe hasRampaging
+  $ Set.toList
+  $ Set.intersection (neighboursOf from) (neighboursOf to)
+  where
+  neighboursOf x = Set.fromList [ neighbour x d | d <- allDirections ]
+  hasRampaging a@Addr { .. } =
+    do GameTile { .. }  <- Map.lookup addrGlobal theMap
+       RampagingEnemy _ <- snd (tileTerrain gameTile addrLocal)
+       hex <- Map.lookup addrLocal gameTileContent
+       guard (hexHasEnemies hex)
+       return a
 
-
-addrOnMap :: Addr -> Land -> Bool
-addrOnMap Addr { .. } Land { .. } = addrGlobal `Map.member` theMap
+-- | Is this address revealed?
+isRevealed :: Addr -> Land -> Bool
+isRevealed Addr { .. } Land { .. } = addrGlobal `Map.member` theMap
 
 
 -- | Set the current time for the land.
