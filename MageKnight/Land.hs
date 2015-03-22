@@ -13,6 +13,7 @@ module MageKnight.Land
   , removePlayer
   , movePlayer
   , provoked
+  , isLastMove
 
     -- * Time
   , setTime
@@ -287,7 +288,7 @@ movePlayer p newLoc l = (p1, placePlayer p1 l1)
               }
 
 
--- | Compute which addresses get provoked, if we move from one lcaotion
+-- | Compute which addresses get provoked, if we move from one location
 -- to another.
 provoked :: Land -> Addr -> Addr -> [(Addr,[Enemy])]
 provoked Land { .. } from to =
@@ -303,6 +304,15 @@ provoked Land { .. } from to =
        let es = hexActiveEnemies hex
        guard (not (null es))
        return (a,es)
+
+
+-- | Compute if moving onto this address will end the movemoent phase.
+isLastMove :: PlayerName -> Addr -> Land -> Bool
+isLastMove p Addr { .. } Land { .. } =
+  case Map.lookup addrGlobal theMap of
+    Nothing -> True   -- We fell off the map?
+    Just gt -> gameTileEndsMovement gt addrLocal p
+
 
 -- | Is this address revealed?
 isRevealed :: Addr -> Land -> Bool
@@ -326,8 +336,6 @@ isSafe p Addr { .. } Land { .. } =
     Just gt -> gameTileIsSafe gt addrLocal p
 
 
--- | Who would get provoked if we moved from the firt
--- provoked :: Addr -> Addr -> Land -> [Addr]
 
 --------------------------------------------------------------------------------
 
@@ -369,6 +377,22 @@ gameTileIsSafe GameTile { .. } loc p =
              MageTower        -> not (hexHasEnemies hex)
              RampagingEnemy _ -> not (hexHasEnemies hex)
              _                -> True)
+
+-- | Would moving on this tile end the movement phase?
+gameTileEndsMovement :: GameTile -> HexAddr -> PlayerName -> Bool
+gameTileEndsMovement GameTile { .. } loc p =
+  case Map.lookup loc gameTileContent of
+    Nothing  -> False
+    Just hex ->
+      case tileTerrain gameTile loc of
+        (City _, _)           -> hexHasEnemies hex
+        (_, Just MageTower)   -> hexHasEnemies hex
+        (_, Just Keep)        -> hexHasEnemies hex || not (hexHasShield p hex)
+        (_, Just (RampagingEnemy _)) -> hexHasEnemies hex
+        _                     -> False
+
+
+
 
 
 --------------------------------------------------------------------------------
