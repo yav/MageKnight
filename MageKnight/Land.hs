@@ -14,6 +14,7 @@ module MageKnight.Land
   , movePlayer
   , provoked
   , isLastMove
+  , mayWalkInto
 
     -- * Time
   , setTime
@@ -289,7 +290,7 @@ movePlayer p newLoc l = (p1, placePlayer p1 l1)
 
 
 -- | Compute which addresses get provoked, if we move from one location
--- to another.
+-- to another normally (i.e., "walking").
 provoked :: Land -> Addr -> Addr -> [(Addr,[Enemy])]
 provoked Land { .. } from to =
     mapMaybe hasRampaging
@@ -306,12 +307,20 @@ provoked Land { .. } from to =
        return (a,es)
 
 
--- | Compute if moving onto this address will end the movemoent phase.
+-- | Compute if moving onto this address will end the movement phase
+-- if moving normalling ("walking").
 isLastMove :: PlayerName -> Addr -> Land -> Bool
 isLastMove p Addr { .. } Land { .. } =
   case Map.lookup addrGlobal theMap of
     Nothing -> True   -- We fell off the map?
     Just gt -> gameTileEndsMovement gt addrLocal p
+
+-- | Can we walk into the given address?
+mayWalkInto :: Addr -> Land -> Bool
+mayWalkInto Addr { .. } Land { .. } =
+  case Map.lookup addrGlobal theMap of
+    Nothing -> False
+    Just gt -> gameTileIsWalkable gt addrLocal
 
 
 -- | Is this address revealed?
@@ -391,6 +400,16 @@ gameTileEndsMovement GameTile { .. } loc p =
         (_, Just (RampagingEnemy _)) -> hexHasEnemies hex
         _                     -> False
 
+-- | Can we walk onto this hex at all?
+gameTileIsWalkable :: GameTile -> HexAddr -> Bool
+gameTileIsWalkable GameTile { .. } loc =
+  case tileTerrain gameTile loc of
+    (Ocean, _) -> False
+    (_, Just (RampagingEnemy _)) ->
+      case Map.lookup loc gameTileContent of
+        Just hex | hexHasEnemies hex -> False
+        _                            -> True
+    _ -> True
 
 
 
