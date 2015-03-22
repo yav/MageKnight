@@ -14,7 +14,7 @@ module MageKnight.Land
   , movePlayer
   , provoked
   , isLastMove
-  , mayWalkInto
+  , mayWalkOnto
 
     -- * Time
   , setTime
@@ -308,7 +308,7 @@ provoked Land { .. } from to =
 
 
 -- | Compute if moving onto this address will end the movement phase
--- if moving normalling ("walking").
+-- if moving normally ("walking").
 isLastMove :: PlayerName -> Addr -> Land -> Bool
 isLastMove p Addr { .. } Land { .. } =
   case Map.lookup addrGlobal theMap of
@@ -316,8 +316,8 @@ isLastMove p Addr { .. } Land { .. } =
     Just gt -> gameTileEndsMovement gt addrLocal p
 
 -- | Can we walk into the given address?
-mayWalkInto :: Addr -> Land -> Bool
-mayWalkInto Addr { .. } Land { .. } =
+mayWalkOnto :: Addr -> Land -> Bool
+mayWalkOnto Addr { .. } Land { .. } =
   case Map.lookup addrGlobal theMap of
     Nothing -> False
     Just gt -> gameTileIsWalkable gt addrLocal
