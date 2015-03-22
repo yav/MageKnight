@@ -289,7 +289,7 @@ movePlayer p newLoc l = (p1, placePlayer p1 l1)
 
 -- | Compute which addresses get provoked, if we move from one lcaotion
 -- to another.
-provoked :: Land -> Addr -> Addr -> [Addr]
+provoked :: Land -> Addr -> Addr -> [(Addr,[Enemy])]
 provoked Land { .. } from to =
     mapMaybe hasRampaging
   $ Set.toList
@@ -300,8 +300,9 @@ provoked Land { .. } from to =
     do GameTile { .. }  <- Map.lookup addrGlobal theMap
        RampagingEnemy _ <- snd (tileTerrain gameTile addrLocal)
        hex <- Map.lookup addrLocal gameTileContent
-       guard (hexHasEnemies hex)
-       return a
+       let es = hexActiveEnemies hex
+       guard (not (null es))
+       return (a,es)
 
 -- | Is this address revealed?
 isRevealed :: Addr -> Land -> Bool

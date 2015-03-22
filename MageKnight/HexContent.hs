@@ -10,6 +10,7 @@ module MageKnight.HexContent
   , hexReveal
   , hexRemoveEnemy
   , hexHasEnemies
+  , hexActiveEnemies
 
     -- * Players
   , hexAddPlayer
@@ -77,6 +78,10 @@ hexRemoveShield s HexContent { .. } =
 hexHasShield :: PlayerName -> HexContent -> Bool
 hexHasShield s HexContent { .. } = s `elem` hexShields
 
+
+
+--------------------------------------------------------------------------------
+
 -- | Reveal hidden enemies on this cell.
 hexReveal :: HexContent -> HexContent
 hexReveal HexContent { .. } =
@@ -101,6 +106,15 @@ hexRemoveEnemy e HexContent { .. } =
 hexHasEnemies :: HexContent -> Bool
 hexHasEnemies HexContent { .. } = not (bagIsEmpty hexEnemies)
 
+-- | The visible enemies on a hex.
+hexActiveEnemies :: HexContent -> [Enemy]
+hexActiveEnemies HexContent { .. } =
+  [ e | (Revealed,e) <- bagToList hexEnemies ]
+
+--------------------------------------------------------------------------------
+
+
+
 -- | Add som eruins to the cell.
 hexSetRuins :: Visibility -> Ruins -> HexContent -> HexContent
 hexSetRuins v r HexContent { .. } = HexContent { hexRuins = Just (v,r), .. }
@@ -108,6 +122,8 @@ hexSetRuins v r HexContent { .. } = HexContent { hexRuins = Just (v,r), .. }
 -- | Remove ruins from the cell.
 hexRemoveRuins :: HexContent -> HexContent
 hexRemoveRuins HexContent { .. } = HexContent { hexRuins = Nothing, .. }
+
+--------------------------------------------------------------------------------
 
 -- | Add a player figure to the cell.
 hexAddPlayer :: Player -> HexContent -> HexContent
