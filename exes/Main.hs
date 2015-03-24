@@ -141,7 +141,7 @@ newGame s = sendJSON =<< liftIO go
   go = do r <- liftIO newStdGen
           let t = newTurn (testGame r)
           writeIORef s t
-          return t
+          return (testGame r)
 
 clickHex :: IORef Turn -> Snap ()
 clickHex s = return () {-
