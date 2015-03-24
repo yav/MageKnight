@@ -258,9 +258,66 @@ function drawTileContent(m,x,y,dir,c) {
 
   positionItems(m, shields, x, y, dir, true);
 
+  items.push(drawHexShadow(m,x,y,dir));
+
   return items;
 }
 
+
+function drawHexShadow(m,x,y,dir) {
+  var l = hexLocation(m, x, y, dir);
+  var img = $('<img/>')
+          .attr('src', imgUrl('maps/hex'))
+          .css('width', m.hexWidth + 'px')
+          .css('height', m.hexHeight + 'px')
+          .css('position', 'absolute')
+          .css('z-index', '4')
+          .css('left', l.left)
+          .css('border', '1px solid black')
+          .css('top', l.top);
+
+   img.mousemove(function(ev) {
+      var off = img.offset();
+      var imX = ev.pageX - off.left;
+      var imY = ev.pageY - off.top;
+      var smllPart = m.hexSide / 2;
+      var res = false;
+      if (imY < smllPart) {
+        var slope = smllPart / m.centerToSide;
+        if (imX < m.hexWidth / 2) {
+          if (imY > -imX * slope) {
+            console.log('outside',x,y,dir);
+            return res;
+          }
+        } else {
+          if (imY < imX * slope) {
+            console.log('outside',x,y,dir);
+            return res;
+          }
+        }
+
+      } else
+      if (imY > 1.5 * m.hexSide) {
+        var slope = smllPart / m.centerToSide;
+        if (imX < m.hexWidth / 2) {
+          if (imY > imX * slope) {
+            console.log('outside',x,y,dir);
+            return res;
+          }
+        } else {
+          if (imY > -imX * slope) {
+              console.log('outside',x,y,dir);
+              return res;
+          }
+        }
+      }
+
+      console.log(imX,imY);
+      return !res;
+   });
+
+  return img;
+}
 
 // What to do when a tile is clicked.
 function tileClicked(m,x,y,dir) {
@@ -737,6 +794,7 @@ function drawPlayArea(hand) {
 
 $(document).ready(function() {
 
+/*
   var body = $('body');
   var h = drawHand(
     [ 'Wound',  'Wound', 'March', 'Crystallize' ]
@@ -746,6 +804,7 @@ $(document).ready(function() {
   body.append(drawPlayArea(h));
 
   return;
+  */
   jQuery.getJSON('/newGame', {}, function(game) {
     console.log(game);
     drawGame(game);
