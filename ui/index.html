@@ -266,54 +266,21 @@ function drawTileContent(m,x,y,dir,c) {
 
 function drawHexShadow(m,x,y,dir) {
   var l = hexLocation(m, x, y, dir);
-  var img = $('<img/>')
-          .attr('src', imgUrl('maps/hex'))
+  var poly = 'polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)';
+  var img = $('<div/>')
           .css('width', m.hexWidth + 'px')
           .css('height', m.hexHeight + 'px')
           .css('position', 'absolute')
           .css('z-index', '4')
           .css('left', l.left)
-          .css('border', '1px solid black')
-          .css('top', l.top);
+          .css('top', l.top)
+          .css('background-color', 'rgba(255,255,255,0.3)')
+          .css('-webkit-clip-path', poly)
+          .css('clip-path', poly);
+
 
    img.mousemove(function(ev) {
-      var off = img.offset();
-      var imX = ev.pageX - off.left;
-      var imY = ev.pageY - off.top;
-      var smllPart = m.hexSide / 2;
-      var res = false;
-      if (imY < smllPart) {
-        var slope = smllPart / m.centerToSide;
-        if (imX < m.hexWidth / 2) {
-          if (imY > -imX * slope) {
-            console.log('outside',x,y,dir);
-            return res;
-          }
-        } else {
-          if (imY < imX * slope) {
-            console.log('outside',x,y,dir);
-            return res;
-          }
-        }
-
-      } else
-      if (imY > 1.5 * m.hexSide) {
-        var slope = smllPart / m.centerToSide;
-        if (imX < m.hexWidth / 2) {
-          if (imY > imX * slope) {
-            console.log('outside',x,y,dir);
-            return res;
-          }
-        } else {
-          if (imY > -imX * slope) {
-              console.log('outside',x,y,dir);
-              return res;
-          }
-        }
-      }
-
-      console.log(imX,imY);
-      return !res;
+      console.log('move',x,y,dir);
    });
 
   return img;
