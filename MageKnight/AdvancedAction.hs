@@ -60,7 +60,7 @@ greenDeeds =
       [ [] --> [ ManaCrystal Green ] ]
       [ [] --> replicate 3 (Attack Siege Physycal) ]
 
-  , deed "Ambusg"
+  , deed "Ambush"
       [] -- XXX
       [] -- XXX
 
