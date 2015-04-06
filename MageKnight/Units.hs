@@ -8,6 +8,7 @@ import MageKnight.Common
 import           Data.Text (Text)
 import           Data.Set  (Set)
 import qualified Data.Set as Set
+import           Data.Maybe (listToMaybe)
 
 
 data UnitType = RegularUnit | EliteUnit
@@ -33,7 +34,7 @@ data UnitSource =
 
 
 instance Export Unit where
-  toJS Unit { .. } = object [ "name" .= unitName, "type" .= unitType ]
+  toJS Unit { .. } = toJS unitName
 
 instance Export UnitType where
   toJS t = toJS (txt :: Text)
@@ -42,7 +43,9 @@ instance Export UnitType where
             RegularUnit -> "regular"
             EliteUnit   -> "elite"
 
-
+findUnit :: Text -> Maybe Unit
+findUnit x =
+  listToMaybe [ u | u <- regularUnits ++ eliteUnits, unitName u == x ]
 
 -- XXX
 regularUnits :: [Unit]
