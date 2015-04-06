@@ -3,7 +3,9 @@
 module Main where
 
 import MageKnight.Common
+import MageKnight.Offers
 import MageKnight.Deed
+import MageKnight.Units
 import MageKnight.Terrain
 import MageKnight.JSON
 import MageKnight.Game
@@ -26,7 +28,7 @@ import           Data.Text (Text)
 import           Data.Text.Encoding(decodeUtf8)
 import           Data.Text.Read(decimal)
 import qualified Data.Text as Text
-import           Data.IORef ( IORef, newIORef, writeIORef
+import           Data.IORef ( IORef, newIORef, writeIORef, readIORef
                             , atomicModifyIORef' )
 
 import           Control.Applicative ((<|>))
@@ -40,8 +42,15 @@ main :: IO ()
 main =
   do r <- newStdGen
      s <- newIORef (newTurn (testGame r))
+     o <- newIORef (setupOffers r (defaultOfferSetup 1 True))
+
      quickHttpServe $ Snap.route
-       [ ("/deed/:deed", getDeedImage)
+       [ ("/deed/:deed",  getDeedImage)
+       , ("/unit/:unit",  getUnitImage)
+
+       , ("/offers",        getOffers o)
+       , ("/takeOffered",   takeOffered o)
+       , ("/refreshOffers", snapRefreshOffers o)
 
        -- testing
        , ("/newGame",                    newGame s)
@@ -78,6 +87,14 @@ intParam p =
        Right (a,t) | Text.null t -> return a
        _ -> badInput ("Malformed integer parameter: " `BS.append` p)
 
+boolParam :: ByteString -> Snap Bool
+boolParam p =
+  do bs <- requiredParam p
+     case bs of
+       "true"  -> return True
+       "false" -> return False
+       _       -> badInput ("Malformed boolean parameter: " `BS.append` p)
+
 addrParam :: Snap Addr
 addrParam =
   do x <- intParam  "tile_x"
@@ -101,6 +118,15 @@ deedParam pname =
      case findDeed x of
        Just d  -> return d
        Nothing -> badInput (BS.append "Invalid deed parameter: " pname)
+
+unitParam :: ByteString -> Snap Unit
+unitParam pname =
+  do x <- textParam pname
+     case findUnit x of
+       Just d  -> return d
+       Nothing -> badInput (BS.append "Invalid unit parameter: " pname)
+
+
 
 sendJSON :: Export a => a -> Snap ()
 sendJSON a =
@@ -133,6 +159,13 @@ deedPath Deed { .. } = dir </> nameToPath deedName <.> "png"
               Green -> "green"
               White -> "white"
 
+unitPath :: Unit -> FilePath
+unitPath Unit { .. } = "ui" </> "img" </> "units" </> ty </> name <.> "png"
+  where ty = case unitType of
+               RegularUnit -> "regular"
+               EliteUnit   -> "elite"
+        name = nameToPath unitName
+
 --------------------------------------------------------------------------------
 
 newGame :: IORef Turn -> Snap ()
@@ -160,8 +193,48 @@ clickHex s = return () {-
       where loc = playerLocation p
             p = player g
 -}
+
 getDeedImage :: Snap ()
 getDeedImage =
   do deed <- deedParam "deed"
      serveFile (deedPath deed)
+
+
+getUnitImage :: Snap ()
+getUnitImage =
+  do unit <- unitParam "unit"
+     serveFile (unitPath unit)
+
+getOffers :: IORef Offers -> Snap ()
+getOffers ref = sendJSON =<< liftIO (readIORef ref)
+
+takeOffered :: IORef Offers -> Snap ()
+takeOffered ref =
+  do offer <- textParam "offer"
+     card  <- intParam  "card"
+     let updOffer f = return (fmap snd . f card)
+     upd <- case offer of
+              "advancedActions" -> updOffer takeAdvancedAction
+              "spells"          -> updOffer takeSpell
+              "units"           -> updOffer takeUnit
+              "monastery"       -> updOffer takeMonasteryTech
+              _                 -> badInput "Unknown offer"
+     mb <- liftIO $
+           atomicModifyIORef' ref $ \o ->
+           case upd o of
+             Just o1 -> (o1, Just o1)
+             Nothing -> (o,  Nothing)
+
+     case mb of
+       Nothing -> badInput "Invalid card"
+       Just o1 -> sendJSON o1
+
+snapRefreshOffers :: IORef Offers -> Snap ()
+snapRefreshOffers ref =
+  do useElite <- boolParam "elite"
+     o1 <- liftIO $ atomicModifyIORef' ref $ \o ->
+            let o1 = refreshOffers useElite o
+            in (o1, o1)
+     sendJSON o1
+
 
