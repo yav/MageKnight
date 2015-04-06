@@ -87,6 +87,7 @@ deedRules Deed { .. } =
   case deedType of
     Wound     -> []
     Action c  -> sidewaysRules ++ basicRules        ++ actionPowerRules c
+    AdvancedAction c -> sidewaysRules ++ basicRules ++ actionPowerRules c
     Spell c   -> sidewaysRules ++ spellBasicRules c ++ spellPowerRules c
     Artifact  -> sidewaysRules ++ basicRules        ++ artifactPowerRules
 
