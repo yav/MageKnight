@@ -30,7 +30,7 @@ function newOffers(offers, el, v) {
     var dom = $('<table/>')
               .css('background-color', 'rgba(255,255,255,0.5)')
               .css('border-collapse', 'collapse')
-              .css('box-shadow', '2px 2px 5px 2px #333')
+              .css('border', '2px solid black')
     var row = $('<row/>')
     dom.append(row)
 
@@ -52,8 +52,8 @@ function newOffers(offers, el, v) {
 
     var unitTypeButton =
       $('<img/>')
-      .css('width', '24px')
-      .css('width', '32px')
+      .css('width', '32')
+      .css('width', '48px')
       .css('cursor', 'pointer')
       .attr('src', url())
       .click(function () {
@@ -70,13 +70,15 @@ function newOffers(offers, el, v) {
     var dom = $('<div/>')
               .css('margin-top',      '1em')
               .css('background-color', 'rgba(255,255,255,0.8)')
-              .css('border-radius', '1em')
+              .css('border-bottom-left-radius', '1em')
+              .css('border-bottom-right-radius', '1em')
+              .css('border', '2px solid black')
 
     if (vis[name] === undefined) vis[name] = true;
 
     dom.append($('<div/>')
                .text(labels[name])
-               .css('color', 'white')
+               .css('color', 'black')
                .css('padding-left', '1em')
                .css('background-color', '#c93')
                .css('cursor', 'pointer')
