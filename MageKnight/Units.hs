@@ -50,7 +50,9 @@ findUnit x =
 
 regularUnits :: [Unit]
 regularUnits =
-  [ Unit { unitName       = "Peasants"
+  concat
+  [ replicate 3 $
+    Unit { unitName       = "Peasants"
          , unitType       = RegularUnit
          , unitLevel      = 1
          , unitCost       = 4
@@ -65,7 +67,8 @@ regularUnits =
             ]
          }
 
-  , Unit { unitName       = "Foresters"
+  , replicate 2 $
+    Unit { unitName       = "Foresters"
          , unitType       = RegularUnit
          , unitLevel      = 1
          , unitCost       = 5
@@ -80,7 +83,8 @@ regularUnits =
             ]
          }
 
-  , Unit { unitName       = "Herbalists"
+  , replicate 2 $
+    Unit { unitName       = "Herbalists"
          , unitType       = RegularUnit
          , unitLevel      = 1
          , unitCost       = 3
@@ -98,7 +102,8 @@ regularUnits =
 
 
 
-  , Unit { unitName       = "Northern Monks"
+  , replicate 1 $
+    Unit { unitName       = "Northern Monks"
          , unitType       = RegularUnit
          , unitLevel      = 2
          , unitCost       = 7
@@ -113,7 +118,8 @@ regularUnits =
             ]
          }
 
-  , Unit { unitName       = "Red Cape Monks"
+  , replicate 1 $
+    Unit { unitName       = "Red Cape Monks"
          , unitType       = RegularUnit
          , unitLevel      = 2
          , unitCost       = 7
@@ -128,7 +134,8 @@ regularUnits =
             ]
          }
 
-  , Unit { unitName       = "Savage Monks"
+  , replicate 1 $
+    Unit { unitName       = "Savage Monks"
          , unitType       = RegularUnit
          , unitLevel      = 2
          , unitCost       = 7
@@ -144,7 +151,8 @@ regularUnits =
          }
 
 
-  , Unit { unitName       = "Utem Crossbowmen"
+  , replicate 2 $
+    Unit { unitName       = "Utem Crossbowmen"
          , unitType       = RegularUnit
          , unitLevel      = 2
          , unitCost       = 6
@@ -158,7 +166,8 @@ regularUnits =
             ]
          }
 
-  , Unit { unitName       = "Utem Guardsmen"
+  , replicate 2 $
+    Unit { unitName       = "Utem Guardsmen"
          , unitType       = RegularUnit
          , unitLevel      = 2
          , unitCost       = 5
@@ -172,7 +181,8 @@ regularUnits =
             ]
          }
 
-  , Unit { unitName       = "Utem Swordsmen"
+  , replicate 2 $
+    Unit { unitName       = "Utem Swordsmen"
          , unitType       = RegularUnit
          , unitLevel      = 2
          , unitCost       = 6
@@ -187,7 +197,8 @@ regularUnits =
             ]
          }
 
-  , Unit { unitName       = "Guardian Golems"
+  , replicate 2 $
+    Unit { unitName       = "Guardian Golems"
          , unitType       = RegularUnit
          , unitLevel      = 2
          , unitCost       = 7
@@ -202,7 +213,8 @@ regularUnits =
             ]
          }
 
-  , Unit { unitName       = "Illusionists"
+  , replicate 2 $
+    Unit { unitName       = "Illusionists"
          , unitType       = RegularUnit
          , unitLevel      = 2
          , unitCost       = 7
@@ -225,7 +237,9 @@ regularUnits =
 -- XXX
 eliteUnits :: [Unit]
 eliteUnits =
-  [ Unit { unitName       = "Altem Guardians"
+  concat
+  [ replicate 3 $
+    Unit { unitName       = "Altem Guardians"
          , unitType       = EliteUnit
          , unitLevel      = 4
          , unitCost       = 11
@@ -235,7 +249,8 @@ eliteUnits =
          , unitAbilities  = [] -- XXX
          }
 
-  , Unit { unitName       = "Altem Mages"
+  , replicate 2
+    $ Unit { unitName     = "Altem Mages"
          , unitType       = EliteUnit
          , unitLevel      = 4
          , unitCost       = 12
@@ -245,7 +260,8 @@ eliteUnits =
          , unitAbilities  = [] -- XXX
          }
 
-  , Unit { unitName       = "Amotep Freezers"
+  , replicate 2 $
+    Unit { unitName       = "Amotep Freezers"
          , unitType       = EliteUnit
          , unitLevel      = 3
          , unitCost       = 8
@@ -255,7 +271,8 @@ eliteUnits =
          , unitAbilities  = [] -- XXX
          }
 
-  , Unit { unitName       = "Amotep Gunners"
+  , replicate 2 $
+    Unit { unitName       = "Amotep Gunners"
          , unitType       = EliteUnit
          , unitLevel      = 3
          , unitCost       = 8
@@ -265,7 +282,8 @@ eliteUnits =
          , unitAbilities  = [] -- XXX
          }
 
-  , Unit { unitName       = "Catapults"
+  , replicate 3 $
+    Unit { unitName       = "Catapults"
          , unitType       = EliteUnit
          , unitLevel      = 3
          , unitCost       = 9
@@ -275,7 +293,8 @@ eliteUnits =
          , unitAbilities  = [] -- XXX
          }
 
-  , Unit { unitName       = "Fire Golems"
+  , replicate 2 $
+    Unit { unitName       = "Fire Golems"
          , unitType       = EliteUnit
          , unitLevel      = 3
          , unitCost       = 8
@@ -285,7 +304,8 @@ eliteUnits =
          , unitAbilities  = [] -- XXX
          }
 
-  , Unit { unitName       = "Fire Mages"
+  , replicate 2 $
+    Unit { unitName       = "Fire Mages"
          , unitType       = EliteUnit
          , unitLevel      = 3
          , unitCost       = 9
@@ -295,7 +315,8 @@ eliteUnits =
          , unitAbilities  = [] -- XXX
          }
 
-  , Unit { unitName       = "Ice Golems"
+  , replicate 2 $
+    Unit { unitName       = "Ice Golems"
          , unitType       = EliteUnit
          , unitLevel      = 3
          , unitCost       = 8
@@ -305,7 +326,8 @@ eliteUnits =
          , unitAbilities  = [] -- XXX
          }
 
-  , Unit { unitName       = "Ice Mages"
+  , replicate 2 $
+    Unit { unitName       = "Ice Mages"
          , unitType       = EliteUnit
          , unitLevel      = 3
          , unitCost       = 9
@@ -314,11 +336,6 @@ eliteUnits =
          , unitSource     = Set.fromList [ FromMonastery, FromMageTower ]
          , unitAbilities  = [] -- XXX
          }
-
-
-
-
-
   ]
 
 
