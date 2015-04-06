@@ -47,7 +47,7 @@ findUnit :: Text -> Maybe Unit
 findUnit x =
   listToMaybe [ u | u <- regularUnits ++ eliteUnits, unitName u == x ]
 
--- XXX
+
 regularUnits :: [Unit]
 regularUnits =
   [ Unit { unitName       = "Peasants"
@@ -224,5 +224,103 @@ regularUnits =
 
 -- XXX
 eliteUnits :: [Unit]
-eliteUnits = []
+eliteUnits =
+  [ Unit { unitName       = "Altem Guardians"
+         , unitType       = EliteUnit
+         , unitLevel      = 4
+         , unitCost       = 11
+         , unitArmor      = 7
+         , unitResists    = Set.empty
+         , unitSource     = Set.fromList [ FromCity ]
+         , unitAbilities  = [] -- XXX
+         }
+
+  , Unit { unitName       = "Altem Mages"
+         , unitType       = EliteUnit
+         , unitLevel      = 4
+         , unitCost       = 12
+         , unitArmor      = 5
+         , unitResists    = Set.fromList [ Fire, Ice ]
+         , unitSource     = Set.fromList [ FromCity ]
+         , unitAbilities  = [] -- XXX
+         }
+
+  , Unit { unitName       = "Amotep Freezers"
+         , unitType       = EliteUnit
+         , unitLevel      = 3
+         , unitCost       = 8
+         , unitArmor      = 6
+         , unitResists    = Set.empty
+         , unitSource     = Set.fromList [ FromKeep, FromCity ]
+         , unitAbilities  = [] -- XXX
+         }
+
+  , Unit { unitName       = "Amotep Gunners"
+         , unitType       = EliteUnit
+         , unitLevel      = 3
+         , unitCost       = 8
+         , unitArmor      = 6
+         , unitResists    = Set.empty
+         , unitSource     = Set.fromList [ FromKeep, FromCity ]
+         , unitAbilities  = [] -- XXX
+         }
+
+  , Unit { unitName       = "Catapults"
+         , unitType       = EliteUnit
+         , unitLevel      = 3
+         , unitCost       = 9
+         , unitArmor      = 4
+         , unitResists    = Set.empty
+         , unitSource     = Set.fromList [ FromKeep, FromCity ]
+         , unitAbilities  = [] -- XXX
+         }
+
+  , Unit { unitName       = "Fire Golems"
+         , unitType       = EliteUnit
+         , unitLevel      = 3
+         , unitCost       = 8
+         , unitArmor      = 4
+         , unitResists    = Set.fromList [ Fire, Physycal ]
+         , unitSource     = Set.fromList [ FromKeep, FromMageTower ]
+         , unitAbilities  = [] -- XXX
+         }
+
+  , Unit { unitName       = "Fire Mages"
+         , unitType       = EliteUnit
+         , unitLevel      = 3
+         , unitCost       = 9
+         , unitArmor      = 4
+         , unitResists    = Set.fromList [ Fire ]
+         , unitSource     = Set.fromList [ FromMonastery, FromMageTower ]
+         , unitAbilities  = [] -- XXX
+         }
+
+  , Unit { unitName       = "Ice Golems"
+         , unitType       = EliteUnit
+         , unitLevel      = 3
+         , unitCost       = 8
+         , unitArmor      = 4
+         , unitResists    = Set.fromList [ Ice, Physycal ]
+         , unitSource     = Set.fromList [ FromKeep, FromMageTower ]
+         , unitAbilities  = [] -- XXX
+         }
+
+  , Unit { unitName       = "Ice Mages"
+         , unitType       = EliteUnit
+         , unitLevel      = 3
+         , unitCost       = 9
+         , unitArmor      = 4
+         , unitResists    = Set.fromList [ Ice ]
+         , unitSource     = Set.fromList [ FromMonastery, FromMageTower ]
+         , unitAbilities  = [] -- XXX
+         }
+
+
+
+
+
+  ]
+
+
+
 

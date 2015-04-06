@@ -39,7 +39,7 @@ function newOffers(offers, el, v) {
                 .css('vertical-align', 'middle')
                 .css('cursor', 'pointer')
                 .click(function() {
-                  jQuery.post('/refreshOffers', { elite: false },
+                  jQuery.post('/refreshOffers', { elite: useElite },
                     function(o1) {
                       topDom.replaceWith(newOffers(o1, useElite, vis))
                     })
