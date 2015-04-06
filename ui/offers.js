@@ -15,6 +15,7 @@ function newOffers(offers, el, v) {
                }
 
   topDom.append (drawRefresh());
+  topDom.append (drawMonastery());
 
   jQuery.each(offers, function(offer, cards) {
     topDom.append(drawOffer(offer,cards))
@@ -26,24 +27,29 @@ function newOffers(offers, el, v) {
   function deedUrl(name) { return '/deed/' + name }
   function unitUrl(name) { return '/unit/' + name }
 
+  function updateOffer(url,data) {
+    return function () {
+      jQuery.post(url,data,function(o1) {
+        topDom.replaceWith(newOffers(o1, useElite, vis))
+      })
+    }
+  }
+
   function drawRefresh() {
     var dom = $('<table/>')
               .css('background-color', 'rgba(255,255,255,0.5)')
               .css('border-collapse', 'collapse')
               .css('border', '2px solid black')
+              .css('display', 'inline-block')
     var row = $('<row/>')
     dom.append(row)
+
 
     row.append( $('<td/>')
                 .text('Refresh')
                 .css('vertical-align', 'middle')
                 .css('cursor', 'pointer')
-                .click(function() {
-                  jQuery.post('/refreshOffers', { elite: useElite },
-                    function(o1) {
-                      topDom.replaceWith(newOffers(o1, useElite, vis))
-                    })
-                })
+                .click(updateOffer('/refreshOffers', { elite: useElite }))
     )
 
     function url() {
@@ -52,8 +58,8 @@ function newOffers(offers, el, v) {
 
     var unitTypeButton =
       $('<img/>')
-      .css('width', '32')
-      .css('width', '48px')
+      .css('width',  '48px')
+      .css('height', '64px')
       .css('cursor', 'pointer')
       .attr('src', url())
       .click(function () {
@@ -63,6 +69,32 @@ function newOffers(offers, el, v) {
 
     row.append($('<td/>').css('line-height', '0').append(unitTypeButton))
     return dom
+  }
+
+
+  function drawMonastery() {
+    var dom = $('<table/>')
+              .css('background-color', 'rgba(255,255,255,0.5)')
+              .css('border-collapse', 'collapse')
+              .css('border', '2px solid black')
+              .css('display', 'inline-block')
+    var row1 = $('<tr/>')
+    var row2 = $('<tr/>')
+    dom.append(row1).append(row2)
+    row1.append($('<td/>')
+                .attr('rowspan','2')
+                .attr('height', '64px')
+                .attr('vertical-align', 'middle')
+                .text('Monastery'))
+        .append($('<td/>')
+                .text('New')
+                .css('cursor','pointer')
+                .click(updateOffer('/newMonastery', {})))
+    row2.append($('<td/>')
+                .text('Burn')
+                .css('cursor','pointer')
+                .click(updateOffer('/burnMonastery', {})))
+    return dom;
   }
 
 
@@ -81,6 +113,7 @@ function newOffers(offers, el, v) {
                .css('color', 'black')
                .css('padding-left', '1em')
                .css('background-color', '#c93')
+               .css('border-bottom', '2px solid black')
                .css('cursor', 'pointer')
                .click(function() {
                   cs = dom.find('img');

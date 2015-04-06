@@ -48,9 +48,11 @@ main =
        [ ("/deed/:deed",  getDeedImage)
        , ("/unit/:unit",  getUnitImage)
 
-       , ("/offers",        getOffers o)
-       , ("/takeOffered",   takeOffered o)
-       , ("/refreshOffers", snapRefreshOffers o)
+       , ("/offers",         getOffers o)
+       , ("/takeOffered",    takeOffered o)
+       , ("/refreshOffers",  snapRefreshOffers o)
+       , ("/newMonastery",   updateOffers o newMonastery)
+       , ("/burnMonastery",  updateOffers o burnMonastery)
 
        -- testing
        , ("/newGame",                    newGame s)
@@ -229,12 +231,19 @@ takeOffered ref =
        Nothing -> badInput "Invalid card"
        Just o1 -> sendJSON o1
 
+updateOffers :: IORef Offers -> (Offers -> Offers) -> Snap ()
+updateOffers ref f =
+  do o1 <- liftIO $ atomicModifyIORef' ref $ \o ->
+           let o1 = f o
+           in (o1, o1)
+     sendJSON o1
+
+
+
 snapRefreshOffers :: IORef Offers -> Snap ()
 snapRefreshOffers ref =
   do useElite <- boolParam "elite"
-     o1 <- liftIO $ atomicModifyIORef' ref $ \o ->
-            let o1 = refreshOffers useElite o
-            in (o1, o1)
-     sendJSON o1
+     updateOffers ref $ refreshOffers useElite
+
 
 
