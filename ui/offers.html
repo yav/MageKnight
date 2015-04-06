@@ -1,0 +1,23 @@
+<!DOCTYPE html
+><html>
+<head>
+<style>
+@font-face {
+  font-family: 'Almendra';
+  src: url('/fonts/Almendra-Bold.ttf');
+}
+</style>
+<script src="jquery.js"></script>
+<script src="offers.js"></script>
+<script>
+$(document).ready(function() {
+  jQuery.get('/offers', {}, function(os) {
+    $('body').append(newOffers(os,false, {}));
+  });
+});
+</script>
+</head>
+<body></body>
+</html>
+
+
