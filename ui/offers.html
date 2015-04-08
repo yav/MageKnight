@@ -9,11 +9,24 @@
 </style>
 <script src="jquery.js"></script>
 <script src="offers.js"></script>
+<script src="player.js"></script>
 <script>
-$(document).ready(function() {
-  jQuery.get('/offers', {}, function(os) {
-    $('body').append(newOffers(os,false, {}));
+function testOffers() {
+  jQuery.get('/newGame', {}, function(g) {
+    $('body').append(newOffers(g.offers,false, {}));
   });
+}
+
+function testPlayer() {
+  jQuery.get('/newGame', {}, function(g) {
+    $('body').append(drawPlayer(g.player,false, {}));
+  });
+}
+
+
+
+$(document).ready(function() {
+  testPlayer();
 });
 </script>
 </head>

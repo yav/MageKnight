@@ -16,8 +16,6 @@ data Player = Player
   { playerName        :: PlayerName
   , playerFame        :: Int
   , playerReputation  :: Int      -- ^ Index on board, *NOT* same as influence
-  , playerArmor       :: Int
-  , playerCardLimit   :: Int
   , playerUnits       :: [ Maybe Unit ]   -- XXX: Replace With active units
   , playerCrystals    :: Bag BasicMana
   , playerDeedDeck    :: [ Deed ]
@@ -34,10 +32,8 @@ data Player = Player
 newPlayer :: Text -> [Deed] -> Player
 newPlayer name deeds = Player
   { playerName        = name
-  , playerFame        = 0
+  , playerFame        = 9
   , playerReputation  = 0
-  , playerArmor       = 2
-  , playerCardLimit   = 5
   , playerUnits       = [ Nothing ]
   , playerCrystals    = bagEmpty
   , playerDeedDeck    = deeds
@@ -47,6 +43,38 @@ newPlayer name deeds = Player
 
   , playerOnUnsafe    = Nothing
   }
+
+levels :: [Int]
+levels = levelStart
+  where
+  levelLens  = 3 : map (+2) levelLens
+  levelStart = 0 : zipWith (+) levelStart levelLens
+
+-- | What's the player's level, based on their fame.
+playerLevel' :: Player -> (Int,(Int,Int))
+playerLevel' Player { .. } = head (dropWhile skip lvls)
+  where
+  lvls = zip [1 .. ] (zip levels (map (subtract 1) (tail levels)))
+  skip (_,(_,b)) = b < playerFame
+
+playerLevel :: Player -> Int
+playerLevel = fst . playerLevel'
+
+-- | What's the player's default armour, based on their fame.
+playerArmor :: Player -> Int
+playerArmor p
+  | l <= 2    = 2
+  | l <= 6    = 3
+  | otherwise = 4
+    where l = playerLevel p
+
+-- | What's the player's default card limit, based on their fame.
+playerCardLimit :: Player -> Int
+playerCardLimit p
+  | l <= 4  = 5
+  | l <= 8  = 6
+  | otherwise         = 7
+    where l = playerLevel p
 
 
 instance Eq Player where
@@ -66,8 +94,8 @@ removeCrystal c Player { .. } =
 -- | Check if this player passed out.
 -- The blloean indicates if the player passed out.
 checkPassOut :: Player -> (Bool, Player)
-checkPassOut Player { .. }
-  | woundNum >= playerCardLimit =
+checkPassOut p@Player { .. }
+  | woundNum >= playerCardLimit p =
       ( True, Player
                 { playerHand = bagAdd woundNum wound bagEmpty
                 , playerDiscardPile = bagToList (bagRemoveAll wound playerHand)
@@ -100,16 +128,17 @@ instance Export Player where
   toJS Player { .. } =
     object
       [ "name"        .= playerName
-      , "fame"        .= playerFame
+      , "fameInfo"    .= object [ "fame"  .= playerFame
+                                , "level" .= l
+                                , "start" .= start
+                                , "end"   .= end
+                                ]
       , "reputation"  .= playerReputation
-      , "armor"       .= playerArmor
-      , "cardLimit"   .= playerCardLimit
       , "units"       .= playerUnits
       , "crystals"    .= bagToList playerCrystals
       , "cards"       .= bagToList playerHand
       , "location"    .= playerLocation
       , "unsafe"      .= fmap fst playerOnUnsafe
       ]
-
-
+    where (l,(start,end)) = playerLevel' Player { .. }
 
