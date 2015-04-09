@@ -32,7 +32,7 @@ data Player = Player
 newPlayer :: Text -> [Deed] -> Player
 newPlayer name deeds = Player
   { playerName        = name
-  , playerFame        = 9
+  , playerFame        = 0
   , playerReputation  = 0
   , playerUnits       = [ Nothing ]
   , playerCrystals    = bagEmpty
