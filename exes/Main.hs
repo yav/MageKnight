@@ -9,7 +9,6 @@ import MageKnight.Units
 import MageKnight.Terrain
 import MageKnight.JSON
 import MageKnight.Game
-import MageKnight.Turn
 import MageKnight.Player
 import MageKnight.DeedDecks(findDeed)
 
@@ -41,12 +40,15 @@ import           System.Random (newStdGen)
 main :: IO ()
 main =
   do r <- newStdGen
-     s <- newIORef (newTurn (testGame r))
+     s <- newIORef (testGame r)
      o <- newIORef (setupOffers r (defaultOfferSetup 1 True))
 
      quickHttpServe $ Snap.route
        [ ("/deed/:deed",  getDeedImage)
        , ("/unit/:unit",  getUnitImage)
+
+       , ("/updateFame", updateFame s)
+       , ("/setReputation", setReputation s)
 
        , ("/offers",         getOffers o)
        , ("/takeOffered",    takeOffered o)
@@ -170,15 +172,16 @@ unitPath Unit { .. } = "ui" </> "img" </> "units" </> ty </> name <.> "png"
 
 --------------------------------------------------------------------------------
 
-newGame :: IORef Turn -> Snap ()
+newGame :: IORef Game -> Snap ()
 newGame s = sendJSON =<< liftIO go
   where
   go = do r <- liftIO newStdGen
-          let t = newTurn (testGame r)
+          let t = testGame r
           writeIORef s t
-          return (testGame r)
+          return t
 
-clickHex :: IORef Turn -> Snap ()
+
+clickHex :: IORef Game -> Snap ()
 clickHex s = return () {-
   do a <- addrParam
      g <- liftIO (atomicModifyIORef' s (go a))
@@ -245,5 +248,25 @@ snapRefreshOffers ref =
   do useElite <- boolParam "elite"
      updateOffers ref $ refreshOffers useElite
 
+snapUpdatePlayer :: IORef Game -> (Player -> Player) -> Snap ()
+snapUpdatePlayer ref f =
+  do g1 <- liftIO $ atomicModifyIORef' ref $ \g ->
+           case updatePlayer (Just . f) g of
+             Just g1 -> (g1,g1)
+             Nothing -> (g,g)
+     sendJSON (player g1)
+
+
+updateFame :: IORef Game -> Snap ()
+updateFame ref =
+  do amt <- intParam "amount"
+     inc <- boolParam "increase"
+     let d = if inc then amt else negate amt
+     snapUpdatePlayer ref $ \p -> p { playerFame = max 0 (d + playerFame p) }
+
+setReputation :: IORef Game -> Snap ()
+setReputation ref =
+  do r <- intParam "reputation"
+     snapUpdatePlayer ref $ \p -> p { playerReputation = r - 7 }
 
 

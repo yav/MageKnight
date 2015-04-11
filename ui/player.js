@@ -32,11 +32,19 @@ function drawPlayer(player) {
 
   function drawLevel() {
     var lvl      = player.fameInfo.level
+    if (lvl > 10) lvl = 10
     var sndLevel = (lvl % 2) === 0
-
 
     var nm = sndLevel ? ((lvl - 1) + '_' + lvl)
                       : (lvl + '_' + (lvl + 1))
+
+
+    var pos = [ '2.1em', '1em'
+              , '2.1em', '1em'
+              , '2.3em', '1.1em'
+              , '2.3em', '1.1em'
+              , '2.1em', '1em'
+              ]
 
     return $('<div/>')
             .css('position', 'relative')
@@ -48,10 +56,10 @@ function drawPlayer(player) {
                          .css('background-color', 'rgba(0,0,0,0.7)')
                          .css('border-radius', '5px')
                          .css('position', 'absolute')
-                         .css('top', '4em')
-                         .css('left', sndLevel ? '1.5em' : '2.2em')
-                         .css('width',  '1em')
-                         .css('height', '0.7em')
+                         .css('top', '3.9em')
+                         .css('left', pos[lvl-1])
+                         .css('width',  '1.5em')
+                         .css('height', '0.8em')
                       ]
                      )
   }
@@ -63,6 +71,29 @@ function drawPlayer(player) {
     var lvlEnd    = finfo.end
     var lvl       = finfo.level + 1
     var lvlReward = ((lvl % 2) === 1) ? 'up_skill' : 'up_unit'
+
+    var fameUpdateAmt     = 0
+    var fameUpdateAmtCell =
+      $('<td/>')
+      .attr('rowspan', '2')
+      .css('color','white')
+      .css('cursor', 'pointer')
+
+    fameUpdateAmtCell
+      .hover( function() { fameUpdateAmtCell.css('background-color', '#c96') }
+            , function() { fameUpdateAmtCell
+                            .css('background-color', 'transparent') })
+      .click(function () {
+        jQuery.post('/updateFame'
+                   , { amount: Math.abs(fameUpdateAmt)
+                     , increase: fameUpdateAmt >= 0
+                     }
+                   , function(p) {
+                       stats.replaceWith(drawPlayer(p))
+                       fameUpdateAmt = 0
+                     })
+      })
+
 
 
     var meter = $('<div/>')
@@ -90,21 +121,51 @@ function drawPlayer(player) {
       award.css('top','-0.2em')
            .css('height', '1.5em').css('width', '1.5em')
 
+
     return $('<table/>')
             .css('width', '100%')
             .css('border-collapse', 'collapse')
             .append($('<tr/>')
                     .append($('<td/>')
+                            .attr('rowspan', '2')
                             .css('position', 'relative')
-                            .css('width', '5%').append(award))
-                    .append($('<td/>').append(meter))
+                            .css('width', '6%').append(award))
+                    .append($('<td/>')
+                            .attr('rowspan', '2')
+                            .css('width', '90%')
+                            .append(meter)
+                           )
+                    .append(fameUpdateAmtCell)
+                    .append(fameButton('&#x25b4;', 1))
                    )
+            .append($('<tr/>')
+                    .append(fameButton('&#x25be;', -1)))
+
+    function fameButton(x,m) {
+      var dom = $('<td/>')
+             .css('line-height', '10px')
+             .css('width', '3%')
+             .css('color', 'rgba(255,255,255,0.7)')
+             .css('cursor', 'pointer')
+             .css('text-align', 'center')
+             .html(x);
+      dom.mouseenter ( function () { dom.css('background-color', '#c96') })
+         .mouseleave ( function () { dom.css('background-color', 'transparent') })
+         .click(function () {
+            fameUpdateAmt += m
+            fameUpdateAmtCell.text(fameUpdateAmt >= 0 ? ('+' + fameUpdateAmt)
+                                                      : fameUpdateAmt)
+          })
+      return dom
+    }
+
+
 
   }
 
 
+
   function drawReputation() {
-    player.reputation = 0;
 
     var inf = [ 'x', '-5', '-3', '-2', '-1', '-1', '0', '0', '0'
               , '+1', '+1', '+2', '+2', '+3', '+5' ];
@@ -112,18 +173,25 @@ function drawPlayer(player) {
     var me = $('<div/>')
              .css('text-align', 'center')
              .css('width', 2 * inf.length + 'em')
-             .css('background-image', 'linear-gradient(to right,#900,#ff9,#fff)')
+             .css('background-image','linear-gradient(to right,#900,#ff9,#fff)')
              .css('border', '1px solid black');
 
     jQuery.each(inf, function(ix,i) {
       var d = $('<div/>')
               .css('display','inline-block')
               .css('margin', '0.5em')
-              .text(i);
+              .text(i)
+              .css('cursor', 'pointer')
+              .click(function () {
+                jQuery.post('/setReputation', { reputation: ix }
+                           , function(p) {
+                               stats.replaceWith(drawPlayer(p))
+                           })
+              })
       if (ix - 7 === player.reputation)
           d.css('padding', '0.5em')
            .css('background-color', 'rgba(0,0,0,0.3)')
-           .css('border-radius', '1em');
+           .css('border-radius', '1em')
 
       me.append(d);
     });
