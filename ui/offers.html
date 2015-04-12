@@ -23,10 +23,19 @@ function testPlayer() {
   });
 }
 
+function testAll() {
+  jQuery.get('/newGame', {}, function(g) {
+    $('body')
+    .append(drawPlayer(g.player,false, {}))
+    .append(newOffers(g.offers, true, {}))
+
+  });
+}
+
 
 
 $(document).ready(function() {
-  testPlayer();
+  testAll();
 });
 </script>
 </head>
