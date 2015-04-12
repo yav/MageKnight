@@ -50,11 +50,10 @@ main =
        , ("/updateFame", updateFame s)
        , ("/setReputation", setReputation s)
 
-       , ("/offers",         getOffers o)
-       , ("/takeOffered",    takeOffered o)
-       , ("/refreshOffers",  snapRefreshOffers o)
-       , ("/newMonastery",   updateOffers o newMonastery)
-       , ("/burnMonastery",  updateOffers o burnMonastery)
+       , ("/takeOffered",    takeOffered s)
+       , ("/refreshOffers",  snapRefreshOffers s)
+       , ("/newMonastery",   snapUpdateOffers s newMonastery)
+       , ("/burnMonastery",  snapUpdateOffers s burnMonastery)
 
        -- testing
        , ("/newGame",                    newGame s)
@@ -210,10 +209,7 @@ getUnitImage =
   do unit <- unitParam "unit"
      serveFile (unitPath unit)
 
-getOffers :: IORef Offers -> Snap ()
-getOffers ref = sendJSON =<< liftIO (readIORef ref)
-
-takeOffered :: IORef Offers -> Snap ()
+takeOffered :: IORef Game -> Snap ()
 takeOffered ref =
   do offer <- textParam "offer"
      card  <- intParam  "card"
@@ -222,31 +218,32 @@ takeOffered ref =
               "advancedActions" -> updOffer takeAdvancedAction
               "spells"          -> updOffer takeSpell
               "units"           -> updOffer takeUnit
-              "monastery"       -> updOffer takeMonasteryTech
+              "monasteries"     -> updOffer takeMonasteryTech
               _                 -> badInput "Unknown offer"
      mb <- liftIO $
-           atomicModifyIORef' ref $ \o ->
-           case upd o of
-             Just o1 -> (o1, Just o1)
-             Nothing -> (o,  Nothing)
+           atomicModifyIORef' ref $ \g ->
+           case upd (offers g) of
+             Just o1 -> (g { offers = o1 }, Just o1)
+             Nothing -> (g,  Nothing)
 
      case mb of
        Nothing -> badInput "Invalid card"
        Just o1 -> sendJSON o1
 
-updateOffers :: IORef Offers -> (Offers -> Offers) -> Snap ()
-updateOffers ref f =
-  do o1 <- liftIO $ atomicModifyIORef' ref $ \o ->
-           let o1 = f o
-           in (o1, o1)
-     sendJSON o1
+snapUpdateOffers :: IORef Game -> (Offers -> Offers) -> Snap ()
+snapUpdateOffers ref f =
+  do g1 <- liftIO $ atomicModifyIORef' ref $ \g ->
+            case updateOffers (Just . f) g of
+              Nothing -> (g,g)
+              Just g1 -> (g1,g1)
+     sendJSON (offers g1)
 
 
 
-snapRefreshOffers :: IORef Offers -> Snap ()
+snapRefreshOffers :: IORef Game -> Snap ()
 snapRefreshOffers ref =
   do useElite <- boolParam "elite"
-     updateOffers ref $ refreshOffers useElite
+     snapUpdateOffers ref $ refreshOffers useElite
 
 snapUpdatePlayer :: IORef Game -> (Player -> Player) -> Snap ()
 snapUpdatePlayer ref f =

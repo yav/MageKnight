@@ -45,6 +45,9 @@ updateSource :: Functor f => (Source -> f Source) -> Game -> f Game
 updateSource f Game { .. } = fmap (\p1 -> Game { theSource = p1, .. })
                                   (f theSource)
 
+updateOffers :: Functor f => (Offers -> f Offers) -> Game -> f Game
+updateOffers f Game { .. } = fmap (\p1 -> Game { offers = p1, .. }) (f offers)
+
 {-
 -- | Move the player 1 unit the given direction.
 movePlayer :: Dir -> Game -> Game
