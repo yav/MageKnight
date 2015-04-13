@@ -278,15 +278,7 @@ movePlayer :: Player -> Addr -> Land -> (Player, Land)
 movePlayer p newLoc l = (p1, placePlayer p1 l1)
   where
   l1      = removePlayer p l
-  p1      = p { playerLocation = newLoc
-              , playerOnUnsafe =
-                  if isSafe (playerName p) newLoc l1
-                    then Nothing
-                    else Just $ case playerOnUnsafe p of
-                                  Nothing      -> (playerLocation p, 0)
-                                  Just (sl,ws) -> let ws' = ws + 1
-                                                  in seq ws' (sl,ws')
-              }
+  p1      = playerSetLoc (isSafe (playerName p) newLoc l1) newLoc p
 
 
 -- | Compute which addresses get provoked, if we move from one location

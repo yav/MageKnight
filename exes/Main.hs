@@ -259,11 +259,11 @@ updateFame ref =
   do amt <- intParam "amount"
      inc <- boolParam "increase"
      let d = if inc then amt else negate amt
-     snapUpdatePlayer ref $ \p -> p { playerFame = max 0 (d + playerFame p) }
+     snapUpdatePlayer ref (playerAddFame d)
 
 setReputation :: IORef Game -> Snap ()
 setReputation ref =
   do r <- intParam "reputation"
-     snapUpdatePlayer ref $ \p -> p { playerReputation = r - 7 }
+     snapUpdatePlayer ref (playerSetReputation (r - 7))
 
 

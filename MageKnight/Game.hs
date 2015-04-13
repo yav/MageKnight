@@ -24,9 +24,11 @@ testGame g =
   where
   offers0     = setupOffers offerRNG (defaultOfferSetup 1 True)
   Ok (l,ms) = setupLand landRNG (defaultLandSetup Wedge 7 2 [3,5])
-  (offerRNG, g1)     = split g
-  (landRNG,sourceRNG) = split g1
-  pl = newPlayer "Arythea" (makeCustomDeck arytheaDeck)
+  (offerRNG, g1)        = split g
+  (landRNG,g2)          = split g1
+  (playerRNG,sourceRNG) = split g2
+
+  pl = newPlayer playerRNG "Arythea" (makeCustomDeck arytheaDeck)
 
 
 
