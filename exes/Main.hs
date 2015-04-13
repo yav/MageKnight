@@ -49,6 +49,8 @@ main =
 
        , ("/updateFame", updateFame s)
        , ("/setReputation", setReputation s)
+       , ("/addCrystal",    snapAddCrystal s)
+       , ("/removeCrystal", snapRemoveCrystal s)
 
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
@@ -129,7 +131,15 @@ unitParam pname =
        Just d  -> return d
        Nothing -> badInput (BS.append "Invalid unit parameter: " pname)
 
-
+basicManaParam :: ByteString -> Snap BasicMana
+basicManaParam pname =
+  do x <- textParam pname
+     case x of
+       "red"    -> return Red
+       "green"  -> return Green
+       "blue"   -> return Blue
+       "white"  -> return White
+       _        -> badInput (BS.append "Inavlid basic mana: " pname)
 
 sendJSON :: Export a => a -> Snap ()
 sendJSON a =
@@ -265,5 +275,18 @@ setReputation :: IORef Game -> Snap ()
 setReputation ref =
   do r <- intParam "reputation"
      snapUpdatePlayer ref (playerSetReputation (r - 7))
+
+snapRemoveCrystal :: IORef Game -> Snap ()
+snapRemoveCrystal ref =
+  do r <- basicManaParam "color"
+     snapUpdatePlayer ref (\p -> case removeCrystal r p of
+                                   Just p1 -> p1
+                                   Nothing -> p)
+
+
+snapAddCrystal :: IORef Game -> Snap ()
+snapAddCrystal ref =
+  do r <- basicManaParam "color"
+     snapUpdatePlayer ref (addCrystal r)
 
 

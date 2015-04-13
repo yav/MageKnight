@@ -2,7 +2,6 @@ function drawPlayer(player) {
 
   // XXX: units
   // XXX: cards
-  // XXX: crystals
 
   var img = $('<img/>')
             .attr('src', charUrl(player.name, 'art'))
@@ -12,6 +11,8 @@ function drawPlayer(player) {
   var rep = drawReputation()
   var fam = drawFame()
   var l   = drawLevel()
+  var cs  = drawCrystals(player.crystals)
+
 
   var stats = $('<table/>')
               .css('font-family', 'Almendra')
@@ -20,15 +21,22 @@ function drawPlayer(player) {
               .append($('<tr/>')
                       .append($('<td/>').attr('rowspan','2').append(img))
                       .append($('<td/>').attr('rowspan','2').append(l))
-                      .append($('<td/>').append(rep)))
+                      .append($('<td/>').append(rep))
+                      .append($('<td/>').attr('rowspan','2')
+                                        .css('min-width', '8em')
+                                        .css('width', '8em')
+                                        .css('background-color', 'rgba(0,0,0,0.3)')
+                                        .append(cs))
+                      )
               .append($('<tr/>').append($('<td/>').append(fam)))
 
 
   return stats
 
-  function imgUrl(x)        { return '/img/' + x + '.png'; }
-  function levelUrl(which)  { return imgUrl('level/' + which); }
-  function charUrl(ch,ty)   { return imgUrl('characters/' + ch + '/' + ty); }
+  function imgUrl(x)        { return '/img/' + x + '.png' }
+  function levelUrl(which)  { return imgUrl('level/' + which) }
+  function charUrl(ch,ty)   { return imgUrl('characters/' + ch + '/' + ty) }
+  function crystalUrl(c,n)  { return imgUrl('mana/crystal/' + c + '/' + n) }
 
   function drawLevel() {
     var lvl      = player.fameInfo.level
@@ -199,6 +207,42 @@ function drawPlayer(player) {
     return me
   }
 
+  function drawCrystals(cs) {
+    var newRow = $('<tr/>')
+    var curRow = $('<tr/>')
+
+    jQuery.each(['red','green','blue','white'], function(ix,c) {
+      var cryNew = $('<td/>')
+      var cryAmt = $('<td/>')
+      var n = cs[c]
+      if (n === undefined || n < 3) cryNew.append(drawCrystal(c,0))
+      if (n !== undefined) cryAmt.append(drawCrystal(c,n))
+      newRow.append(cryNew)
+      curRow.append(cryAmt)
+    })
+
+    return $('<table/>')
+           .append(newRow)
+           .append(curRow)
+  }
+
+
+
+  function drawCrystal(c,n) {
+    var dom = $('<div/>')
+
+    return $('<img/>')
+           .attr('src', crystalUrl(c,n))
+           .css('height', '2em')
+           .css('width', '2em')
+           .css('cursor', 'pointer')
+           .click(function() {
+              var m = n === 0 ? '/addCrystal' : '/removeCrystal'
+              jQuery.post(m, { color: c }
+                         , function(p) { stats.replaceWith(drawPlayer(p)) })
+           })
+    return dom
+  }
 
 }
 

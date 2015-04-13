@@ -13,7 +13,6 @@ module MageKnight.Player
   , newDeed
   , newDiscardedDeed
 
-
   -- * Reputation
   , playerReputation
   , playerSetReputation
@@ -256,7 +255,8 @@ instance Export Player where
                                 ]
       , "reputation"  .= reputation
       , "units"       .= units
-      , "crystals"    .= bagToList crystals
+      , "crystals"    .= object [ toKeyJS x .= n
+                                          | (x,n) <- bagToListGrouped crystals ]
       , "cards"       .= hand
       , "location"    .= location
       , "unsafe"      .= fmap fst onUnsafe

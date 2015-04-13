@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
 module MageKnight.Game where
 
+import           MageKnight.Common
 import           MageKnight.Offers
 import           MageKnight.Source
 import           MageKnight.Land
@@ -28,8 +29,11 @@ testGame g =
   (landRNG,g2)          = split g1
   (playerRNG,sourceRNG) = split g2
 
-  pl = newPlayer playerRNG "Arythea" (makeCustomDeck arytheaDeck)
-
+  pl = (!! 3) $ iterate (addCrystal Green)
+      $ (!! 3) $ iterate (addCrystal Red)
+      $ (!! 1) $ iterate (addCrystal White)
+      $ (!! 2) $ iterate (addCrystal Blue)
+     $ newPlayer playerRNG "Arythea" (makeCustomDeck arytheaDeck)
 
 
 
