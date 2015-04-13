@@ -22,11 +22,7 @@ function drawPlayer(player) {
                       .append($('<td/>').attr('rowspan','2').append(img))
                       .append($('<td/>').attr('rowspan','2').append(l))
                       .append($('<td/>').append(rep))
-                      .append($('<td/>').attr('rowspan','2')
-                                        .css('min-width', '8em')
-                                        .css('width', '8em')
-                                        .css('background-color', 'rgba(0,0,0,0.3)')
-                                        .append(cs))
+                      .append($('<td/>').attr('rowspan','2').append(cs))
                       )
               .append($('<tr/>').append($('<td/>').append(fam)))
 
@@ -212,8 +208,14 @@ function drawPlayer(player) {
     var curRow = $('<tr/>')
 
     jQuery.each(['red','green','blue','white'], function(ix,c) {
-      var cryNew = $('<td/>')
-      var cryAmt = $('<td/>')
+      var cryNew = $('<td/>').css('min-height', '2em')
+                             .css('height', '2em')
+                             .css('padding', '0')
+                             .css('line-height', '0')
+      var cryAmt = $('<td/>').css('min-height', '2em')
+                             .css('height', '2em')
+                             .css('padding', '0')
+                             .css('line-height', '0')
       var n = cs[c]
       if (n === undefined || n < 3) cryNew.append(drawCrystal(c,0))
       if (n !== undefined) cryAmt.append(drawCrystal(c,n))
@@ -222,6 +224,7 @@ function drawPlayer(player) {
     })
 
     return $('<table/>')
+           .css('background-color', 'rgba(0,0,0,0.3)')
            .append(newRow)
            .append(curRow)
   }
