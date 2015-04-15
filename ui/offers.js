@@ -122,25 +122,27 @@ function newOffers(offers, el, v) {
                 })
                )
 
-    jQuery.each(cards, function(ix,card) { dom.append(drawCard(ix,card)) })
+    jQuery.each(cards, function(ix,card) { dom.append(drawCard(name,ix,card)) })
 
     if (!vis[name]) dom.find('img').hide();
 
     return dom
 
-    function drawCard(ix, card) {
+    function drawCard(offerName,ix, card) {
 
-     var big = $('<div/>')
+      var big = $('<table/>')
                 .css('position', 'fixed')
                 .css('left', '10%')
                 .css('top',  '10%')
                 .hide()
 
+      var big_tr = $('<tr/>')
+      big.append(big_tr)
 
-
-     function deck(deck_name) {
-        return $('<div/>')
-               .css('position', 'relative')
+     function deck(deck_name, tgt) {
+        return $('<td/>')
+               .css('vertical-align', 'top')
+               .append($('<div/>')
                .css('background-image', 'url("/img/cards/back.png")')
                .css('background-size', '200px 256px')
                .css('width',  '200px')
@@ -148,12 +150,12 @@ function newOffers(offers, el, v) {
                .css('border-radius', '10px')
                .css('text-align', 'center')
                .css('font-size', '40px')
-               .css('display', 'inline-block')
                .css('cursor', 'pointer')
                .click(function () {
                   var f = function() {}
                   big.hide()
-                  jQuery.post('/takeOffered', { offer: name, card: ix }
+                  jQuery.post('/takeOffered', { offer: name, card: ix,
+                                                target: tgt }
                              , function(newOs) {
                                 it = newOffers(newOs, useElite, vis)
                                 f = function() { topDom.replaceWith(it) }
@@ -166,22 +168,22 @@ function newOffers(offers, el, v) {
                        .css('border-radius', '5px')
                        .css('padding', '10px')
                        .css('color', 'rgba(255,255,255,0.7)')
-                      )
+                      ))
      }
 
-      big.append(deck('Deeds'))
+      big.append(deck('Deeds', 'deed'))
 
-      var big_card = $('<img/>')
+      var big_card = $('<td/>')
+                .append($('<img/>')
                 .attr('src', name === 'units' ? unitUrl(card) : deedUrl(card))
                 .css('width',  '400px')
                 .css('height', '600px')
-                .css('margin', '1em')
                 .css('border',  '5px solid black')
                 .css('box-shadow', '10px 4px 10px 4px #333')
-                .click(function () { big.hide() })
+                .click(function () { big.hide() }))
 
       big.append(big_card)
-      big.append(deck('Discard'))
+      big.append(deck('Discard', 'discard'))
 
       var dom = $('<img/>')
                 .attr('src', name === 'units' ? unitUrl(card) : deedUrl(card))

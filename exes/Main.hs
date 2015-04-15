@@ -223,22 +223,29 @@ takeOffered :: IORef Game -> Snap ()
 takeOffered ref =
   do offer <- textParam "offer"
      card  <- intParam  "card"
-     let updOffer f = return (fmap snd . f card)
-     upd <- case offer of
-              "advancedActions" -> updOffer takeAdvancedAction
-              "spells"          -> updOffer takeSpell
-              "units"           -> updOffer takeUnit
-              "monasteries"     -> updOffer takeMonasteryTech
-              _                 -> badInput "Unknown offer"
-     mb <- liftIO $
-           atomicModifyIORef' ref $ \g ->
-           case upd (offers g) of
-             Just o1 -> (g { offers = o1 }, Just o1)
-             Nothing -> (g,  Nothing)
-
+     upd   <- case offer of
+                "advancedActions" -> takeDeed $ takeAdvancedAction card
+                "spells"          -> takeDeed $ takeSpell card
+                "monasteries"     -> takeDeed $ takeMonasteryTech card
+--                "units"           -> updOffer takeUnit
+                _                 -> badInput "Unknown offer"
+     mb <- liftIO (atomicModifyIORef' ref upd)
      case mb of
        Nothing -> badInput "Invalid card"
-       Just o1 -> sendJSON o1
+       Just o  -> sendJSON o
+
+  where
+  takeDeed f =
+    do txt <- textParam "target"
+       upd <- case txt of
+                "deed"    -> return newDeed
+                "discard" -> return newDiscardedDeed
+                _ -> badInput "Invalid target"
+       return $ \g ->
+          case f (offers g) of
+            Nothing -> (g, Nothing)
+            Just (c,o1) ->
+              (g { offers = o1, player = upd c (player g) }, Just o1)
 
 snapUpdateOffers :: IORef Game -> (Offers -> Offers) -> Snap ()
 snapUpdateOffers ref f =
