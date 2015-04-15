@@ -1,4 +1,4 @@
-{-# LANGUAGE Trustworthy #-}
+{-# LANGUAGE Trustworthy, OverloadedStrings #-}
 module MageKnight.JSON
   ( Export(..)
   , jsonBytes
@@ -36,6 +36,11 @@ jsonBytes = JS.encode . toJS
 
 jsKey :: ExportAsKey a => a -> JS.Value
 jsKey = toJS . toKeyJS
+
+instance Export Bool where
+  toJS n = case n of
+             True  -> toJS ("true" :: Text)
+             False -> toJS ("false" :: Text)
 
 instance Export Int where
   toJS n = JS.Number (fromIntegral n)
