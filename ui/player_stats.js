@@ -1,8 +1,5 @@
 function drawPlayer(player) {
 
-  // XXX: units
-  // XXX: cards
-
   var img = $('<img/>')
             .attr('src', charUrl(player.name, 'art'))
             .css('width','5em')
