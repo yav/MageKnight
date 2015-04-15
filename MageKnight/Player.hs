@@ -28,6 +28,10 @@ module MageKnight.Player
   , addCrystal
   , removeCrystal
 
+  -- * Units
+  , hireUnit
+  , disbandUnit
+
   -- * Damage
   , assignDamage
 
@@ -45,6 +49,7 @@ import MageKnight.Terrain
 import MageKnight.JSON
 import MageKnight.Random(StdGen, shuffle)
 
+import           Data.Maybe (isNothing)
 import           Data.Text (Text)
 import           Data.List (partition)
 
@@ -243,6 +248,22 @@ backToSafety Player { .. } =
     Nothing    -> (False, Player { .. })
     Just (a,w) ->
       checkPassOut Player { location = a, hand = replicate w wound ++ hand, .. }
+
+-- | Try to add a unit to the player.  Failes if there are no open slots.
+-- XXX: Active unite
+hireUnit :: Unit -> Player -> Maybe Player
+hireUnit u Player { .. } =
+  case break isNothing units of
+    (as,_:bs) -> Just Player { units = as ++ Just u : bs, .. }
+    _         -> Nothing
+
+-- | Disband the given unit
+disbandUnit :: Int -> Player -> Player
+disbandUnit u Player { .. } =
+  case splitAt u units of
+    (as,_:bs) -> Player { units = as ++ bs, .. }
+    _         -> Player { .. }
+
 
 instance Export Player where
   toJS Player { .. } =

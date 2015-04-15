@@ -227,14 +227,18 @@ takeOffered ref =
                 "advancedActions" -> takeDeed $ takeAdvancedAction card
                 "spells"          -> takeDeed $ takeSpell card
                 "monasteries"     -> takeDeed $ takeMonasteryTech card
---                "units"           -> updOffer takeUnit
-                _                 -> badInput "Unknown offer"
-     mb <- liftIO (atomicModifyIORef' ref upd)
-     case mb of
-       Nothing -> badInput "Invalid card"
-       Just o  -> sendJSON o
+                "units" -> return $ \g ->
+                  fromMaybe g $
+                  do (u,o1) <- takeUnit card (offers g)
+                     p1     <- hireUnit u (player g)
+                     return g { offers = o1, player = p1 }
+                _   -> badInput "Unknown offer"
+     g <- liftIO (atomicModifyIORef' ref (fork . upd))
+     sendJSON g
 
   where
+  fork x = (x,x)
+
   takeDeed f =
     do txt <- textParam "target"
        upd <- case txt of
@@ -243,9 +247,8 @@ takeOffered ref =
                 _ -> badInput "Invalid target"
        return $ \g ->
           case f (offers g) of
-            Nothing -> (g, Nothing)
-            Just (c,o1) ->
-              (g { offers = o1, player = upd c (player g) }, Just o1)
+            Nothing     -> g
+            Just (c,o1) -> g { offers = o1, player = upd c (player g) }
 
 snapUpdateOffers :: IORef Game -> (Offers -> Offers) -> Snap ()
 snapUpdateOffers ref f =

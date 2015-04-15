@@ -98,6 +98,7 @@ function newOffers(offers, el, v) {
   }
 
 
+
   function drawOffer(name,cards) {
     var dom = $('<div/>')
               .css('margin-top',      '1em')
@@ -122,13 +123,16 @@ function newOffers(offers, el, v) {
                 })
                )
 
-    jQuery.each(cards, function(ix,card) { dom.append(drawCard(name,ix,card)) })
+    jQuery.each(cards, function(ix,card) { dom.append(drawCard(ix,card)) })
 
     if (!vis[name]) dom.find('img').hide();
 
     return dom
 
-    function drawCard(offerName,ix, card) {
+
+
+
+    function drawCard(ix, card) {
 
       var big = $('<table/>')
                 .css('position', 'fixed')
@@ -139,51 +143,54 @@ function newOffers(offers, el, v) {
       var big_tr = $('<tr/>')
       big.append(big_tr)
 
-     function deck(deck_name, tgt) {
+      function deck(deck_name, tgt) {
         return $('<td/>')
                .css('vertical-align', 'top')
                .append($('<div/>')
-               .css('background-image', 'url("/img/cards/back.png")')
+               .css('background-color', '#303')
                .css('background-size', '200px 256px')
-               .css('width',  '200px')
-               .css('height', '256px')
                .css('border-radius', '10px')
+               .css('padding-left', '1em')
+               .css('padding-right', '1em')
                .css('text-align', 'center')
                .css('font-size', '40px')
                .css('cursor', 'pointer')
+               .css('color', '#ccc')
+               .css('box-shadow', '0px 0px 5px 2px #969')
+               .css('margin', '15px')
+               .text(deck_name)
                .click(function () {
                   var f = function() {}
                   big.hide()
                   jQuery.post('/takeOffered', { offer: name, card: ix,
                                                 target: tgt }
-                             , function(newOs) {
-                                it = newOffers(newOs, useElite, vis)
+                             , function(g) {
+                                it = newOffers(g.offers, useElite, vis)
                                 f = function() { topDom.replaceWith(it) }
                              })
                   dom.fadeOut('slow', function() { f(); });
-               })
-               .append($('<div/>')
-                       .text(deck_name)
-                       .css('background-color', 'rgba(0,0,0,0.6)')
-                       .css('border-radius', '5px')
-                       .css('padding', '10px')
-                       .css('color', 'rgba(255,255,255,0.7)')
-                      ))
-     }
+               }))
+      }
 
-      big.append(deck('Deeds', 'deed'))
+      if (name === 'units')
+        big.append(deck('Hire',  ''))
+      else
+        big.append(deck('Deeds', 'deed'))
 
       var big_card = $('<td/>')
                 .append($('<img/>')
                 .attr('src', name === 'units' ? unitUrl(card) : deedUrl(card))
-                .css('width',  '400px')
-                .css('height', '600px')
+                .css('width',  '350px')
+                .css('height', '450px')
                 .css('border',  '5px solid black')
                 .css('box-shadow', '10px 4px 10px 4px #333')
+                .css('cursor', 'pointer')
                 .click(function () { big.hide() }))
 
       big.append(big_card)
-      big.append(deck('Discard', 'discard'))
+
+      if (name !== 'units')
+        big.append(deck('Discard', 'discard'))
 
       var dom = $('<img/>')
                 .attr('src', name === 'units' ? unitUrl(card) : deedUrl(card))
