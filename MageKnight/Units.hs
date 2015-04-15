@@ -11,9 +11,21 @@ import qualified Data.Set as Set
 import           Data.Maybe (listToMaybe)
 
 
+-- | A unit
+data ActiveUnit = ActiveUnit
+  { baseUnit    :: Unit
+  , unitReady   :: Bool
+  , unitWounds  :: Int
+  }
+
+
+activeateUnit :: Unit -> ActiveUnit
+activeateUnit u = ActiveUnit { baseUnit = u, unitReady = True, unitWounds = 0 }
+
+
 data UnitType = RegularUnit | EliteUnit
 
--- XXX: finish up
+-- | A unit that has not been hired (i.e., in the offer)
 data Unit = Unit { unitName       :: Text
                  , unitType       :: UnitType
                  , unitLevel      :: Int
@@ -21,7 +33,7 @@ data Unit = Unit { unitName       :: Text
                  , unitArmor      :: Int
                  , unitResists    :: Set Element
                  , unitSource     :: Set UnitSource
-                 , unitAbilities  :: [Rule]
+                 , unitAbilities  :: [Rule]  -- XXX: finish up
                  }
 
 data UnitSource =
@@ -42,6 +54,14 @@ instance Export UnitType where
     txt = case t of
             RegularUnit -> "regular"
             EliteUnit   -> "elite"
+
+instance Export ActiveUnit where
+  toJS ActiveUnit { .. } =
+    object [ "unit"   .= baseUnit
+           , "ready"  .= unitReady
+           , "wounds" .= unitWounds
+           ]
+
 
 findUnit :: Text -> Maybe Unit
 findUnit x =

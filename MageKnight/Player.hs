@@ -31,6 +31,7 @@ module MageKnight.Player
   -- * Units
   , hireUnit
   , disbandUnit
+  , addUnitSlot
 
   -- * Damage
   , assignDamage
@@ -59,7 +60,7 @@ data Player = Player
   { name        :: PlayerName
   , fame        :: Int
   , reputation  :: Int      -- ^ Index on board, *NOT* same as influence
-  , units       :: [ Maybe Unit ]   -- XXX: Replace With active units
+  , units       :: [ Maybe ActiveUnit ]
   , crystals    :: Bag BasicMana
   , deedDeck    :: [ Deed ]
   , hand        :: [ Deed ]
@@ -254,16 +255,19 @@ backToSafety Player { .. } =
 hireUnit :: Unit -> Player -> Maybe Player
 hireUnit u Player { .. } =
   case break isNothing units of
-    (as,_:bs) -> Just Player { units = as ++ Just u : bs, .. }
+    (as,_:bs) -> Just Player { units = as ++ Just (activeateUnit u) : bs, .. }
     _         -> Nothing
 
 -- | Disband the given unit
-disbandUnit :: Int -> Player -> Player
+disbandUnit :: Int -> Player -> Maybe (Unit, Player)
 disbandUnit u Player { .. } =
   case splitAt u units of
-    (as,_:bs) -> Player { units = as ++ bs, .. }
-    _         -> Player { .. }
+    (as,Just b:bs) -> Just (baseUnit b, Player { units = as ++ bs, .. })
+    _              -> Nothing
 
+-- | Add an additional slot for a unit
+addUnitSlot :: Player -> Player
+addUnitSlot Player { .. } = Player { units = Nothing : units, .. }
 
 instance Export Player where
   toJS Player { .. } =
