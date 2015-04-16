@@ -32,6 +32,9 @@ module MageKnight.Player
   , hireUnit
   , disbandUnit
   , addUnitSlot
+  , woundUnit
+  , healUnit
+  , unitSetReady
 
   -- * Damage
   , assignDamage
@@ -264,6 +267,31 @@ disbandUnit u Player { .. } =
   case splitAt u units of
     (as,Just b:bs) -> Just (baseUnit b, Player { units = as ++ bs, .. })
     _              -> Nothing
+
+
+updateUnit :: (ActiveUnit -> ActiveUnit) -> Int -> Player -> Player
+updateUnit f u Player { .. } =
+  case splitAt u units of
+    (as, Just b : bs) -> Player { units = as ++ Just (f b) : bs, .. }
+    _                 -> Player { .. }
+
+woundUnit :: Int -> Player -> Player
+woundUnit = updateUnit $ \ActiveUnit { .. } ->
+                          ActiveUnit { unitWounds = 1 + unitWounds, .. }
+
+healUnit :: Int -> Player -> Player
+healUnit = updateUnit $ \ActiveUnit { .. } ->
+                          if unitWounds > 0
+                            then ActiveUnit { unitWounds = unitWounds - 1, .. }
+                            else ActiveUnit { .. }
+
+
+unitSetReady :: Bool -> Int -> Player -> Player
+unitSetReady r = updateUnit $ \ActiveUnit { .. } ->
+                               ActiveUnit { unitReady = r, .. }
+
+
+
 
 -- | Add an additional slot for a unit
 addUnitSlot :: Player -> Player

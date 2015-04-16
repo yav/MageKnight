@@ -51,11 +51,14 @@ main =
        , ("/setReputation", setReputation s)
        , ("/addCrystal",    snapAddCrystal s)
        , ("/removeCrystal", snapRemoveCrystal s)
+       , ("/woundUnit",     snapWoundUnit s)
+       , ("/healUnit",      snapHealUnit s)
 
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
        , ("/newMonastery",   snapUpdateOffers s newMonastery)
        , ("/burnMonastery",  snapUpdateOffers s burnMonastery)
+
 
        -- testing
        , ("/newGame",                    newGame s)
@@ -299,4 +302,20 @@ snapAddCrystal ref =
   do r <- basicManaParam "color"
      snapUpdatePlayer ref (addCrystal r)
 
+
+snapWoundUnit :: IORef Game -> Snap ()
+snapWoundUnit ref =
+  do u <- intParam "unit"
+     snapUpdatePlayer ref (woundUnit u)
+
+snapHealUnit :: IORef Game -> Snap ()
+snapHealUnit ref =
+  do u <- intParam "unit"
+     snapUpdatePlayer ref (healUnit u)
+
+snapUnitSetReady :: IORef Game -> Snap ()
+snapUnitSetReady ref =
+  do u <- intParam "unit"
+     r <- boolParam "ready"
+     snapUpdatePlayer ref (unitSetReady r u)
 

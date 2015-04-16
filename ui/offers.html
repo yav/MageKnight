@@ -9,16 +9,24 @@
 </style>
 <script src="jquery.js"></script>
 <script src="offers.js"></script>
+<script src="player.js"></script>
 <script src="player_stats.js"></script>
 <script>
 
+var drawOffers = newOffers()
+
+function drawGame(g) {
+  return $('<div/>')
+         .attr('id','game')
+         .append(drawPlayer(g.player))
+         .append(drawPlayerCards(g.player))
+         .append(drawOffers(g.offers))
+}
+
 function testAll() {
-  var drawOffers = newOffers()
 
   jQuery.get('/newGame', {}, function(g) {
-    $('body')
-    .append(drawPlayer(g.player))
-    .append(drawOffers(g.offers))
+    $('#game').replaceWith(drawGame(g))
   })
 }
 
@@ -29,7 +37,7 @@ $(document).ready(function() {
 });
 </script>
 </head>
-<body></body>
+<body><div id="game"></div></body>
 </html>
 
 

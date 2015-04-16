@@ -169,9 +169,9 @@ function newOffers() {
                     jQuery.post('/takeOffered', { offer: name, card: ix,
                                                   target: tgt }
                                , function(g) {
-                                  it = drawOffers(g.offers)
+                                  it = drawGame(g)
                                   // XXX: rest of the game
-                                  f = function() { topDom.replaceWith(it) }
+                                  f = function() { $('#game').replaceWith(it) }
                                })
                     dom.fadeOut('slow', function() { f(); });
                  }))
