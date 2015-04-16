@@ -38,9 +38,7 @@ jsKey :: ExportAsKey a => a -> JS.Value
 jsKey = toJS . toKeyJS
 
 instance Export Bool where
-  toJS n = case n of
-             True  -> toJS ("true" :: Text)
-             False -> toJS ("false" :: Text)
+  toJS n = JS.Bool n
 
 instance Export Int where
   toJS n = JS.Number (fromIntegral n)

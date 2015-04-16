@@ -27,18 +27,29 @@ function drawPlayerCards(player) {
               .css('display', 'inline-block')
 
     var card = $('<div/>')
+               .css('position', 'relative')
                .css('background-image', 'url("/unit/' + mbUnit.unit + '")')
                .css('background-size', '200px 256px')
-               .css('width', '200px')
+               .css('background-repeat', 'no-repeat')
+               .css('padding-left', '30px')
+               .css('width', '220px')
                .css('height','256px')
                .css('margin', '1em')
+               .css('overflow', 'auto')
+               .css('cursor', 'pointer')
+               .click(function() {
+                  jQuery.post('/unitToggleReady', { unit: ix },
+                    function(p) { topDom.replaceWith(drawPlayerCards(p)) })
+               })
+
+    if (!mbUnit.ready)
+      card.append(drawExhausted())
 
     for (var i = 0; i < mbUnit.wounds; ++i) {
       card.append(drawWound())
     }
 
-    return dom.append(card)
-              .append(addWoundButton())
+    return dom.append(card.append(addWoundButton()))
 
     function addWoundButton() {
       return  $('<img/>')
@@ -50,6 +61,7 @@ function drawPlayerCards(player) {
                 jQuery.post('/woundUnit', { unit: ix }, function(p1) {
                   topDom.replaceWith(drawPlayerCards(p1))
                 })
+                return false
              })
     }
 
@@ -64,12 +76,20 @@ function drawPlayerCards(player) {
                 jQuery.post('/healUnit', { unit: ix }, function(p1) {
                   topDom.replaceWith(drawPlayerCards(p1))
                 })
+                return false
              })
     }
 
-
-
-
+    function drawExhausted() {
+      return $('<div/>')
+             .css('color','white')
+             .css('background-color', 'rgba(0,0,0,0.7)')
+             .css('position', 'absolute')
+             .css('left','0px')
+             .css('top','150px')
+             .css('width','200px')
+             .css('height','100px')
+    }
   }
 
 }

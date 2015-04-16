@@ -53,6 +53,7 @@ main =
        , ("/removeCrystal", snapRemoveCrystal s)
        , ("/woundUnit",     snapWoundUnit s)
        , ("/healUnit",      snapHealUnit s)
+       , ("/unitToggleReady", snapUnitToggleReady s)
 
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
@@ -313,9 +314,8 @@ snapHealUnit ref =
   do u <- intParam "unit"
      snapUpdatePlayer ref (healUnit u)
 
-snapUnitSetReady :: IORef Game -> Snap ()
-snapUnitSetReady ref =
+snapUnitToggleReady :: IORef Game -> Snap ()
+snapUnitToggleReady ref =
   do u <- intParam "unit"
-     r <- boolParam "ready"
-     snapUpdatePlayer ref (unitSetReady r u)
+     snapUpdatePlayer ref (unitToggleReady u)
 

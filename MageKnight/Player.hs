@@ -35,6 +35,7 @@ module MageKnight.Player
   , woundUnit
   , healUnit
   , unitSetReady
+  , unitToggleReady
 
   -- * Damage
   , assignDamage
@@ -289,6 +290,10 @@ healUnit = updateUnit $ \ActiveUnit { .. } ->
 unitSetReady :: Bool -> Int -> Player -> Player
 unitSetReady r = updateUnit $ \ActiveUnit { .. } ->
                                ActiveUnit { unitReady = r, .. }
+
+unitToggleReady :: Int -> Player -> Player
+unitToggleReady = updateUnit $ \ActiveUnit { .. } ->
+                                ActiveUnit { unitReady = not unitReady, .. }
 
 
 
