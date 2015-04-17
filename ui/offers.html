@@ -13,12 +13,14 @@
 <script src="player_stats.js"></script>
 <script>
 
+
 var drawOffers = newOffers()
 
 function drawGame(g) {
+
   return $('<div/>')
          .attr('id','game')
-         .append(drawPlayer(g.player))
+         .append(drawPlayerStats(g.player))
          .append(drawPlayerCards(g.player))
          .append(drawOffers(g.offers))
 }

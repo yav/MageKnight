@@ -1,4 +1,4 @@
-function drawPlayer(player) {
+function drawPlayerStats(player) {
 
   var img = $('<img/>')
             .attr('src', charUrl(player.name, 'art'))
@@ -12,6 +12,7 @@ function drawPlayer(player) {
 
 
   var stats = $('<table/>')
+              .attr('id','playerStats')
               .css('font-family', 'Almendra')
               .css('background-color', '#303')
               .css('border', '2px solid black')
@@ -90,7 +91,7 @@ function drawPlayer(player) {
                      , increase: fameUpdateAmt >= 0
                      }
                    , function(p) {
-                       stats.replaceWith(drawPlayer(p))
+                       stats.replaceWith(drawPlayerStats(p))
                        fameUpdateAmt = 0
                      })
       })
@@ -118,9 +119,17 @@ function drawPlayer(player) {
 
     if (lvlReward === 'up_skill')
       award.css('top','-1ex').css('height', '5ex').css('width', '1.5em')
-    else
+    else {
       award.css('top','-0.2em')
            .css('height', '1.5em').css('width', '1.5em')
+           .css('cursor', 'pointer')
+           .click( function() {
+              console.log('award clicked')
+              jQuery.post('/addUnitSlot', {}, function (p) {
+                $('#playerCards').replaceWith(drawPlayerCards(p))
+              })
+           })
+    }
 
 
     return $('<table/>')
@@ -185,9 +194,7 @@ function drawPlayer(player) {
               .css('cursor', 'pointer')
               .click(function () {
                 jQuery.post('/setReputation', { reputation: ix }
-                           , function(p) {
-                               stats.replaceWith(drawPlayer(p))
-                           })
+                   , function(p) { stats.replaceWith(drawPlayerStats(p)) })
               })
       if (ix - 7 === player.reputation)
           d.css('padding', '0.5em')
@@ -239,7 +246,7 @@ function drawPlayer(player) {
            .click(function() {
               var m = n === 0 ? '/addCrystal' : '/removeCrystal'
               jQuery.post(m, { color: c }
-                         , function(p) { stats.replaceWith(drawPlayer(p)) })
+                   , function(p) { stats.replaceWith(drawPlayerStats(p))})
            })
     return dom
   }

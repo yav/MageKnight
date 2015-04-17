@@ -8,6 +8,7 @@ function newOffers() {
 
 
       var topDom = $('<div/>')
+                   .attr('id','offers')
                    .css('font-family', 'Almendra')
                    .css('background-color', '#303')
                    .css('padding', '1em')
@@ -18,8 +19,8 @@ function newOffers() {
                    , 'monasteries':     'Monasteries'
                    }
 
-      topDom.append (drawRefresh());
-      topDom.append (drawMonastery());
+      topDom.append (drawRefresh())
+      topDom.append (drawMonastery())
 
       jQuery.each(offers, function(offer, cards) {
         topDom.append(drawOffer(offer,cards))
