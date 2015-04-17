@@ -9,6 +9,7 @@ function drawPlayerStats(player) {
   var fam = drawFame()
   var l   = drawLevel()
   var cs  = drawCrystals(player.crystals)
+  var ds  = drawDeedDeck()
 
 
   var stats = $('<table/>')
@@ -21,6 +22,7 @@ function drawPlayerStats(player) {
                       .append($('<td/>').attr('rowspan','2').append(l))
                       .append($('<td/>').append(rep))
                       .append($('<td/>').attr('rowspan','2').append(cs))
+                      .append($('<td/>').attr('rowspan','2').append(ds))
                       )
               .append($('<tr/>').append($('<td/>').append(fam)))
 
@@ -250,6 +252,25 @@ function drawPlayerStats(player) {
            })
     return dom
   }
+
+
+  function drawDeedDeck () {
+    return $('<div/>')
+           .css('background-image', 'url("/img/cards/back.png")')
+           .css('background-size', '64px 96px')
+           .css('width',  '64px')
+           .css('height', '96px')
+           .css('background-repeat', 'no-repeat')
+           .css('border-radius', '10px')
+           .css('cursor','pointer')
+           .click(function() {
+              jQuery.post('/drawCard', {}, function(p) {
+                $('#playerCards').replaceWith(drawPlayerCards(p))
+              })
+           })
+  }
+
+
 
 }
 

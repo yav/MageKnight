@@ -57,6 +57,8 @@ main =
        , ("/disbandUnit",     snapDisbandUnit s)
        , ("/addUnitSlot",     snapAddUnitSlot s)
 
+       , ("/drawCard",     snapDrawCard s)
+
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
        , ("/newMonastery",   snapUpdateOffers s newMonastery)
@@ -339,3 +341,6 @@ snapAddUnitSlot :: IORef Game -> Snap ()
 snapAddUnitSlot ref =
   snapUpdatePlayer ref addUnitSlot
 
+snapDrawCard :: IORef Game -> Snap ()
+snapDrawCard ref =
+  snapUpdatePlayer ref drawCard
