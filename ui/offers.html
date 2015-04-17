@@ -9,8 +9,8 @@
 </style>
 <script src="jquery.js"></script>
 <script src="offers.js"></script>
-<script src="player.js"></script>
 <script src="player_stats.js"></script>
+<script src="player_units.js"></script>
 <script>
 
 
@@ -21,7 +21,7 @@ function drawGame(g) {
   return $('<div/>')
          .attr('id','game')
          .append(drawPlayerStats(g.player))
-         .append(drawPlayerCards(g.player))
+         .append(drawPlayerUnits(g.player))
          .append(drawOffers(g.offers))
 }
 

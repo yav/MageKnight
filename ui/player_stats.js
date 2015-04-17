@@ -126,7 +126,7 @@ function drawPlayerStats(player) {
            .click( function() {
               console.log('award clicked')
               jQuery.post('/addUnitSlot', {}, function (p) {
-                $('#playerCards').replaceWith(drawPlayerCards(p))
+                $('#playerUnits').replaceWith(drawPlayerUnits(p))
               })
            })
     }

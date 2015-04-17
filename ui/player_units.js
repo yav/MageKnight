@@ -1,8 +1,8 @@
 
-function drawPlayerCards(player) {
+function drawPlayerUnits(player) {
 
   var topDom = $('<div/>')
-               .attr('id', 'playerCards')
+               .attr('id', 'playerUnits')
                .css('font-family', 'Almendra')
 
   jQuery.each(player.units, function(ix,mbUnit) {
@@ -37,7 +37,7 @@ function drawPlayerCards(player) {
                .css('padding-left','40px')
                .click(function() {
                   jQuery.post('/unitToggleReady', { unit: ix },
-                    function(p) { topDom.replaceWith(playerCards(p)) })
+                    function(p) { topDom.replaceWith(drawPlayerUnits(p)) })
                })
 
     if (!mbUnit.ready)
@@ -68,7 +68,7 @@ function drawPlayerCards(player) {
              .css('margin-left', '5px')
              .click(function () {
                 jQuery.post('/disbandUnit', { unit: ix },
-                  function (p) { topDom.replaceWith(drawPlayerCards(p)) })
+                  function (p) { topDom.replaceWith(drawPlayerUnits(p)) })
                 return false
              })
     }
@@ -85,7 +85,7 @@ function drawPlayerCards(player) {
              .css('float','right')
              .click(function() {
                 jQuery.post('/woundUnit', { unit: ix }, function(p1) {
-                  topDom.replaceWith(drawPlayerCards(p1))
+                  topDom.replaceWith(drawPlayerUnits(p1))
                 })
                 return false
              })
@@ -106,7 +106,7 @@ function drawPlayerCards(player) {
              .css('cursor', 'pointer')
              .click(function() {
                 jQuery.post('/healUnit', { unit: ix }, function(p1) {
-                  topDom.replaceWith(drawPlayerCards(p1))
+                  topDom.replaceWith(drawPlayerUnits(p1))
                 })
                 return false
              })
