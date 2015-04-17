@@ -3,13 +3,13 @@
 module Main where
 
 import MageKnight.Common
-import MageKnight.Offers
+import MageKnight.Offers as Offers
 import MageKnight.Deed
 import MageKnight.Units
 import MageKnight.Terrain
 import MageKnight.JSON
 import MageKnight.Game
-import MageKnight.Player
+import MageKnight.Player as Player
 import MageKnight.DeedDecks(findDeed)
 
 import           Snap.Http.Server (quickHttpServe)
@@ -54,6 +54,8 @@ main =
        , ("/woundUnit",     snapWoundUnit s)
        , ("/healUnit",      snapHealUnit s)
        , ("/unitToggleReady", snapUnitToggleReady s)
+       , ("/disbandUnit",     snapDisbandUnit s)
+       , ("/addUnitSlot",     snapAddUnitSlot s)
 
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
@@ -318,4 +320,22 @@ snapUnitToggleReady :: IORef Game -> Snap ()
 snapUnitToggleReady ref =
   do u <- intParam "unit"
      snapUpdatePlayer ref (unitToggleReady u)
+
+snapDisbandUnit :: IORef Game -> Snap ()
+snapDisbandUnit ref =
+  do u <- intParam "unit"
+     p <- liftIO $ atomicModifyIORef' ref $ \g ->
+           fork $
+           fromMaybe g $
+              do (uni,p1) <- Player.disbandUnit u (player g)
+                 return g { player = p1
+                          , offers = Offers.disbandUnit uni (offers g)
+                          }
+     sendJSON p
+  where
+  fork x = (x, player x)
+
+snapAddUnitSlot :: IORef Game -> Snap ()
+snapAddUnitSlot ref =
+  snapUpdatePlayer ref addUnitSlot
 

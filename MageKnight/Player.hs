@@ -266,7 +266,8 @@ hireUnit u Player { .. } =
 disbandUnit :: Int -> Player -> Maybe (Unit, Player)
 disbandUnit u Player { .. } =
   case splitAt u units of
-    (as,Just b:bs) -> Just (baseUnit b, Player { units = as ++ bs, .. })
+    (as,Just b:bs) -> Just (baseUnit b, Player { units = as ++ Nothing : bs
+                                               , .. })
     _              -> Nothing
 
 
@@ -300,7 +301,7 @@ unitToggleReady = updateUnit $ \ActiveUnit { .. } ->
 
 -- | Add an additional slot for a unit
 addUnitSlot :: Player -> Player
-addUnitSlot Player { .. } = Player { units = Nothing : units, .. }
+addUnitSlot Player { .. } = Player { units = units ++ [Nothing], .. }
 
 instance Export Player where
   toJS Player { .. } =
