@@ -11,6 +11,7 @@ import MageKnight.JSON
 import MageKnight.Game
 import MageKnight.Player as Player
 import MageKnight.DeedDecks(findDeed)
+import MageKnight.Loc
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)
@@ -261,9 +262,8 @@ takeOffered ref =
 snapUpdateOffers :: IORef Game -> (Offers -> Offers) -> Snap ()
 snapUpdateOffers ref f =
   do g1 <- liftIO $ atomicModifyIORef' ref $ \g ->
-            case updateOffers (Just . f) g of
-              Nothing -> (g,g)
-              Just g1 -> (g1,g1)
+            let g1 = writeLoc g theOffers f
+            in (g1,g1)
      sendJSON (offers g1)
 
 
@@ -276,9 +276,8 @@ snapRefreshOffers ref =
 snapUpdatePlayer :: IORef Game -> (Player -> Player) -> Snap ()
 snapUpdatePlayer ref f =
   do g1 <- liftIO $ atomicModifyIORef' ref $ \g ->
-           case updatePlayer (Just . f) g of
-             Just g1 -> (g1,g1)
-             Nothing -> (g,g)
+           let g1 = writeLoc g thePlayer f
+           in (g1,g1)
      sendJSON (player g1)
 
 

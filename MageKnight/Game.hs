@@ -1,7 +1,8 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
 module MageKnight.Game where
 
-import           MageKnight.Common
+import           MageKnight.Common hiding (Resource(..))
+import           MageKnight.Deed
 import           MageKnight.Offers
 import           MageKnight.Source
 import           MageKnight.Land
@@ -11,20 +12,24 @@ import           MageKnight.JSON
 import           MageKnight.Player
 import           MageKnight.DeedDecks(makeCustomDeck, arytheaDeck)
 import           MageKnight.Perhaps
+import           MageKnight.Bag
+import           MageKnight.Loc
 
+import           Data.Text (Text)
 
 
 
 testGame :: StdGen -> Game
 testGame g =
-  Game { theSource  = newSource sourceRNG 3
+  Game { manaSource = newSource sourceRNG 3
        , offers     = iterate newMonastery offers0 !! ms
-       , theLand    = placePlayer pl l
+       , land       = placePlayer pl l
        , player     = pl
+       , playArea   = emptyPlayArea
        }
   where
   offers0     = setupOffers offerRNG (defaultOfferSetup 1 True)
-  Ok (l,ms) = setupLand landRNG (defaultLandSetup Wedge 7 2 [3,5])
+  Ok (l,ms)   = setupLand landRNG (defaultLandSetup Wedge 7 2 [3,5])
   (offerRNG, g1)        = split g
   (landRNG,g2)          = split g1
   (playerRNG,sourceRNG) = split g2
@@ -38,21 +43,38 @@ testGame g =
 
 
 data Game = Game
-  { theSource   :: Source
+  { manaSource  :: Source
   , offers      :: Offers
-  , theLand     :: Land
+  , land        :: Land
   , player      :: Player   -- just one for now
+  , playArea    :: PlayArea
   }
 
-updatePlayer :: Functor f => (Player -> f Player) -> Game -> f Game
-updatePlayer f Game { .. } = fmap (\p1 -> Game { player = p1, .. }) (f player)
+thePlayer :: MonoLoc Game Player
+thePlayer = loc player (\g a -> g { player = a })
 
-updateSource :: Functor f => (Source -> f Source) -> Game -> f Game
-updateSource f Game { .. } = fmap (\p1 -> Game { theSource = p1, .. })
-                                  (f theSource)
+theSource :: MonoLoc Game Source
+theSource = loc manaSource (\g a -> g { manaSource = a })
 
-updateOffers :: Functor f => (Offers -> f Offers) -> Game -> f Game
-updateOffers f Game { .. } = fmap (\p1 -> Game { offers = p1, .. }) (f offers)
+theOffers :: MonoLoc Game Offers
+theOffers = loc offers (\g a -> g { offers = a })
+
+theLand :: MonoLoc Game Land
+theLand = loc land (\g a -> g { land = a })
+
+thePlayArea :: MonoLoc Game PlayArea
+thePlayArea = loc playArea (\g a -> g { playArea = a })
+
+
+useCrystal :: BasicMana -> Game -> Game
+useCrystal m Game { .. } =
+  case removeCrystal m player of
+    Just p1 -> Game { player = p1
+                    , playArea = addManaToken (BasicMana m) playArea
+                    , .. }
+    Nothing -> Game { .. }
+
+
 
 {-
 -- | Move the player 1 unit the given direction.
@@ -63,7 +85,7 @@ movePlayer d Game { .. } =
 -}
 
 addrOnMap :: Addr -> Game -> Bool
-addrOnMap a g = MageKnight.Land.isRevealed a (theLand g)
+addrOnMap a g = MageKnight.Land.isRevealed a (land g)
 
 
 {-
@@ -81,12 +103,95 @@ explore addr g0 =
 --------------------------------------------------------------------------------
 
 instance Export Game where
-  toJS Game { .. } =
+  toJS g =
     object
-      [ "source" .= theSource
-      , "offers" .= offers
-      , "land"   .= theLand
-      , "player" .= player
+      [ "source" .= readLoc g theSource
+      , "offers" .= readLoc g theOffers
+      , "land"   .= readLoc g theLand
+      , "player" .= readLoc g thePlayer
       ]
+
+--------------------------------------------------------------------------------
+
+data PlayArea = PlayArea
+  { manaTokens      :: Bag Mana
+  , discardedCards  :: [Deed]
+  , trashedCards    :: [Deed]
+  , activeCards     :: [ActiveCard]
+  }
+
+emptyPlayArea :: PlayArea
+emptyPlayArea = PlayArea
+  { manaTokens      = bagEmpty
+  , discardedCards  = []
+  , trashedCards    = []
+  , activeCards     = []
+  }
+
+addManaToken :: Mana -> PlayArea -> PlayArea
+addManaToken m PlayArea { .. } =
+               PlayArea  { manaTokens = bagAdd 1 m manaTokens, .. }
+
+removeManaToken :: Mana -> PlayArea -> PlayArea
+removeManaToken m PlayArea { .. } =
+  case bagRemove 1 m manaTokens of
+    Just b -> PlayArea { manaTokens = b, .. }
+    _      -> PlayArea { .. }
+
+addSidewaysCard :: ActionType -> Deed -> PlayArea -> PlayArea
+addSidewaysCard a d PlayArea { .. } =
+  PlayArea { activeCards = SidewaysCard a d : activeCards, .. }
+
+addCard :: Deed -> PlayArea -> PlayArea
+addCard d PlayArea { .. } =
+  PlayArea { activeCards = NormalCard False d : activeCards, .. }
+
+powerUpCard :: Int -> PlayArea -> PlayArea
+powerUpCard n PlayArea { .. } =
+  case splitAt n activeCards of
+    (as,NormalCard _ d : bs) ->
+        PlayArea { activeCards = as ++ NormalCard True d : bs, .. }
+    _ -> PlayArea { .. }
+
+discardCard :: Deed -> PlayArea -> PlayArea
+discardCard d PlayArea { .. } =
+  PlayArea { discardedCards = d : discardedCards, .. }
+
+trashCard :: Deed -> PlayArea -> PlayArea
+trashCard d PlayArea { .. } =
+  PlayArea { trashedCards = d : trashedCards, .. }
+
+
+data ActiveCard   = SidewaysCard ActionType Deed
+                  | NormalCard Bool Deed
+
+data ActionType   = Movement | Influence | Block | Attack
+
+
+instance Export PlayArea where
+  toJS PlayArea { .. } =
+    object
+      [ "mana"      .= bagToList manaTokens
+      , "cards"     .= activeCards
+      , "discarded" .= discardedCards
+      , "trashed"   .= trashedCards
+      ]
+
+instance Export ActiveCard where
+  toJS card =
+    case card of
+      SidewaysCard act d -> object [ "card" .= d, "useFor"  .= act ]
+      NormalCard p d     -> object [ "card" .= d, "powerUp" .= p ]
+
+instance Export ActionType where
+  toJS act = toJS $ case act of
+                      Movement  -> "movement" :: Text
+                      Influence -> "influence"
+                      Block     -> "block"
+                      Attack    -> "attack"
+
+
+
+
 
 

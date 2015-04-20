@@ -46,6 +46,7 @@ library
     MageKnight.ResourceQ,
     MageKnight.Bag,
     MageKnight.Perhaps
+    MageKnight.Loc
 
   build-depends:
     base,

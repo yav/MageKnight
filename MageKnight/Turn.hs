@@ -1,5 +1,5 @@
 {-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
-module MageKnight.Turn
+module MageKnight.Turn where {-
   ( -- * New turn
     Turn, newTurn
 
@@ -207,4 +207,4 @@ instance Export Turn where
     , "move_limit"      .= moveRadius
 
     ] -}
-
+-}
