@@ -74,6 +74,12 @@ useCrystal m Game { .. } =
                     , .. }
     Nothing -> Game { .. }
 
+playCard :: Int -> Game -> Game
+playCard n Game { .. } =
+  case takeCard n player of
+    Just (d,p1) -> Game { player = p1, playArea = addCard d playArea, .. }
+    Nothing     -> Game { .. }
+
 
 
 {-
@@ -105,10 +111,11 @@ explore addr g0 =
 instance Export Game where
   toJS g =
     object
-      [ "source" .= readLoc g theSource
-      , "offers" .= readLoc g theOffers
-      , "land"   .= readLoc g theLand
-      , "player" .= readLoc g thePlayer
+      [ "source"    .= readLoc g theSource
+      , "offers"    .= readLoc g theOffers
+      , "land"      .= readLoc g theLand
+      , "player"    .= readLoc g thePlayer
+      , "playArea"  .= readLoc g thePlayArea
       ]
 
 --------------------------------------------------------------------------------
@@ -119,6 +126,12 @@ data PlayArea = PlayArea
   , trashedCards    :: [Deed]
   , activeCards     :: [ActiveCard]
   }
+
+data ActiveCard   = SidewaysCard ActionType Deed
+                  | NormalCard Bool {- powered up? -} Deed
+
+data ActionType   = Movement | Influence | Block | Attack
+
 
 emptyPlayArea :: PlayArea
 emptyPlayArea = PlayArea
@@ -131,6 +144,8 @@ emptyPlayArea = PlayArea
 addManaToken :: Mana -> PlayArea -> PlayArea
 addManaToken m PlayArea { .. } =
                PlayArea  { manaTokens = bagAdd 1 m manaTokens, .. }
+
+
 
 removeManaToken :: Mana -> PlayArea -> PlayArea
 removeManaToken m PlayArea { .. } =
@@ -161,11 +176,6 @@ trashCard :: Deed -> PlayArea -> PlayArea
 trashCard d PlayArea { .. } =
   PlayArea { trashedCards = d : trashedCards, .. }
 
-
-data ActiveCard   = SidewaysCard ActionType Deed
-                  | NormalCard Bool Deed
-
-data ActionType   = Movement | Influence | Block | Attack
 
 
 instance Export PlayArea where

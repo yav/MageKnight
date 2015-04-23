@@ -403,11 +403,11 @@ function drawPlayArea(hand) {
   me.append(actionCard('March', false));
   return me;
 
-  
+
   function actionCard(name, poweredUp) {
     var me = deedCardImage(name);
     var pos = poweredUp ? (7/12) : (9/11);
-  
+
     var screen = $('<div/>')
                  .width(me.width())
                  .height(me.height()/7)

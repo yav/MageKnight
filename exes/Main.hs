@@ -29,7 +29,7 @@ import           Data.Text.Encoding(decodeUtf8)
 import           Data.Text.Read(decimal)
 import qualified Data.Text as Text
 import           Data.IORef ( IORef, newIORef, writeIORef, readIORef
-                            , atomicModifyIORef' )
+                            , atomicModifyIORef', modifyIORef' )
 
 import           Control.Applicative ((<|>))
 import           Control.Monad.IO.Class(liftIO)
@@ -59,6 +59,7 @@ main =
        , ("/addUnitSlot",     snapAddUnitSlot s)
 
        , ("/drawCard",     snapDrawCard s)
+       , ("/playCard",     snapPlayCard s)
 
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
@@ -343,3 +344,17 @@ snapAddUnitSlot ref =
 snapDrawCard :: IORef Game -> Snap ()
 snapDrawCard ref =
   snapUpdatePlayer ref drawCard
+
+
+snapUpdateGame :: IORef Game -> (Game -> Game) -> Snap ()
+snapUpdateGame ref f =
+  do g1 <- liftIO (atomicModifyIORef' ref (\g -> let g1 = f g
+                                                 in (g1,g1)))
+     sendJSON g1
+
+snapPlayCard :: IORef Game -> Snap ()
+snapPlayCard ref =
+  do n <- intParam "card"
+     snapUpdateGame ref (playCard n)
+
+

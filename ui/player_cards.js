@@ -56,7 +56,9 @@ function drawPlayerCards(player) {
         )
         .append (
           textButton('&#x27a1;', function(ev) {
-            console.log('play ' + cardName)
+            jQuery.post('/playCard', { card: ix }, function(g) {
+              $('#game').replaceWith(drawGame(g))
+            })
             return false;
           })
         )
