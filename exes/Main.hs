@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Main where
 
-import MageKnight.Common
+import MageKnight.Common hiding (Resource(..))
 import MageKnight.Offers as Offers
 import MageKnight.Deed
 import MageKnight.Units
@@ -60,6 +60,7 @@ main =
 
        , ("/drawCard",     snapDrawCard s)
        , ("/playCard",     snapPlayCard s)
+       , ("/playCardFor",  snapPlayCardFor s)
 
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
@@ -356,5 +357,18 @@ snapPlayCard :: IORef Game -> Snap ()
 snapPlayCard ref =
   do n <- intParam "card"
      snapUpdateGame ref (playCard n)
+
+snapPlayCardFor :: IORef Game -> Snap ()
+snapPlayCardFor ref =
+  do n <- intParam "card"
+     a <- textParam "action"
+     act <- case a of
+              "move"      -> return Movement
+              "influence" -> return Influence
+              "attack"    -> return Attack
+              "block"     -> return Block
+              _           -> badInput "Invalid action type."
+
+     snapUpdateGame ref (playCardFor act n)
 
 

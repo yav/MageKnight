@@ -93,6 +93,8 @@ function drawPlayerCards(player) {
                  .css('transform', 'rotate(-90deg)')
                  .click(function(ev) {
                    console.log('play ' + cardName + ' for ' + name)
+                   jQuery.post('/playCardFor', { card: ix, action: name },
+                     function(g) { $('#game').replaceWith(drawGame(g)) })
                    return false
                  })
        sidewaysMenu.append(btn)

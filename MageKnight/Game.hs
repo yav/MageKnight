@@ -80,6 +80,14 @@ playCard n Game { .. } =
     Just (d,p1) -> Game { player = p1, playArea = addCard d playArea, .. }
     Nothing     -> Game { .. }
 
+playCardFor :: ActionType -> Int -> Game -> Game
+playCardFor a n Game { .. } =
+  case takeCard n player of
+    Just (d,p1) -> Game { player = p1
+                        , playArea = addSidewaysCard a d playArea
+                        , .. }
+    Nothing     -> Game { .. }
+
 
 
 {-
@@ -182,9 +190,9 @@ instance Export PlayArea where
   toJS PlayArea { .. } =
     object
       [ "mana"      .= bagToList manaTokens
-      , "cards"     .= activeCards
-      , "discarded" .= discardedCards
-      , "trashed"   .= trashedCards
+      , "cards"     .= reverse activeCards
+      , "discarded" .= reverse discardedCards
+      , "trashed"   .= reverse trashedCards
       ]
 
 instance Export ActiveCard where
@@ -195,7 +203,7 @@ instance Export ActiveCard where
 
 instance Export ActionType where
   toJS act = toJS $ case act of
-                      Movement  -> "movement" :: Text
+                      Movement  -> "move" :: Text
                       Influence -> "influence"
                       Block     -> "block"
                       Attack    -> "attack"
