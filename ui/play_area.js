@@ -13,7 +13,7 @@ function drawPlayArea(playArea) {
 
   return topDom
 
-  function deedUrl(nm)      { return '/deed/' + nm }
+  function deedUrl(deed)    { return '/deed/' + deed.name }
   function imgUrl(x)        { return '/img/' + x + '.png' }
   function cardIconUrl(nm)  { return imgUrl('cards/icons/' + nm) }
 
@@ -41,8 +41,11 @@ function drawPlayArea(playArea) {
     var icon = $('<img/>')
                .attr('src', cardIconUrl(act))
                .css('margin', '2px')
-               .css('width','16px')
-               .css('height','18px')
+               .css('width',  '32px')
+               .css('height', '40px')
+               .css('position', 'absolute')
+               .css('left', (h - 32)/2 + 'px')
+               .css('top',  (w - 40)/2 + 'px')
 
     var lab = $('<div/>')
               .css('background-color', 'rgba(0,0,0,0.8)')
@@ -52,7 +55,6 @@ function drawPlayArea(playArea) {
               .css('height', w + 'px')
               .css('left', '0')
               .css('top',  '0')
-              .css('text-align', 'center')
               .css('border-radius', '0.5em')
 
     me.append(pic).append(lab.append(icon))
@@ -77,10 +79,28 @@ function drawPlayArea(playArea) {
     if (card.useFor !== undefined) {
       return drawSideCard(name,card.useFor)
     } else {
-      var pos = card.poweredUp ? (7/12) : (9/11);
+      // XXX: Wound
+
+      var pos, screen_h, screen_top;
+
+      switch (name.type) {
+        case 'action':
+          screen_h = h / 7;
+          pos = card.poweredUp ? (7/12) : (9/11);
+          break;
+        case 'spell':
+          screen_h = h / 2;
+          pos = card.poweredUp ? 0 : (1/2)
+          break;
+        case 'artifact': // XXX
+          screen_h = h / 7;
+          pos = card.poweredUp ? (7/12) : (9/11);
+          break;
+      }
+
       var screen = $('<div/>')
                    .width(w + 'px')
-                   .height((h / 7) + 'px')
+                   .height(screen_h + 'px')
                    .css('position','absolute')
                    .css('left','0px')
                    .css('top', (pos * h) + 'px')

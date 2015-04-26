@@ -29,7 +29,7 @@ function newOffers() {
       // Draw artifact
       return topDom
 
-    function deedUrl(name) { return '/deed/' + name }
+    function deedUrl(deed) { return '/deed/' + deed.name }
     function unitUrl(name) { return '/unit/' + name }
 
     function updateOffer(url) {

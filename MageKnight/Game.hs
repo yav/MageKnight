@@ -190,9 +190,9 @@ instance Export PlayArea where
   toJS PlayArea { .. } =
     object
       [ "mana"      .= bagToList manaTokens
-      , "cards"     .= reverse activeCards
-      , "discarded" .= reverse discardedCards
-      , "trashed"   .= reverse trashedCards
+      , "cards"     .= activeCards
+      , "discarded" .= discardedCards
+      , "trashed"   .= trashedCards
       ]
 
 instance Export ActiveCard where

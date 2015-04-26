@@ -17,6 +17,7 @@ import MageKnight.Rule
 import MageKnight.Bag
 import MageKnight.JSON
 
+import           Data.Text ( Text )
 import qualified Data.Text as Text
 
 
@@ -38,7 +39,15 @@ instance Ord Deed where
   compare x y = compare (deedName x) (deedName y)
 
 instance Export Deed where
-  toJS Deed { .. } = toJS deedName
+  toJS Deed { .. } = object [ "name" .= deedName, "type" .= deedType ]
+
+instance Export DeedType where
+  toJS ty = toJS $ case ty of
+                     Wound            -> "wound" :: Text
+                     Action _         -> "action"
+                     AdvancedAction _ -> "action"
+                     Spell _          -> "spell"
+                     Artifact         -> "artifact"
 
 
 wound :: Deed

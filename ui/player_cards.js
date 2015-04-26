@@ -1,6 +1,6 @@
 function drawPlayerCards(player) {
 
-  function deedUrl(nm)      { return '/deed/' + nm }
+  function deedUrl(deed)    { return '/deed/' + deed.name }
   function imgUrl(x)        { return '/img/' + x + '.png' }
   function cardIconUrl(nm)  { return imgUrl('cards/icons/' + nm) }
 
@@ -30,7 +30,7 @@ function drawPlayerCards(player) {
         .css('color', 'white')
         .hide();
 
-    if (cardName === 'Wound') {
+    if (cardName.type === 'wound') {
       playMenu.append(
         $('<img/>')
         .attr('src', cardIconUrl('heal'))
@@ -92,7 +92,6 @@ function drawPlayerCards(player) {
                  .css('height','18px')
                  .css('transform', 'rotate(-90deg)')
                  .click(function(ev) {
-                   console.log('play ' + cardName + ' for ' + name)
                    jQuery.post('/playCardFor', { card: ix, action: name },
                      function(g) { $('#game').replaceWith(drawGame(g)) })
                    return false
