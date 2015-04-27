@@ -33,20 +33,26 @@ function drawPlayArea(playArea) {
   function drawManaToken(c) {
     sh = 'black'
     switch (c) {
-      case 'red':   colA = '#300'; colB = '#f00'; break;
-      case 'green': colA = '#030'; colB = '#0f0'; break;
-      case 'blue':  colA = '#003'; colB = '#0ff'; break;
-      case 'white': colA = '#333'; colB = '#fff'; break;
-      case 'gold':  colA = '#630'; colB = '#ff0'; break;
-      case 'black': colA = '#666'; colB = '#000'; break;
+      case 'red':   lab = 'r'; colA = '#300'; colB = '#f00'; break;
+      case 'green': lab = 'g'; colA = '#030'; colB = '#0f0'; break;
+      case 'blue':  lab = 'b'; colA = '#003'; colB = '#0ff'; break;
+      case 'white': lab = 'w'; colA = '#333'; colB = '#fff'; break;
+      case 'gold':  lab = 'S'; colA = '#630'; colB = '#ff0'; break;
+      case 'black': lab = 'N'; colA = '#666'; colB = '#000'; break;
     }
 
+    var icon = $('<img/>')
+               .attr('src', manaUrl(c))
+               .css('width',  '16px')
+               .css('height', '16px')
+               .css('margin', '10px')
+
     return $('<div/>')
-           .css('width',  '2em')
-           .css('height', '2em')
+           .append(icon)
+           .css('padding', '5px')
            .css('display', 'inline-block')
            .css('background', 'linear-gradient(' + colB + ',' + colA + ')')
-           .css('border-radius', '1em')
+           .css('border-radius', '2em')
            .css('box-shadow', 'inset 0px 0px 2px 2px ' + sh)
            .css('margin','2px')
 
