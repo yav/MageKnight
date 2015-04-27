@@ -153,8 +153,6 @@ addManaToken :: Mana -> PlayArea -> PlayArea
 addManaToken m PlayArea { .. } =
                PlayArea  { manaTokens = bagAdd 1 m manaTokens, .. }
 
-
-
 removeManaToken :: Mana -> PlayArea -> PlayArea
 removeManaToken m PlayArea { .. } =
   case bagRemove 1 m manaTokens of

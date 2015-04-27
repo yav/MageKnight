@@ -223,12 +223,15 @@ checkPassOut p@Player { .. }
   (wounds,others) = partition (== wound) hand
 
 -- | Assign combat damage to a player.  Returns 'True' if the player passed out.
-assignDamage :: Int -> Player -> (Bool, Player)
-assignDamage d p = checkPassOut p { hand = replicate woundNum wound ++ hand p }
+assignDamage :: Int -> Bool {- ^ Poison? -} -> Player -> (Bool, Player)
+assignDamage d poison p =
+  checkPassOut p { hand = replicate woundNum wound ++ hand p
+                 , discardPile = replicate poisonDamage wound ++ discardPile p
+                 }
   where
-  armor       = playerArmor p
-  woundNum    = div (max 0 d + armor - 1) armor
-
+  armor         = playerArmor p
+  woundNum      = div (max 0 d + armor - 1) armor
+  poisonDamage  = if poison then woundNum else 0
 
 -- | Set the player's location
 playerSetLoc :: Bool {- ^ Is this a safe locaiton? -} ->

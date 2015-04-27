@@ -6,6 +6,9 @@ function drawPlayArea(playArea) {
   var topDom = $('<div/>')
                .attr('id', 'playArea')
                .css('font-family', 'Almendra')
+               .css('background-color', '#303')
+
+  topDom.append(drawMana())
 
   jQuery.each(playArea.cards, function(ix,card) {
     topDom.append(drawActiveCard(card))
@@ -16,6 +19,43 @@ function drawPlayArea(playArea) {
   function deedUrl(deed)    { return '/deed/' + deed.name }
   function imgUrl(x)        { return '/img/' + x + '.png' }
   function cardIconUrl(nm)  { return imgUrl('cards/icons/' + nm) }
+  function manaUrl(mana)    { return imgUrl('mana/' + mana) }
+
+  function drawMana() {
+    var dom = $('<div/>')
+              .css('background-color', 'rgba(0,0,0,0.2)')
+    jQuery.each(playArea.mana, function(ix,c) {
+      dom.append(drawManaToken(c))
+    })
+    return dom
+  }
+
+  function drawManaToken(c) {
+    sh = 'black'
+    switch (c) {
+      case 'red':   colA = '#300'; colB = '#f00'; break;
+      case 'green': colA = '#030'; colB = '#0f0'; break;
+      case 'blue':  colA = '#003'; colB = '#0ff'; break;
+      case 'white': colA = '#333'; colB = '#fff'; break;
+      case 'gold':  colA = '#630'; colB = '#ff0'; break;
+      case 'black': colA = '#666'; colB = '#000'; break;
+    }
+
+    return $('<div/>')
+           .css('width',  '2em')
+           .css('height', '2em')
+           .css('display', 'inline-block')
+           .css('background', 'linear-gradient(' + colB + ',' + colA + ')')
+           .css('border-radius', '1em')
+           .css('box-shadow', 'inset 0px 0px 2px 2px ' + sh)
+           .css('margin','2px')
+
+    return $('<img/>')
+           .attr('src', manaUrl(c))
+           .css('width',  '2em')
+           .css('height', '2em')
+           .css('margin', '1px')
+  }
 
   function drawSideCard(name,act) {
     var me = $('<div/>')

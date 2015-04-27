@@ -246,9 +246,13 @@ function drawPlayerStats(player) {
            .css('width', '2em')
            .css('cursor', 'pointer')
            .click(function() {
-              var m = n === 0 ? '/addCrystal' : '/removeCrystal'
-              jQuery.post(m, { color: c }
+              if (n === 0) {
+                jQuery.post('/addCrystal', { color: c }
                    , function(p) { stats.replaceWith(drawPlayerStats(p))})
+              } else {
+                jQuery.post('/useCrystal', { color: c }
+                   , function(g) { $('#game').replaceWith(drawGame(g)) })
+              }
            })
     return dom
   }

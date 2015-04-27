@@ -51,7 +51,6 @@ main =
        , ("/updateFame", updateFame s)
        , ("/setReputation", setReputation s)
        , ("/addCrystal",    snapAddCrystal s)
-       , ("/removeCrystal", snapRemoveCrystal s)
        , ("/woundUnit",     snapWoundUnit s)
        , ("/healUnit",      snapHealUnit s)
        , ("/unitToggleReady", snapUnitToggleReady s)
@@ -61,6 +60,8 @@ main =
        , ("/drawCard",     snapDrawCard s)
        , ("/playCard",     snapPlayCard s)
        , ("/playCardFor",  snapPlayCardFor s)
+       , ("/assignDamage", snapAssignDamage s)
+       , ("/useCrystal",   snapUseCrystal s)
 
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
@@ -295,18 +296,16 @@ setReputation ref =
   do r <- intParam "reputation"
      snapUpdatePlayer ref (playerSetReputation (r - 7))
 
-snapRemoveCrystal :: IORef Game -> Snap ()
-snapRemoveCrystal ref =
-  do r <- basicManaParam "color"
-     snapUpdatePlayer ref (\p -> case removeCrystal r p of
-                                   Just p1 -> p1
-                                   Nothing -> p)
-
-
 snapAddCrystal :: IORef Game -> Snap ()
 snapAddCrystal ref =
   do r <- basicManaParam "color"
      snapUpdatePlayer ref (addCrystal r)
+
+snapAssignDamage :: IORef Game -> Snap ()
+snapAssignDamage ref =
+  do p <- boolParam "poison"
+     d <- intParam "damage"
+     snapUpdatePlayer ref (snd . assignDamage d p)
 
 
 snapWoundUnit :: IORef Game -> Snap ()
@@ -370,5 +369,10 @@ snapPlayCardFor ref =
               _           -> badInput "Invalid action type."
 
      snapUpdateGame ref (playCardFor act n)
+
+snapUseCrystal :: IORef Game -> Snap ()
+snapUseCrystal ref =
+  do c <- basicManaParam "color"
+     snapUpdateGame ref (useCrystal c)
 
 
