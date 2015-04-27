@@ -31,36 +31,23 @@ function drawPlayArea(playArea) {
   }
 
   function drawManaToken(c) {
-    sh = 'black'
+    var colB
+
     switch (c) {
-      case 'red':   lab = 'r'; colA = '#300'; colB = '#f00'; break;
-      case 'green': lab = 'g'; colA = '#030'; colB = '#0f0'; break;
-      case 'blue':  lab = 'b'; colA = '#003'; colB = '#0ff'; break;
-      case 'white': lab = 'w'; colA = '#333'; colB = '#fff'; break;
-      case 'gold':  lab = 'S'; colA = '#630'; colB = '#ff0'; break;
-      case 'black': lab = 'N'; colA = '#666'; colB = '#000'; break;
+      case 'red':   colB = '#f00'; break;
+      case 'green': colB = '#0f0'; break;
+      case 'blue':  colB = '#0ff'; break;
+      case 'white': colB = '#fff'; break;
+      case 'gold':  colB = '#ff0'; break;
+      case 'black': colB = '#ccc'; break;
     }
-
-    var icon = $('<img/>')
-               .attr('src', manaUrl(c))
-               .css('width',  '16px')
-               .css('height', '16px')
-               .css('margin', '10px')
-
-    return $('<div/>')
-           .append(icon)
-           .css('padding', '5px')
-           .css('display', 'inline-block')
-           .css('background', 'linear-gradient(' + colB + ',' + colA + ')')
-           .css('border-radius', '2em')
-           .css('box-shadow', 'inset 0px 0px 2px 2px ' + sh)
-           .css('margin','2px')
 
     return $('<img/>')
            .attr('src', manaUrl(c))
-           .css('width',  '2em')
-           .css('height', '2em')
-           .css('margin', '1px')
+           .css('width',  '24px')
+           .css('height', '24px')
+           .css('margin', '10px')
+           .css('box-shadow', '0px 0px 20px 2px ' + colB)
   }
 
   function drawSideCard(name,act) {
