@@ -74,6 +74,16 @@ useCrystal m Game { .. } =
                     , .. }
     Nothing -> Game { .. }
 
+useDie :: Mana -> Game -> Game
+useDie m Game { .. } =
+  case takeMana m manaSource of
+    Just s1 -> Game { manaSource = s1
+                    , playArea = addManaToken m playArea
+                    , .. }
+
+gameRefillSource :: Game -> Game
+gameRefillSource g = writeLoc g theSource refillSource
+
 playCard :: Int -> Game -> Game
 playCard n Game { .. } =
   case takeCard n player of

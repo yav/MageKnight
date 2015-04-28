@@ -62,12 +62,14 @@ main =
        , ("/playCardFor",  snapPlayCardFor s)
        , ("/assignDamage", snapAssignDamage s)
        , ("/useCrystal",   snapUseCrystal s)
+       , ("/useDie",       snapUseDie s)
 
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
        , ("/newMonastery",   snapUpdateOffers s newMonastery)
        , ("/burnMonastery",  snapUpdateOffers s burnMonastery)
 
+       , ("/refillSource",   snapRefillSource s)
 
        -- testing
        , ("/newGame",                    newGame s)
@@ -152,6 +154,20 @@ basicManaParam pname =
        "blue"   -> return Blue
        "white"  -> return White
        _        -> badInput (BS.append "Inavlid basic mana: " pname)
+
+manaParam :: ByteString -> Snap Mana
+manaParam pname =
+  do x <- textParam pname
+     case x of
+       "red"    -> return (BasicMana Red)
+       "green"  -> return (BasicMana Green)
+       "blue"   -> return (BasicMana Blue)
+       "white"  -> return (BasicMana White)
+       "gold"   -> return Gold
+       "black"  -> return Black
+       _        -> badInput (BS.append "Inavlid mana: " pname)
+
+
 
 sendJSON :: Export a => a -> Snap ()
 sendJSON a =
@@ -376,3 +392,9 @@ snapUseCrystal ref =
      snapUpdateGame ref (useCrystal c)
 
 
+snapUseDie :: IORef Game -> Snap ()
+snapUseDie ref =
+  do c <- manaParam "color"
+     snapUpdateGame ref (useDie c)
+
+snapRefillSource ref = snapUpdateGame ref gameRefillSource

@@ -31,6 +31,11 @@ function drawGame(g) {
          .append(drawOffers(g.offers))
 }
 
+function redrawGame(g) {
+  $('#game').replaceWith(drawGame(g))
+}
+
+
 function testAll() {
 
   jQuery.get('/newGame', {}, function(g) {
