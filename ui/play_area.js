@@ -11,7 +11,7 @@ function drawPlayArea(playArea) {
   topDom.append(drawMana())
 
   jQuery.each(playArea.cards, function(ix,card) {
-    topDom.append(drawActiveCard(card))
+    topDom.append(drawActiveCard(ix,card))
   })
 
   return topDom
@@ -48,6 +48,8 @@ function drawPlayArea(playArea) {
            .css('height', '24px')
            .css('margin', '10px')
            .css('box-shadow', '0px 0px 20px 2px ' + colB)
+           .click(function () {
+              jQuery.post('/spendMana', { color: c }, redrawGame) })
   }
 
   function drawSideCard(name,act) {
@@ -95,8 +97,10 @@ function drawPlayArea(playArea) {
 
   }
 
-  function drawActiveCard(card) {
+  function drawActiveCard(ix,card) {
     var name = card.card
+
+    console.log(card) 
 
     var me = $('<div/>')
              .css('margin', '1em')
@@ -119,15 +123,15 @@ function drawPlayArea(playArea) {
       switch (name.type) {
         case 'action':
           screen_h = h / 7;
-          pos = card.poweredUp ? (7/12) : (9/11);
+          pos = card.powerUp ? (7/12) : (9/11);
           break;
         case 'spell':
           screen_h = h / 2;
-          pos = card.poweredUp ? 0 : (1/2)
+          pos = card.powerUp ? 0 : (1/2)
           break;
         case 'artifact': // XXX
           screen_h = h / 7;
-          pos = card.poweredUp ? (7/12) : (9/11);
+          pos = card.powerUp ? (7/12) : (9/11);
           break;
       }
 
@@ -139,6 +143,12 @@ function drawPlayArea(playArea) {
                    .css('top', (pos * h) + 'px')
                    .css('background-color', 'rgba(0,0,0,0.75)')
       me.append(screen)
+
+      if (!card.powerUp)
+        me.css('cursor', 'pointer')
+          .click(function () {
+            jQuery.post('/powerUp', { card: ix }, redrawGame)
+          })
     }
 
     return me

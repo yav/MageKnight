@@ -1,5 +1,8 @@
-{-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
+{-# LANGUAGE RecordWildCards, OverloadedStrings, Trustworthy #-}
 module MageKnight.Game where
+
+import Debug.Trace
+
 
 import           MageKnight.Common hiding (Resource(..))
 import           MageKnight.Deed
@@ -99,7 +102,6 @@ playCardFor a n Game { .. } =
     Nothing     -> Game { .. }
 
 
-
 {-
 -- | Move the player 1 unit the given direction.
 movePlayer :: Dir -> Game -> Game
@@ -166,8 +168,8 @@ addManaToken m PlayArea { .. } =
 removeManaToken :: Mana -> PlayArea -> PlayArea
 removeManaToken m PlayArea { .. } =
   case bagRemove 1 m manaTokens of
-    Just b -> PlayArea { manaTokens = b, .. }
-    _      -> PlayArea { .. }
+    Just b  -> PlayArea { manaTokens = b, .. }
+    Nothing -> PlayArea { .. }
 
 addSidewaysCard :: ActionType -> Deed -> PlayArea -> PlayArea
 addSidewaysCard a d PlayArea { .. } =
@@ -182,7 +184,7 @@ powerUpCard n PlayArea { .. } =
   case splitAt n activeCards of
     (as,NormalCard _ d : bs) ->
         PlayArea { activeCards = as ++ NormalCard True d : bs, .. }
-    _ -> PlayArea { .. }
+    _ -> trace "no" PlayArea { .. }
 
 discardCard :: Deed -> PlayArea -> PlayArea
 discardCard d PlayArea { .. } =

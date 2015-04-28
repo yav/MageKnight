@@ -29,6 +29,14 @@ data Deed     = Deed { deedName      :: DeedName
                      , deedPower     :: [ Rule ]
                      }
 
+deedColor :: Deed -> Maybe BasicMana
+deedColor d =
+  case deedType d of
+    Action b         -> Just b
+    AdvancedAction b -> Just b
+    Spell b          -> Just b
+    _                -> Nothing
+
 data DeedType = Wound | Action BasicMana | AdvancedAction BasicMana
               | Spell BasicMana | Artifact
 

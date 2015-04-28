@@ -63,6 +63,8 @@ main =
        , ("/assignDamage", snapAssignDamage s)
        , ("/useCrystal",   snapUseCrystal s)
        , ("/useDie",       snapUseDie s)
+       , ("/powerUp",      snapPowerUp s)
+       , ("/spendMana",    snapSpendMana s)
 
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
@@ -75,6 +77,9 @@ main =
        , ("/newGame",                    newGame s)
        , ("/click", clickHex s)
        ] <|> serveDirectory "ui"
+
+
+type Act = IORef Game -> Snap ()
 
 
 --------------------------------------------------------------------------------
@@ -209,7 +214,7 @@ unitPath Unit { .. } = "ui" </> "img" </> "units" </> ty </> name <.> "png"
 
 --------------------------------------------------------------------------------
 
-newGame :: IORef Game -> Snap ()
+newGame :: Act
 newGame s = sendJSON =<< liftIO go
   where
   go = do r <- liftIO newStdGen
@@ -218,7 +223,7 @@ newGame s = sendJSON =<< liftIO go
           return t
 
 
-clickHex :: IORef Game -> Snap ()
+clickHex :: Act
 clickHex s = return () {-
   do a <- addrParam
      g <- liftIO (atomicModifyIORef' s (go a))
@@ -247,12 +252,12 @@ getUnitImage =
   do unit <- unitParam "unit"
      serveFile (unitPath unit)
 
-takeOffered :: IORef Game -> Snap ()
+takeOffered :: Act
 takeOffered ref =
   do offer <- textParam "offer"
      card  <- intParam  "card"
      upd   <- case offer of
-                "advancedActions" -> takeDeed $ takeAdvancedAction card
+                "advancedActs" -> takeDeed $ takeAdvancedAction card
                 "spells"          -> takeDeed $ takeSpell card
                 "monasteries"     -> takeDeed $ takeMonasteryTech card
                 "units" -> return $ \g ->
@@ -287,7 +292,7 @@ snapUpdateOffers ref f =
 
 
 
-snapRefreshOffers :: IORef Game -> Snap ()
+snapRefreshOffers :: Act
 snapRefreshOffers ref =
   do useElite <- boolParam "elite"
      snapUpdateOffers ref $ refreshOffers useElite
@@ -300,46 +305,46 @@ snapUpdatePlayer ref f =
      sendJSON (player g1)
 
 
-updateFame :: IORef Game -> Snap ()
+updateFame :: Act
 updateFame ref =
   do amt <- intParam "amount"
      inc <- boolParam "increase"
      let d = if inc then amt else negate amt
      snapUpdatePlayer ref (playerAddFame d)
 
-setReputation :: IORef Game -> Snap ()
+setReputation :: Act
 setReputation ref =
   do r <- intParam "reputation"
      snapUpdatePlayer ref (playerSetReputation (r - 7))
 
-snapAddCrystal :: IORef Game -> Snap ()
+snapAddCrystal :: Act
 snapAddCrystal ref =
   do r <- basicManaParam "color"
      snapUpdatePlayer ref (addCrystal r)
 
-snapAssignDamage :: IORef Game -> Snap ()
+snapAssignDamage :: Act
 snapAssignDamage ref =
   do p <- boolParam "poison"
      d <- intParam "damage"
      snapUpdatePlayer ref (snd . assignDamage d p)
 
 
-snapWoundUnit :: IORef Game -> Snap ()
+snapWoundUnit :: Act
 snapWoundUnit ref =
   do u <- intParam "unit"
      snapUpdatePlayer ref (woundUnit u)
 
-snapHealUnit :: IORef Game -> Snap ()
+snapHealUnit :: Act
 snapHealUnit ref =
   do u <- intParam "unit"
      snapUpdatePlayer ref (healUnit u)
 
-snapUnitToggleReady :: IORef Game -> Snap ()
+snapUnitToggleReady :: Act
 snapUnitToggleReady ref =
   do u <- intParam "unit"
      snapUpdatePlayer ref (unitToggleReady u)
 
-snapDisbandUnit :: IORef Game -> Snap ()
+snapDisbandUnit :: Act
 snapDisbandUnit ref =
   do u <- intParam "unit"
      p <- liftIO $ atomicModifyIORef' ref $ \g ->
@@ -353,11 +358,11 @@ snapDisbandUnit ref =
   where
   fork x = (x, player x)
 
-snapAddUnitSlot :: IORef Game -> Snap ()
+snapAddUnitSlot :: Act
 snapAddUnitSlot ref =
   snapUpdatePlayer ref addUnitSlot
 
-snapDrawCard :: IORef Game -> Snap ()
+snapDrawCard :: Act
 snapDrawCard ref =
   snapUpdatePlayer ref drawCard
 
@@ -368,12 +373,12 @@ snapUpdateGame ref f =
                                                  in (g1,g1)))
      sendJSON g1
 
-snapPlayCard :: IORef Game -> Snap ()
+snapPlayCard :: Act
 snapPlayCard ref =
   do n <- intParam "card"
      snapUpdateGame ref (playCard n)
 
-snapPlayCardFor :: IORef Game -> Snap ()
+snapPlayCardFor :: Act
 snapPlayCardFor ref =
   do n <- intParam "card"
      a <- textParam "action"
@@ -386,15 +391,29 @@ snapPlayCardFor ref =
 
      snapUpdateGame ref (playCardFor act n)
 
-snapUseCrystal :: IORef Game -> Snap ()
+snapUseCrystal :: Act
 snapUseCrystal ref =
   do c <- basicManaParam "color"
      snapUpdateGame ref (useCrystal c)
 
 
-snapUseDie :: IORef Game -> Snap ()
+snapUseDie :: Act
 snapUseDie ref =
   do c <- manaParam "color"
      snapUpdateGame ref (useDie c)
 
+snapRefillSource :: Act
 snapRefillSource ref = snapUpdateGame ref gameRefillSource
+
+
+snapPowerUp :: Act
+snapPowerUp ref =
+  do i <- intParam "card"    -- power up this card
+     snapUpdateGame ref (\g -> writeLoc g thePlayArea (powerUpCard i))
+
+
+snapSpendMana :: Act
+snapSpendMana ref =
+  do c <- manaParam "color"
+     snapUpdateGame ref (\g -> writeLoc g thePlayArea (removeManaToken c))
+
