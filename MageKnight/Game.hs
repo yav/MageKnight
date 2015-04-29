@@ -19,6 +19,7 @@ import           MageKnight.Bag
 import           MageKnight.Loc
 
 import           Data.Text (Text)
+import           Data.Maybe(fromMaybe)
 
 
 
@@ -37,12 +38,13 @@ testGame g =
   (landRNG,g2)          = split g1
   (playerRNG,sourceRNG) = split g2
 
-  pl = (!! 3) $ iterate (addCrystal Green)
-      $ (!! 3) $ iterate (addCrystal Red)
-      $ (!! 1) $ iterate (addCrystal White)
-      $ (!! 2) $ iterate (addCrystal Blue)
+  pl = (!! 3) $ iterate (addCrystal' Green)
+      $ (!! 3) $ iterate (addCrystal' Red)
+      $ (!! 1) $ iterate (addCrystal' White)
+      $ (!! 2) $ iterate (addCrystal' Blue)
      $ newPlayer playerRNG "Arythea" (makeCustomDeck arytheaDeck)
 
+  addCrystal' x g = fromMaybe g (addCrystal x g)
 
 
 data Game = Game

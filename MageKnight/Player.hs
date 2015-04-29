@@ -57,6 +57,7 @@ import MageKnight.Random(StdGen, shuffle)
 import           Data.Maybe (isNothing)
 import           Data.Text (Text)
 import           Data.List (partition)
+import           Control.Monad(guard)
 
 type PlayerName = Text
 
@@ -95,9 +96,10 @@ playerReputation :: Player -> Int
 playerReputation = reputation
 
 -- | Change the player's reputation
-playerSetReputation :: Int -> Player -> Player
-playerSetReputation n Player { .. } = Player { reputation = n', .. }
-  where n' = if n >= -7 && n <= 7 then n else reputation
+playerSetReputation :: Int -> Player -> Maybe Player
+playerSetReputation n Player { .. } =
+  do guard (n >= -7 && n <= 7)
+     return Player { reputation = n, .. }
 
 -- | Location of the player
 playerLocation :: Player -> Addr
@@ -124,11 +126,11 @@ newPlayer g name deeds = Player
 
 
 -- | Move a card from the player's deed deck to their hand.
-drawCard :: Player -> Player
+drawCard :: Player -> Maybe Player
 drawCard Player { .. } =
   case deedDeck of
-    []     -> Player { .. }
-    x : xs -> Player { hand = x : hand, deedDeck = xs, .. }
+    []     -> Nothing
+    x : xs -> Just Player { hand = x : hand, deedDeck = xs, .. }
 
 -- | Add a card to the player's deed deck.
 newDeed :: Deed -> Player -> Player
@@ -149,10 +151,10 @@ takeCard n Player { .. } =
 
 -- | Add a crystal to the player's inventory.
 -- Does nothign if the inventory already has 3 crystals of this color.
-addCrystal :: BasicMana -> Player -> Player
-addCrystal c Player { .. }
-  | bagLookup c crystals >= 3 = Player { .. }
-  | otherwise = Player { crystals = bagAdd 1 c crystals, .. }
+addCrystal :: BasicMana -> Player -> Maybe Player
+addCrystal c Player { .. } =
+  do guard (bagLookup c crystals < 3)
+     return Player { crystals = bagAdd 1 c crystals, .. }
 
 -- | Use up one of the player's crystals.
 removeCrystal :: BasicMana -> Player -> Maybe Player
@@ -170,11 +172,11 @@ playerFame = fame
 
 -- | Change the player's fame by this much.
 -- Negative numbers decrease fame.
-playerAddFame :: Int -> Player -> Player
-playerAddFame n Player { .. } = Player { fame = fame', .. }
+playerAddFame :: Int -> Player -> Maybe Player
+playerAddFame n Player { .. } =
+  do guard (val >= 0 && val <= 119)
+     return Player { fame = val, .. }
   where val   = fame + n
-        fame' = if val >= 0 && val <= 119 then val else fame
-
 
 -- | Amount of fame for each level on the fame board.
 levels :: [Int]
@@ -205,9 +207,9 @@ playerArmor p
 -- | What's the player's default card limit, based on their fame.
 playerCardLimit :: Player -> Int
 playerCardLimit p
-  | l <= 4  = 5
-  | l <= 8  = 6
-  | otherwise         = 7
+  | l <= 4    = 5
+  | l <= 8    = 6
+  | otherwise = 7
     where l = playerLevel p
 
 
@@ -274,28 +276,28 @@ disbandUnit u Player { .. } =
     _              -> Nothing
 
 
-updateUnit :: (ActiveUnit -> ActiveUnit) -> Int -> Player -> Player
+updateUnit :: (ActiveUnit -> ActiveUnit) -> Int -> Player -> Maybe Player
 updateUnit f u Player { .. } =
   case splitAt u units of
-    (as, Just b : bs) -> Player { units = as ++ Just (f b) : bs, .. }
-    _                 -> Player { .. }
+    (as, Just b : bs) -> Just Player { units = as ++ Just (f b) : bs, .. }
+    _                 -> Nothing
 
-woundUnit :: Int -> Player -> Player
+woundUnit :: Int -> Player -> Maybe Player
 woundUnit = updateUnit $ \ActiveUnit { .. } ->
                           ActiveUnit { unitWounds = 1 + unitWounds, .. }
 
-healUnit :: Int -> Player -> Player
+healUnit :: Int -> Player -> Maybe Player
 healUnit = updateUnit $ \ActiveUnit { .. } ->
                           if unitWounds > 0
                             then ActiveUnit { unitWounds = unitWounds - 1, .. }
                             else ActiveUnit { .. }
 
 
-unitSetReady :: Bool -> Int -> Player -> Player
+unitSetReady :: Bool -> Int -> Player -> Maybe Player
 unitSetReady r = updateUnit $ \ActiveUnit { .. } ->
                                ActiveUnit { unitReady = r, .. }
 
-unitToggleReady :: Int -> Player -> Player
+unitToggleReady :: Int -> Player -> Maybe Player
 unitToggleReady = updateUnit $ \ActiveUnit { .. } ->
                                 ActiveUnit { unitReady = not unitReady, .. }
 

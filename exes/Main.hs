@@ -12,6 +12,7 @@ import MageKnight.Game
 import MageKnight.Player as Player
 import MageKnight.DeedDecks(findDeed)
 import MageKnight.Loc
+import MageKnight.Perhaps
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)
@@ -304,23 +305,33 @@ snapUpdatePlayer ref f =
            in (g1,g1)
      sendJSON (player g1)
 
+snapMaybeUpdatePlayer :: IORef Game -> (Player -> Maybe Player) -> Snap ()
+snapMaybeUpdatePlayer ref f =
+  do g1 <- liftIO $ atomicModifyIORef' ref $ \g ->
+           case doWriteLoc g thePlayer f of
+             Nothing -> (g, g)
+             Just g1 -> (g1,g1)
+     sendJSON (player g1)
+
+
+
 
 updateFame :: Act
 updateFame ref =
   do amt <- intParam "amount"
      inc <- boolParam "increase"
      let d = if inc then amt else negate amt
-     snapUpdatePlayer ref (playerAddFame d)
+     snapMaybeUpdatePlayer ref (playerAddFame d)
 
 setReputation :: Act
 setReputation ref =
   do r <- intParam "reputation"
-     snapUpdatePlayer ref (playerSetReputation (r - 7))
+     snapMaybeUpdatePlayer ref (playerSetReputation (r - 7))
 
 snapAddCrystal :: Act
 snapAddCrystal ref =
   do r <- basicManaParam "color"
-     snapUpdatePlayer ref (addCrystal r)
+     snapMaybeUpdatePlayer ref (addCrystal r)
 
 snapAssignDamage :: Act
 snapAssignDamage ref =
@@ -332,17 +343,17 @@ snapAssignDamage ref =
 snapWoundUnit :: Act
 snapWoundUnit ref =
   do u <- intParam "unit"
-     snapUpdatePlayer ref (woundUnit u)
+     snapMaybeUpdatePlayer ref (woundUnit u)
 
 snapHealUnit :: Act
 snapHealUnit ref =
   do u <- intParam "unit"
-     snapUpdatePlayer ref (healUnit u)
+     snapMaybeUpdatePlayer ref (healUnit u)
 
 snapUnitToggleReady :: Act
 snapUnitToggleReady ref =
   do u <- intParam "unit"
-     snapUpdatePlayer ref (unitToggleReady u)
+     snapMaybeUpdatePlayer ref (unitToggleReady u)
 
 snapDisbandUnit :: Act
 snapDisbandUnit ref =
@@ -363,8 +374,7 @@ snapAddUnitSlot ref =
   snapUpdatePlayer ref addUnitSlot
 
 snapDrawCard :: Act
-snapDrawCard ref =
-  snapUpdatePlayer ref drawCard
+snapDrawCard ref = snapMaybeUpdatePlayer ref drawCard
 
 
 snapUpdateGame :: IORef Game -> (Game -> Game) -> Snap ()
