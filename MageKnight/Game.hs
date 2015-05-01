@@ -42,7 +42,7 @@ testGame g =
       $ (!! 3) $ iterate (addCrystal' Red)
       $ (!! 1) $ iterate (addCrystal' White)
       $ (!! 2) $ iterate (addCrystal' Blue)
-     $ newPlayer playerRNG "Arythea" (makeCustomDeck arytheaDeck)
+     $ newPlayer playerRNG "arythea" (makeCustomDeck arytheaDeck)
 
   addCrystal' x g = fromMaybe g (addCrystal x g)
 

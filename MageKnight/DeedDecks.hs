@@ -65,10 +65,10 @@ makeCustomDeck = mapMaybe (\x -> find ((x ==) . deedName) allDeeds)
 makeDeckFor :: PlayerName -> Maybe [Deed]
 makeDeckFor name =
   do deedNames <- case name of
-                    "Arythea" -> Just arytheaDeck
-                    "Tovak"   -> Just tovakDeck
-                    "Goldyx"  -> Just goldyxDeck
-                    "Norowas" -> Just norowasDeck
+                    "arythea" -> Just arytheaDeck
+                    "tovak"   -> Just tovakDeck
+                    "goldyx"  -> Just goldyxDeck
+                    "norowas" -> Just norowasDeck
                     _         -> Nothing
      return (makeCustomDeck deedNames)
 
