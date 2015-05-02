@@ -24,27 +24,28 @@ function drawGame(g) {
 
   var l = drawLand(g.land, g.player.name, g.player.unsafe)
 
-  return $('<div/>')
-         .attr('id','game')
-         .append(drawPlayerStats(g.player))
-         .append(l.dom)
-         .append(drawSource(g.source))
-         .append(drawPlayArea(g.playArea))
-         .append(drawPlayerCards(g.player))
-         .append(drawPlayerUnits(g.player))
-         .append(drawOffers(g.offers))
+  return { dom: $('<div/>')
+                .attr('id','game')
+                .append(drawPlayerStats(g.player))
+                .append(l.dom)
+                .append(drawSource(g.source))
+                .append(drawPlayArea(g.playArea))
+                .append(drawPlayerCards(g.player))
+                .append(drawPlayerUnits(g.player))
+                .append(drawOffers(g.offers))
+        , focus: l.focus
+        }
 }
 
 function redrawGame(g) {
-  $('#game').replaceWith(drawGame(g))
+  var l = drawGame(g)
+  $('#game').replaceWith(l.dom)
+  l.focus(g.player.location.x, g.player.location.y)
 }
 
 
 function testAll() {
-
-  jQuery.get('/newGame', {}, function(g) {
-    $('#game').replaceWith(drawGame(g))
-  })
+  jQuery.get('/newGame', {}, redrawGame)
 }
 
 

@@ -250,8 +250,7 @@ function drawPlayerStats(player) {
                 jQuery.post('/addCrystal', { color: c }
                    , function(p) { stats.replaceWith(drawPlayerStats(p))})
               } else {
-                jQuery.post('/useCrystal', { color: c }
-                   , function(g) { $('#game').replaceWith(drawGame(g)) })
+                jQuery.post('/useCrystal', { color: c }, redrawGame)
               }
            })
     return dom

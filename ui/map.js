@@ -3,14 +3,6 @@ function drawLand(land, p, lastSafe) {
                .attr('id','land')
                .css('position', 'relative')
 
-  var time = $('<img/>')
-             .attr('src', timeUrl(land.time))
-             .css('width', '5em')
-             .css('position', 'absolute')
-             .css('top', '0px')
-             .css('right', '0px')
-             .css('z-index','1')
-
   var map  = drawMap(land.map, land.time, p, lastSafe)
 
   var next = $('<div/>')
@@ -31,7 +23,7 @@ function drawLand(land, p, lastSafe) {
     next.append(t)
   })
 
-  topDom.append(next,time,map.dom)
+  topDom.append(next,map.dom)
 
   return { dom: topDom, focus: map.focus }
 
@@ -90,6 +82,7 @@ function prepareMap(pMaxX, pMaxY, pTileWidth) {
 
   return { tileWidth    : tileWidth
          , hexWidth     : hexWidth
+
          , enemyWidth   : enemyWidth
          , charWidth    : charWidth
          , shieldWidth  : shieldWidth
@@ -152,7 +145,6 @@ function positionItems(m, items, x, y, dir, lower) {
     var h = lower ? (3/4) : (1/2)
     item.css('left', left)
         .css('top',  c.top + h * (m.hexHeight - item.height()))
-        .click(function () { tileClicked(m,x,y,dir) })
     left += item.width() * scaling
   })
 
@@ -168,159 +160,96 @@ function positionItems(m, items, x, y, dir, lower) {
 //  The assumption ahs to do with drawing the "ocean" around the map's edges.
 function drawTile(m, t) {
 
-  var x      = t.x;
-  var y      = t.y;
-  var coords = tilePos(m,x,y);
-  var left   = coords.left;
-  var top    = coords.top;
+  var x      = t.x
+  var y      = t.y
+  var coords = tilePos(m,x,y)
+  var left   = coords.left
+  var top    = coords.top
 
   var img = $('<img/>').css('position','absolute')
                        .width(m.tileWidth)
                        .height(m.tileWidth * 0.96)
                        .css('left', left)
-                       .css('top',top);
+                       .css('top',top)
 
-  img.click(function(ev) {
+  var imgs = [ img ]
 
-    var off = img.offset();
-    var imX = ev.pageX - off.left;
-    var imY = ev.pageY - off.top;
-
-    var rectX   = m.hexWidth;
-    var rectY   = 1.5 * m.hexSide;
-
-    var row    = Math.floor(imY / rectY);
-    var clickY = imY - row * rectY;
-    var even   = row % 2 === 0;
-    if (even) imX += m.centerToSide;
-
-    var col    = Math.floor(imX / rectX);
-    var clickX = imX - col * rectX;
-
-    if (clickY < m.hexSide / 2)
-      var smllPart = m.hexSide / 2;
-      var slope = smllPart / m.centerToSide;
-      if (clickX < m.centerToSide) {
-        if (clickY < smllPart - clickX * slope) {
-          --row;
-          if (even) --col;
-        }
-      } else {
-        clickX -= m.centerToSide;
-        if (clickY < clickX * slope) {
-          --row;
-          if (!even) ++col;
-        }
-      }
-    ++row;
-
-    var table = [ [ [0,1,'SW'],  [0,1,'SE'], [1,1,'W'] ]
-                , [ [-1,1,'E'],  [0,0,'NW'], [0,0,'NE'],[1,0,'SW'] ]
-                , [ [0,0,'W'],   [0,0,'C'],  [0,0,'E'] ]
-                , [ [-1,0,'NE'], [0,0,'SW'], [0,0,'SE'],[1,-1,'W'] ]
-                , [ [-1,0,'E'],  [0,-1,'NW'],[0,-1,'NE'] ]
-                ]
-    var diff = table[row][col];
-    var cX = x + diff[0];
-    var cY = y + diff[1];
-    var dir = diff[2];
-    if (cX >= 0 && cY >= 0) { return tileClicked(m,cX,cY,dir); return true; }
-    return false;
-  });
-
-
-  var imgs = [ img ]; /*
-  if (x == 0) imgs.push(drawTile(m,{ tile: {type: 'basic', name: 'border-left'}
-                                   , x: -1,y: y+1
-                                   , content: []
-                                   })[0]);
-  if (y == 0) imgs.push(drawTile(m,{ tile: {type: 'basic', name:'border-bottom'}
-                                   , x: x+1, y: -1
-                                   , content: []
-                                   })[0]); */
-
-  img.attr('src',tileUrl(t.tile.tile.type,t.tile.tile.name));
+  img.attr('src',tileUrl(t.tile.tile.type,t.tile.tile.name))
 
   jQuery.each(t.tile.content, function(ix,c) {
-    var deco = drawTileContent(m,x,y,c.location,c.content);
-    jQuery.each(deco, function(ix,d) { imgs.push(d); });
-  });
+    var deco = drawTileContent(m,x,y,c.location,c.content)
+    jQuery.each(deco, function(ix,d) { imgs.push(d); })
+  })
 
-  return imgs;
+  jQuery.each(['NW','NE','E','SE','SW','W','C'], function(ix,dir) {
+    imgs.push(drawHexShadow(m,x,y,dir))
+  })
+
+  return imgs
 }
 
 
 // Draw the various things on a hex in tile.
 function drawTileContent(m,x,y,dir,c) {
-  var items = [];
+  var items = []
 
   if (c.ruins !== null) {
-    items.push(ruinsToken(m,c.ruins));
+    items.push(ruinsToken(m,c.ruins))
   }
 
   jQuery.each (c.players, function(ix,player) {
-    items.push (characterToken(m,player));
-  });
+    items.push (characterToken(m,player))
+  })
 
   jQuery.each (c.enemies, function(ix,enemy) {
-    items.push (enemyToken(m, enemy.type, enemy.name));
-  });
+    items.push (enemyToken(m, enemy.type, enemy.name))
+  })
 
-  positionItems(m, items, x, y, dir, false);
+  positionItems(m, items, x, y, dir, false)
 
-  var shields = [];
+  var shields = []
   jQuery.each (c.shields, function(ix,player) {
-    var s = shieldToken(m,player);
-    shields.push(s);
-    items.push(s);
-  });
+    var s = shieldToken(m,player)
+    shields.push(s)
+    items.push(s)
+  })
 
-  positionItems(m, shields, x, y, dir, true);
+  positionItems(m, shields, x, y, dir, true)
 
-  items.push(drawHexShadow(m,x,y,dir));
-
-  return items;
+  return items
 }
 
 
 function drawHexShadow(m,x,y,dir) {
-  var l = hexLocation(m, x, y, dir);
-  var poly = 'polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)';
+  var l = hexLocation(m, x, y, dir)
+  var poly = 'polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)'
   var img = $('<div/>')
-          .css('width', m.hexWidth + 'px')
+          .css('width',  m.hexWidth + 'px')
           .css('height', m.hexHeight + 'px')
           .css('position', 'absolute')
           .css('z-index', '4')
           .css('left', l.left)
           .css('top', l.top)
-          .css('background-color', 'rgba(255,255,255,0.3)')
+          .css('background-color', 'rgba(255,255,255,0)')
           .css('-webkit-clip-path', poly)
-          .css('clip-path', poly);
+          .css('clip-path', poly)
 
 
-   img.mousemove(function(ev) {
-      console.log('move',x,y,dir);
-   });
+   img.click(function() { console.log('click',x,y,dir) })
+      .hover( function() { img.css('background-color', 'rgba(255,255,255,0.5)')}
+            , function() { img.css('background-color', 'rgba(255,255,255,0)') }
+            )
 
-  return img;
+  return img
 }
-
-// What to do when a tile is clicked.
-function tileClicked(m,x,y,dir) {
-  jQuery.getJSON('/click', { tile_x: x, tile_y: y, hex: dir }, drawGame);
-}
-
 
 function drawMap(map, t, p, lastSafe) {
-  t = 'Night'
   var bg = t === 'Night' ? 'linear-gradient(#003,#303,#003,#000)'
-                         : 'linear-gradient(#066,#0ff,#ffc)'
+                         : 'linear-gradient(to right, #036,#0cf,#036)'
 
   var div = $('<div/>')
             .css('position', 'relative')
             .css('overflow', 'auto')
-            // .css('background', 'black');
-            // .css('background-image','linear-gradient(#600,#996,#660)')
             .css('background-image', bg)
 
   var maxX = 0;

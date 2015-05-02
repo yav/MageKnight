@@ -56,9 +56,7 @@ function drawPlayerCards(player) {
         )
         .append (
           textButton('&#x27a1;', function(ev) {
-            jQuery.post('/playCard', { card: ix }, function(g) {
-              $('#game').replaceWith(drawGame(g))
-            })
+            jQuery.post('/playCard', { card: ix }, redrawGame)
             return false;
           })
         )
@@ -93,7 +91,7 @@ function drawPlayerCards(player) {
                  .css('transform', 'rotate(-90deg)')
                  .click(function(ev) {
                    jQuery.post('/playCardFor', { card: ix, action: name },
-                     function(g) { $('#game').replaceWith(drawGame(g)) })
+                                redrawGame)
                    return false
                  })
        sidewaysMenu.append(btn)
