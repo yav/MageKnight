@@ -2,6 +2,7 @@ function drawLand(land, p, lastSafe) {
   var topDom = $('<div/>')
                .attr('id','land')
                .css('position', 'relative')
+               .css('font-family', 'Almendra')
 
   var map  = drawMap(land.map, land.time, p, lastSafe)
 
@@ -235,10 +236,41 @@ function drawHexShadow(m,x,y,dir) {
           .css('clip-path', poly)
 
 
-   img.click(function() { console.log('click',x,y,dir) })
-      .hover( function() { img.css('background-color', 'rgba(255,255,255,0.5)')}
-            , function() { img.css('background-color', 'rgba(255,255,255,0)') }
-            )
+  img.click(function() {
+    jQuery.post('/click',  { tile_x: x, tile_y: y, hex: dir },
+      function(r) {
+        switch (r.tag) {
+          case 'menu':
+            var menu = $('<div/>')
+                       .css('background-color', 'white')
+                       .css('border', '2px solid black')
+                       .css('position', 'absolute')
+                       .css('z-index', '5')
+                       .css('left', l.left)
+                       .css('top', l.top)
+
+            jQuery.each(r.items, function(ix,lab) {
+              var item = $('<div/>')
+                         .text(lab)
+                         .css('padding', '0.5em')
+              item.hover( function () { item.css('background-color', '#ccc') }
+                        , function () { item.css('background-color', '#fff') }
+                        )
+
+                   .click(function() {
+                           console.log('I choose ' + ix)
+                           menu.remove()
+                         })
+              menu.append(item)
+            })
+            img.parent().append(menu)
+            break
+        }
+      })
+  })
+  .hover( function() { img.css('background-color', 'rgba(255,255,255,0.5)') }
+        , function() { img.css('background-color', 'rgba(255,255,255,0)') }
+        )
 
   return img
 }

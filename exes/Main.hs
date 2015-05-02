@@ -42,8 +42,7 @@ import           System.Random (newStdGen)
 main :: IO ()
 main =
   do r <- newStdGen
-     s <- newIORef (testGame r)
-     o <- newIORef (setupOffers r (defaultOfferSetup 1 True))
+     s <- newIORef SnapState { snapGame = testGame r }
 
      quickHttpServe $ Snap.route
        [ ("/deed/:deed",  getDeedImage)
@@ -76,11 +75,14 @@ main =
 
        -- testing
        , ("/newGame",                    newGame s)
-       , ("/click", clickHex s)
+       , ("/click",           snapClickHex s)
        ] <|> serveDirectory "ui"
 
+data SnapState = SnapState
+  { snapGame      :: Game
+  }
 
-type Act = IORef Game -> Snap ()
+type Act = IORef SnapState -> Snap ()
 
 
 --------------------------------------------------------------------------------
@@ -220,27 +222,20 @@ newGame s = sendJSON =<< liftIO go
   where
   go = do r <- liftIO newStdGen
           let t = testGame r
-          writeIORef s t
+          writeIORef s SnapState { snapGame = t }
           return t
 
 
-clickHex :: Act
-clickHex s = return () {-
-  do a <- addrParam
-     g <- liftIO (atomicModifyIORef' s (go a))
-     sendJSON g
-  where
-  go a g = undefined
-    | Just d <- find ((a ==) . neighbour loc) allDirections =
-      let g1 = if addrOnMap a g then movePlayer d g
-               else fromMaybe g (explore a g)
-      in (g1,g1)
+snapClickHex :: Act
+snapClickHex s =
+  do addr <- addrParam
+     sendJSON $ object [ "tag"   .= ("menu" :: Text)
+                       , "items" .= [ Text.pack ("move to " ++ show addr)
+                                    , "info"
+                                    ]
+                       ]
 
-    | otherwise = (g,g)
 
-      where loc = playerLocation p
-            p = player g
--}
 
 getDeedImage :: Snap ()
 getDeedImage =
@@ -257,7 +252,7 @@ takeOffered :: Act
 takeOffered ref =
   do offer <- textParam "offer"
      card  <- intParam  "card"
-     upd   <- case offer of
+     upd'  <- case offer of
                 "advancedActs" -> takeDeed $ takeAdvancedAction card
                 "spells"          -> takeDeed $ takeSpell card
                 "monasteries"     -> takeDeed $ takeMonasteryTech card
@@ -267,8 +262,9 @@ takeOffered ref =
                      p1     <- hireUnit u (player g)
                      return g { offers = o1, player = p1 }
                 _   -> badInput "Unknown offer"
-     g <- liftIO (atomicModifyIORef' ref (fork . upd))
-     sendJSON g
+     let upd s = s { snapGame = upd' (snapGame s) }
+     s <- liftIO (atomicModifyIORef' ref (fork . upd))
+     sendJSON (snapGame s)
 
   where
   fork x = (x,x)
@@ -284,12 +280,14 @@ takeOffered ref =
             Nothing     -> g
             Just (c,o1) -> g { offers = o1, player = upd c (player g) }
 
-snapUpdateOffers :: IORef Game -> (Offers -> Offers) -> Snap ()
+snapUpdateOffers :: IORef SnapState -> (Offers -> Offers) -> Snap ()
 snapUpdateOffers ref f =
-  do g1 <- liftIO $ atomicModifyIORef' ref $ \g ->
-            let g1 = writeLoc g theOffers f
-            in (g1,g1)
-     sendJSON (offers g1)
+  do s1 <- liftIO $ atomicModifyIORef' ref $ \s ->
+            let g  = snapGame s
+                g1 = writeLoc g theOffers f
+                s1 = s { snapGame = g1 }
+            in (s1,s1)
+     sendJSON $ offers $ snapGame s1
 
 
 
@@ -298,20 +296,18 @@ snapRefreshOffers ref =
   do useElite <- boolParam "elite"
      snapUpdateOffers ref $ refreshOffers useElite
 
-snapUpdatePlayer :: IORef Game -> (Player -> Player) -> Snap ()
-snapUpdatePlayer ref f =
-  do g1 <- liftIO $ atomicModifyIORef' ref $ \g ->
-           let g1 = writeLoc g thePlayer f
-           in (g1,g1)
-     sendJSON (player g1)
+snapUpdatePlayer :: IORef SnapState -> (Player -> Player) -> Snap ()
+snapUpdatePlayer ref f = snapMaybeUpdatePlayer ref (Just . f)
 
-snapMaybeUpdatePlayer :: IORef Game -> (Player -> Maybe Player) -> Snap ()
+snapMaybeUpdatePlayer :: IORef SnapState -> (Player -> Maybe Player) -> Snap ()
 snapMaybeUpdatePlayer ref f =
-  do g1 <- liftIO $ atomicModifyIORef' ref $ \g ->
-           case doWriteLoc g thePlayer f of
-             Nothing -> (g, g)
-             Just g1 -> (g1,g1)
-     sendJSON (player g1)
+  do g1 <- liftIO $ atomicModifyIORef' ref $ \s ->
+           let g = snapGame s
+           in case doWriteLoc g thePlayer f of
+                Nothing -> (s, s)
+                Just g1 -> let s1 = s { snapGame = g }
+                           in (s1,s1)
+     sendJSON $ player $ snapGame g1
 
 
 
@@ -358,30 +354,30 @@ snapUnitToggleReady ref =
 snapDisbandUnit :: Act
 snapDisbandUnit ref =
   do u <- intParam "unit"
-     p <- liftIO $ atomicModifyIORef' ref $ \g ->
-           fork $
-           fromMaybe g $
-              do (uni,p1) <- Player.disbandUnit u (player g)
-                 return g { player = p1
-                          , offers = Offers.disbandUnit uni (offers g)
-                          }
-     sendJSON p
-  where
-  fork x = (x, player x)
+     s <- liftIO $ atomicModifyIORef' ref $ \s ->
+              fromMaybe (s,s) $
+              do let g = snapGame s
+                 (uni,p1) <- Player.disbandUnit u (player g)
+                 let g1 = g { player = p1
+                            , offers = Offers.disbandUnit uni (offers g)
+                            }
+                     s1 = s { snapGame = g1 }
+                 return (s1,s1)
+     sendJSON $ player $ snapGame s
 
 snapAddUnitSlot :: Act
-snapAddUnitSlot ref =
-  snapUpdatePlayer ref addUnitSlot
+snapAddUnitSlot ref = snapUpdatePlayer ref addUnitSlot
 
 snapDrawCard :: Act
 snapDrawCard ref = snapMaybeUpdatePlayer ref drawCard
 
 
-snapUpdateGame :: IORef Game -> (Game -> Game) -> Snap ()
+snapUpdateGame :: IORef SnapState -> (Game -> Game) -> Snap ()
 snapUpdateGame ref f =
-  do g1 <- liftIO (atomicModifyIORef' ref (\g -> let g1 = f g
-                                                 in (g1,g1)))
-     sendJSON g1
+  do s1 <- liftIO (atomicModifyIORef' ref (\s -> let g1 = f (snapGame s)
+                                                     s1 = s { snapGame = g1 }
+                                                 in (s1,s1)))
+     sendJSON $ snapGame s1
 
 snapPlayCard :: Act
 snapPlayCard ref =
