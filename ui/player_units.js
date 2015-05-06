@@ -36,8 +36,7 @@ function drawPlayerUnits(player) {
                .css('cursor', 'pointer')
                .css('padding-left','40px')
                .click(function() {
-                  jQuery.post('/unitToggleReady', { unit: ix },
-                    function(p) { topDom.replaceWith(drawPlayerUnits(p)) })
+                  jQuery.post('/unitToggleReady', { unit: ix }, redrawGame)
                })
 
     if (!mbUnit.ready)
@@ -67,8 +66,7 @@ function drawPlayerUnits(player) {
              .css('pointer', 'cursor')
              .css('margin-left', '5px')
              .click(function () {
-                jQuery.post('/disbandUnit', { unit: ix },
-                  function (p) { topDom.replaceWith(drawPlayerUnits(p)) })
+                jQuery.post('/disbandUnit', { unit: ix }, redrawGame)
                 return false
              })
     }
@@ -84,9 +82,7 @@ function drawPlayerUnits(player) {
              .css('cursor', 'pointer')
              .css('float','right')
              .click(function() {
-                jQuery.post('/woundUnit', { unit: ix }, function(p1) {
-                  topDom.replaceWith(drawPlayerUnits(p1))
-                })
+                jQuery.post('/woundUnit', { unit: ix }, redrawGame)
                 return false
              })
 
@@ -105,9 +101,7 @@ function drawPlayerUnits(player) {
              .css('margin-right', '0.2em')
              .css('cursor', 'pointer')
              .click(function() {
-                jQuery.post('/healUnit', { unit: ix }, function(p1) {
-                  topDom.replaceWith(drawPlayerUnits(p1))
-                })
+                jQuery.post('/healUnit', { unit: ix }, redrawGame)
                 return false
              })
     }

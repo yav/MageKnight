@@ -44,7 +44,7 @@ testGame g =
       $ (!! 2) $ iterate (addCrystal' Blue)
      $ newPlayer playerRNG "arythea" (makeCustomDeck arytheaDeck)
 
-  addCrystal' x g = fromMaybe g (addCrystal x g)
+  addCrystal' x ga = fromMaybe ga (addCrystal x ga)
 
 
 data Game = Game
@@ -79,12 +79,12 @@ useCrystal m Game { .. } =
                     , .. }
     Nothing -> Game { .. }
 
-useDie :: Mana -> Game -> Game
+useDie :: Mana -> Game -> Maybe Game
 useDie m Game { .. } =
-  case takeMana m manaSource of
-    Just s1 -> Game { manaSource = s1
-                    , playArea = addManaToken m playArea
-                    , .. }
+  do s1 <- takeMana m manaSource
+     return Game { manaSource = s1
+                 , playArea = addManaToken m playArea
+                 , .. }
 
 gameRefillSource :: Game -> Game
 gameRefillSource g = writeLoc g theSource refillSource

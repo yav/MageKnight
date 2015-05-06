@@ -12,7 +12,6 @@ import MageKnight.Game
 import MageKnight.Player as Player
 import MageKnight.DeedDecks(findDeed)
 import MageKnight.Loc
-import MageKnight.Perhaps
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)
@@ -21,8 +20,6 @@ import           Snap.Util.FileServe(serveDirectory, serveFile)
 
 
 import           Data.Char(toLower, isAlphaNum, isAscii)
-import           Data.Maybe ( fromMaybe )
-import           Data.List(find)
 import           Data.ByteString(ByteString)
 import qualified Data.ByteString as BS
 import           Data.Text (Text)
@@ -128,16 +125,16 @@ addrParam =
      y <- intParam  "tile_y"
      h <- textParam "hex"
      let ok d = return (hexAddr d)
-     loc <- case h of
-              "NW" -> ok NW
-              "NE" -> ok NE
-              "W"  -> ok W
-              "C"  -> ok Center
-              "E"  -> ok E
-              "SW" -> ok SW
-              "SE" -> ok SE
-              _    -> badInput "Malformed parameter: hex"
-     return Addr { addrGlobal = (x,y), addrLocal = loc }
+     lo <- case h of
+             "NW" -> ok NW
+             "NE" -> ok NE
+             "W"  -> ok W
+             "C"  -> ok Center
+             "E"  -> ok E
+             "SW" -> ok SW
+             "SE" -> ok SE
+             _    -> badInput "Malformed parameter: hex"
+     return Addr { addrGlobal = (x,y), addrLocal = lo }
 
 deedParam :: ByteString -> Snap Deed
 deedParam pname =
@@ -215,6 +212,22 @@ unitPath Unit { .. } = "ui" </> "img" </> "units" </> ty </> name <.> "png"
                EliteUnit   -> "elite"
         name = nameToPath unitName
 
+
+--------------------------------------------------------------------------------
+-- RO
+
+getDeedImage :: Snap ()
+getDeedImage =
+  do deed <- deedParam "deed"
+     serveFile (deedPath deed)
+
+
+getUnitImage :: Snap ()
+getUnitImage =
+  do unit <- unitParam "unit"
+     serveFile (unitPath unit)
+
+
 --------------------------------------------------------------------------------
 
 newGame :: Act
@@ -224,6 +237,33 @@ newGame s = sendJSON =<< liftIO go
           let t = testGame r
           writeIORef s SnapState { snapGame = t, snapHistory = [] }
           return t
+
+
+snapUpdateGameMaybe :: IORef SnapState -> (Game -> Maybe Game) -> Snap ()
+snapUpdateGameMaybe ref f =
+  do s1 <- liftIO $ atomicModifyIORef' ref $ \s ->
+        let g = snapGame s
+        in (\x -> (x,x)) $
+           case f g of
+             Just g1 -> SnapState { snapGame = g1
+                                  , snapHistory = g : snapHistory s
+                                  }
+             Nothing -> s
+     sendJSON (snapGame s1)
+
+
+snapUpdateGame :: IORef SnapState -> (Game -> Game) -> Snap ()
+snapUpdateGame ref f = snapUpdateGameMaybe ref (Just . f)
+
+snapUpdatePlayer :: IORef SnapState -> (Player -> Player) -> Snap ()
+snapUpdatePlayer ref f = snapMaybeUpdatePlayer ref (Just . f)
+
+snapMaybeUpdatePlayer :: IORef SnapState -> (Player -> Maybe Player) -> Snap ()
+snapMaybeUpdatePlayer ref f = snapUpdateGameMaybe ref $
+                              \g -> doWriteLoc g thePlayer f
+
+
+
 
 
 snapClickHex :: Act
@@ -237,30 +277,19 @@ snapClickHex s =
 
 
 
-getDeedImage :: Snap ()
-getDeedImage =
-  do deed <- deedParam "deed"
-     serveFile (deedPath deed)
-
-
-getUnitImage :: Snap ()
-getUnitImage =
-  do unit <- unitParam "unit"
-     serveFile (unitPath unit)
-
 takeOffered :: Act
 takeOffered ref =
   do offer <- textParam "offer"
      card  <- intParam  "card"
      upd'  <- case offer of
                 "advancedActions" -> takeDeed $ takeAdvancedAction card
-                "spells"       -> takeDeed $ takeSpell card
-                "monasteries"  -> takeDeed $ takeMonasteryTech card
+                "spells"          -> takeDeed $ takeSpell card
+                "monasteries"     -> takeDeed $ takeMonasteryTech card
                 "units" -> return $ \g ->
                   do (u,o1) <- takeUnit card (offers g)
                      p1     <- hireUnit u (player g)
                      return g { offers = o1, player = p1 }
-                _   -> badInput "Unknown offer"
+                _ -> badInput "Unknown offer"
 
      snapUpdateGameMaybe ref upd'
   where
@@ -269,7 +298,7 @@ takeOffered ref =
        upd <- case txt of
                 "deed"    -> return newDeed
                 "discard" -> return newDiscardedDeed
-                _ -> badInput "Invalid target"
+                _         -> badInput "Invalid target"
        return $ \g -> do (c,o1) <- f (offers g)
                          return g { offers = o1, player = upd c (player g) }
 
@@ -280,21 +309,6 @@ snapRefreshOffers :: Act
 snapRefreshOffers ref =
   do useElite <- boolParam "elite"
      snapUpdateOffers ref $ refreshOffers useElite
-
-snapUpdatePlayer :: IORef SnapState -> (Player -> Player) -> Snap ()
-snapUpdatePlayer ref f = snapMaybeUpdatePlayer ref (Just . f)
-
-snapMaybeUpdatePlayer :: IORef SnapState -> (Player -> Maybe Player) -> Snap ()
-snapMaybeUpdatePlayer ref f =
-  do g1 <- liftIO $ atomicModifyIORef' ref $ \s ->
-           let g = snapGame s
-           in case doWriteLoc g thePlayer f of
-                Nothing -> (s, s)
-                Just g1 -> let s1 = SnapState { snapGame = g1
-                                              , snapHistory = g : snapHistory s
-                                              }
-                           in (s1,s1)
-     sendJSON $ player $ snapGame g1
 
 updateFame :: Act
 updateFame ref =
@@ -338,38 +352,17 @@ snapUnitToggleReady ref =
 snapDisbandUnit :: Act
 snapDisbandUnit ref =
   do u <- intParam "unit"
-     s <- liftIO $ atomicModifyIORef' ref $ \s ->
-              fromMaybe (s,s) $
-              do let g = snapGame s
-                 (uni,p1) <- Player.disbandUnit u (player g)
-                 let g1 = g { player = p1
-                            , offers = Offers.disbandUnit uni (offers g)
-                            }
-                     s1 = s { snapGame = g1 }
-                 return (s1,s1)
-     sendJSON $ player $ snapGame s
+     snapUpdateGameMaybe ref $ \g ->
+       do (uni,p1) <- Player.disbandUnit u (player g)
+          return g { player = p1
+                   , offers = Offers.disbandUnit uni (offers g)
+                   }
 
 snapAddUnitSlot :: Act
 snapAddUnitSlot ref = snapUpdatePlayer ref addUnitSlot
 
 snapDrawCard :: Act
 snapDrawCard ref = snapMaybeUpdatePlayer ref drawCard
-
-
-snapUpdateGame :: IORef SnapState -> (Game -> Game) -> Snap ()
-snapUpdateGame ref f = snapUpdateGameMaybe ref (Just . f)
-
-snapUpdateGameMaybe :: IORef SnapState -> (Game -> Maybe Game) -> Snap ()
-snapUpdateGameMaybe ref f =
-  do s1 <- liftIO $ atomicModifyIORef' ref $ \s ->
-        let g = snapGame s
-        in (\x -> (x,x)) $
-           case f g of
-             Just g1 -> SnapState { snapGame = g1
-                                  , snapHistory = g : snapHistory s
-                                  }
-             Nothing -> s
-     sendJSON $ snapGame s1
 
 
 snapPlayCard :: Act
@@ -399,7 +392,7 @@ snapUseCrystal ref =
 snapUseDie :: Act
 snapUseDie ref =
   do c <- manaParam "color"
-     snapUpdateGame ref (useDie c)
+     snapUpdateGameMaybe ref (useDie c)
 
 snapRefillSource :: Act
 snapRefillSource ref = snapUpdateGame ref gameRefillSource

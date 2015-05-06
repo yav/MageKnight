@@ -92,8 +92,8 @@ function drawPlayerStats(player) {
                    , { amount: Math.abs(fameUpdateAmt)
                      , increase: fameUpdateAmt >= 0
                      }
-                   , function(p) {
-                       stats.replaceWith(drawPlayerStats(p))
+                   , function(g) {
+                       redrawGame(g)
                        fameUpdateAmt = 0
                      })
       })
@@ -127,9 +127,7 @@ function drawPlayerStats(player) {
            .css('cursor', 'pointer')
            .click( function() {
               console.log('award clicked')
-              jQuery.post('/addUnitSlot', {}, function (p) {
-                $('#playerUnits').replaceWith(drawPlayerUnits(p))
-              })
+              jQuery.post('/addUnitSlot', {}, redrawGame)
            })
     }
 
@@ -195,8 +193,7 @@ function drawPlayerStats(player) {
               .text(i)
               .css('cursor', 'pointer')
               .click(function () {
-                jQuery.post('/setReputation', { reputation: ix }
-                   , function(p) { stats.replaceWith(drawPlayerStats(p)) })
+                jQuery.post('/setReputation', { reputation: ix }, redrawGame)
               })
       if (ix - 7 === player.reputation)
           d.css('padding', '0.5em')
@@ -246,12 +243,8 @@ function drawPlayerStats(player) {
            .css('width', '2em')
            .css('cursor', 'pointer')
            .click(function() {
-              if (n === 0) {
-                jQuery.post('/addCrystal', { color: c }
-                   , function(p) { stats.replaceWith(drawPlayerStats(p))})
-              } else {
-                jQuery.post('/useCrystal', { color: c }, redrawGame)
-              }
+              jQuery.post( n === 0 ? '/addCrystal' : '/useCrystal'
+                         , { color: c }, redrawGame)
            })
     return dom
   }
@@ -266,11 +259,7 @@ function drawPlayerStats(player) {
            .css('background-repeat', 'no-repeat')
            .css('border-radius', '10px')
            .css('cursor','pointer')
-           .click(function() {
-              jQuery.post('/drawCard', {}, function(p) {
-                $('#playerCards').replaceWith(drawPlayerCards(p))
-              })
-           })
+           .click(function() { jQuery.post('/drawCard', {}, redrawGame) })
   }
 
 
