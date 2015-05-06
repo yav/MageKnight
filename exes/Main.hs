@@ -29,8 +29,7 @@ import           Data.Text (Text)
 import           Data.Text.Encoding(decodeUtf8)
 import           Data.Text.Read(decimal)
 import qualified Data.Text as Text
-import           Data.IORef ( IORef, newIORef, writeIORef, readIORef
-                            , atomicModifyIORef', modifyIORef' )
+import           Data.IORef ( IORef, newIORef, writeIORef, atomicModifyIORef' )
 
 import           Control.Applicative ((<|>))
 import           Control.Monad.IO.Class(liftIO)
@@ -42,7 +41,7 @@ import           System.Random (newStdGen)
 main :: IO ()
 main =
   do r <- newStdGen
-     s <- newIORef SnapState { snapGame = testGame r }
+     s <- newIORef SnapState { snapGame = testGame r, snapHistory = [] }
 
      quickHttpServe $ Snap.route
        [ ("/deed/:deed",  getDeedImage)
@@ -80,6 +79,7 @@ main =
 
 data SnapState = SnapState
   { snapGame      :: Game
+  , snapHistory   :: [Game]
   }
 
 type Act = IORef SnapState -> Snap ()
@@ -222,7 +222,7 @@ newGame s = sendJSON =<< liftIO go
   where
   go = do r <- liftIO newStdGen
           let t = testGame r
-          writeIORef s SnapState { snapGame = t }
+          writeIORef s SnapState { snapGame = t, snapHistory = [] }
           return t
 
 
@@ -253,43 +253,28 @@ takeOffered ref =
   do offer <- textParam "offer"
      card  <- intParam  "card"
      upd'  <- case offer of
-                "advancedActs" -> takeDeed $ takeAdvancedAction card
-                "spells"          -> takeDeed $ takeSpell card
-                "monasteries"     -> takeDeed $ takeMonasteryTech card
+                "advancedActions" -> takeDeed $ takeAdvancedAction card
+                "spells"       -> takeDeed $ takeSpell card
+                "monasteries"  -> takeDeed $ takeMonasteryTech card
                 "units" -> return $ \g ->
-                  fromMaybe g $
                   do (u,o1) <- takeUnit card (offers g)
                      p1     <- hireUnit u (player g)
                      return g { offers = o1, player = p1 }
                 _   -> badInput "Unknown offer"
-     let upd s = s { snapGame = upd' (snapGame s) }
-     s <- liftIO (atomicModifyIORef' ref (fork . upd))
-     sendJSON (snapGame s)
 
+     snapUpdateGameMaybe ref upd'
   where
-  fork x = (x,x)
-
   takeDeed f =
     do txt <- textParam "target"
        upd <- case txt of
                 "deed"    -> return newDeed
                 "discard" -> return newDiscardedDeed
                 _ -> badInput "Invalid target"
-       return $ \g ->
-          case f (offers g) of
-            Nothing     -> g
-            Just (c,o1) -> g { offers = o1, player = upd c (player g) }
+       return $ \g -> do (c,o1) <- f (offers g)
+                         return g { offers = o1, player = upd c (player g) }
 
 snapUpdateOffers :: IORef SnapState -> (Offers -> Offers) -> Snap ()
-snapUpdateOffers ref f =
-  do s1 <- liftIO $ atomicModifyIORef' ref $ \s ->
-            let g  = snapGame s
-                g1 = writeLoc g theOffers f
-                s1 = s { snapGame = g1 }
-            in (s1,s1)
-     sendJSON $ offers $ snapGame s1
-
-
+snapUpdateOffers ref f = snapUpdateGame ref $ \g -> writeLoc g theOffers f
 
 snapRefreshOffers :: Act
 snapRefreshOffers ref =
@@ -305,12 +290,11 @@ snapMaybeUpdatePlayer ref f =
            let g = snapGame s
            in case doWriteLoc g thePlayer f of
                 Nothing -> (s, s)
-                Just g1 -> let s1 = s { snapGame = g }
+                Just g1 -> let s1 = SnapState { snapGame = g1
+                                              , snapHistory = g : snapHistory s
+                                              }
                            in (s1,s1)
      sendJSON $ player $ snapGame g1
-
-
-
 
 updateFame :: Act
 updateFame ref =
@@ -373,11 +357,20 @@ snapDrawCard ref = snapMaybeUpdatePlayer ref drawCard
 
 
 snapUpdateGame :: IORef SnapState -> (Game -> Game) -> Snap ()
-snapUpdateGame ref f =
-  do s1 <- liftIO (atomicModifyIORef' ref (\s -> let g1 = f (snapGame s)
-                                                     s1 = s { snapGame = g1 }
-                                                 in (s1,s1)))
+snapUpdateGame ref f = snapUpdateGameMaybe ref (Just . f)
+
+snapUpdateGameMaybe :: IORef SnapState -> (Game -> Maybe Game) -> Snap ()
+snapUpdateGameMaybe ref f =
+  do s1 <- liftIO $ atomicModifyIORef' ref $ \s ->
+        let g = snapGame s
+        in (\x -> (x,x)) $
+           case f g of
+             Just g1 -> SnapState { snapGame = g1
+                                  , snapHistory = g : snapHistory s
+                                  }
+             Nothing -> s
      sendJSON $ snapGame s1
+
 
 snapPlayCard :: Act
 snapPlayCard ref =

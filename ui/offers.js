@@ -33,11 +33,7 @@ function newOffers() {
     function unitUrl(name) { return '/unit/' + name }
 
     function updateOffer(url) {
-      return function () {
-        jQuery.post(url, { elite: useElite }, function(o1) {
-          topDom.replaceWith(drawOffers(o1))
-        })
-      }
+      return function () { jQuery.post(url, { elite: useElite }, redrawGame) }
     }
 
     function drawRefresh() {
@@ -165,16 +161,9 @@ function newOffers() {
                  .css('margin', '15px')
                  .text(deck_name)
                  .click(function () {
-                    var f = function() {}
-                    big.hide()
-                    jQuery.post('/takeOffered', { offer: name, card: ix,
-                                                  target: tgt }
-                               , function(g) {
-                                  it = drawGame(g)
-                                  // XXX: rest of the game
-                                  f = function() { $('#game').replaceWith(it) }
-                               })
-                    dom.fadeOut('slow', function() { f(); });
+                    jQuery.post( '/takeOffered'
+                               , { offer: name, card: ix, target: tgt }
+                               , redrawGame)
                  }))
         }
 
