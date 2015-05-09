@@ -276,7 +276,7 @@ function drawHexShadow(m,x,y,dir) {
 }
 
 function drawMap(map, t, p, lastSafe) {
-  var bg = t === 'Night' ? 'linear-gradient(#003,#303,#003,#000)'
+  var bg = t === 'night' ? 'linear-gradient(#003,#303,#003,#000)'
                          : 'linear-gradient(to right, #036,#0cf,#036)'
 
   var div = $('<div/>')
