@@ -9,6 +9,8 @@ import MageKnight.Units
 import MageKnight.Terrain
 import MageKnight.JSON
 import MageKnight.Game
+import MageKnight.Land(getFeatureAt)
+import MageKnight.Enemies(EnemyType(..))
 import MageKnight.Player as Player
 import MageKnight.DeedDecks(findDeed)
 import MageKnight.Loc
@@ -26,7 +28,8 @@ import           Data.Text (Text)
 import           Data.Text.Encoding(decodeUtf8)
 import           Data.Text.Read(decimal)
 import qualified Data.Text as Text
-import           Data.IORef ( IORef, newIORef, writeIORef, atomicModifyIORef' )
+import           Data.IORef ( IORef, newIORef, writeIORef, atomicModifyIORef'
+                            , readIORef )
 
 import           Control.Applicative ((<|>))
 import           Control.Monad.IO.Class(liftIO)
@@ -41,8 +44,8 @@ main =
      s <- newIORef SnapState { snapGame = testGame r, snapHistory = [] }
 
      quickHttpServe $ Snap.route
-       [ ("/deed/:deed",  getDeedImage)
-       , ("/unit/:unit",  getUnitImage)
+       [ ("/deed/:deed",        getDeedImage)
+       , ("/unit/:unit",        getUnitImage)
 
        , ("/updateFame", updateFame s)
        , ("/setReputation", setReputation s)
@@ -68,6 +71,8 @@ main =
        , ("/burnMonastery",  snapUpdateOffers s burnMonastery)
 
        , ("/refillSource",   snapRefillSource s)
+
+       , ("/mapHelpUrl",     snapGetMapHelpUrl s)
 
        -- testing
        , ("/newGame",                    newGame s)
@@ -212,6 +217,30 @@ unitPath Unit { .. } = "ui" </> "img" </> "units" </> ty </> name <.> "png"
                EliteUnit   -> "elite"
         name = nameToPath unitName
 
+featureHelpUrl :: Feature -> Maybe FilePath
+featureHelpUrl f =
+  case f of
+    MagicalGlade    -> img "magical_glade"
+    Mine _          -> img "mines"
+    Village         -> img "village"
+    Monastery       -> img "monastery"
+    Keep            -> img "keep"
+    MageTower       -> img "mage_tower"
+    Dungeon         -> img "dungeon"
+    Tomb            -> img "tomb"
+    MonsterDen      -> img "monster_den"
+    SpawningGrounds -> img "spawning_grounds"
+    AncientRuins    -> img "ancient_ruins"
+    RampagingEnemy e ->
+      case e of
+        Orc      -> img "marauding_orcs"
+        Draconum -> img "draconum"
+        _        -> Nothing
+
+  where
+  img x = Just ("img" </> "manual" </> "features" </> x <.> "png")
+
+
 
 --------------------------------------------------------------------------------
 -- RO
@@ -227,6 +256,14 @@ getUnitImage =
   do unit <- unitParam "unit"
      serveFile (unitPath unit)
 
+snapGetMapHelpUrl :: Act
+snapGetMapHelpUrl ref =
+  do a  <- addrParam
+     g  <- liftIO (snapGame `fmap` readIORef ref)
+     sendJSON $
+       object [ "helpUrl" .=
+                  fmap Text.pack
+                     (featureHelpUrl =<< getFeatureAt a (land g)) ]
 
 --------------------------------------------------------------------------------
 

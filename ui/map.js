@@ -237,6 +237,21 @@ function drawHexShadow(m,x,y,dir) {
 
 
   img.click(function() {
+    jQuery.post('/mapHelpUrl',  { tile_x: x, tile_y: y, hex: dir },
+      function(info) {
+        if (info.helpUrl === null) return
+
+        var dom = $('<img/>')
+                  .attr('src', info.helpUrl)
+                  .css('position', 'absolute')
+                  .css('right',    '1em')
+                  .css('bottom',   '1em')
+                  .css('z-index',  '10')
+        dom.click(function () { dom.remove() })
+        $('#game').append(dom)
+      })
+    return
+
     jQuery.post('/click',  { tile_x: x, tile_y: y, hex: dir },
       function(r) {
         switch (r.tag) {

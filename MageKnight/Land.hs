@@ -19,6 +19,9 @@ module MageKnight.Land
     -- * Time
   , setTime
   , getTime
+
+    -- * Info about tiles
+  , getFeatureAt
   ) where
 
 import           MageKnight.Terrain
@@ -244,6 +247,13 @@ exploreAt :: Addr -> TileAddr -> Land -> Perhaps (Land, Int)
 exploreAt loc newTilePos l =
   do (l1,m) <- initialTile False newTilePos l
      return (revealHiddenNeighbours loc l1, m)
+
+-- | Get the feature of a tile at the given address.
+getFeatureAt :: Addr -> Land -> Maybe Feature
+getFeatureAt Addr { .. } Land { .. } =
+  do GameTile { gameTile = Tile { .. } } <- Map.lookup addrGlobal theMap
+     let (_,mbF) = tileTerrain addrLocal
+     mbF
 
 -- | Setup a new tile at the given position.
 initialTile :: Bool -> TileAddr -> Land -> Perhaps (Land, Int)
