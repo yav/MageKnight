@@ -229,10 +229,10 @@ revealHiddenNeighbours a Land { .. } =
 revealHidden :: Addr -> Land -> Land
 revealHidden a l = updateAddr a upd l
   where
-  upd (City _) _            = hexReveal
+  upd (City _) _            = hexReveal -- XXX: reveal where state battle
   upd _ (Just AncientRuins) = hexReveal
-  upd _ (Just MageTower)    = hexReveal
-  upd _ (Just Keep)         = hexReveal
+  upd _ (Just MageTower)    = hexReveal -- XXX: reveal when starting battle
+  upd _ (Just Keep)         = hexReveal -- XXX: reveal when starting battle
   upd _ _                   = id
 
 
