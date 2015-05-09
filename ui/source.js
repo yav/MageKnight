@@ -1,9 +1,20 @@
-function drawSource(manas) {
+function drawSource(manas, time) {
+
+//  time = 'day'
+
+  var bg = time === 'night' ? 'linear-gradient(to right, #936, #000)'
+                            : 'linear-gradient(to right, #0cf,#036)'
+
 
   var source = $('<div/>')
                .attr('id', 'source')
                .css('font-family', 'Almendra')
-               .css('background-color', '#303')
+               .css('background-image', bg)
+               .css('border', '1px solid black')
+               .css('margin', '5px')
+               .css('line-height', '0')
+
+
 
   jQuery.each(manas, function(ix,mana) {
     source.append(drawDie(mana))
@@ -18,42 +29,27 @@ function drawSource(manas) {
   function manaUrl(mana)    { return imgUrl('mana/' + mana) }
 
   function refreshButton() {
-    var icon = $('<div/>')
-               .html('&#x21BA;')
-               .css('color', 'white')
-               .css('font-size', '20px')
-               .css('text-align', 'center')
-               .css('position', 'absolute')
-               .css('top','0')
-               .css('left','2px')
-
-    return $('<div/>')
-           .append(icon)
-           .css('display', 'inline-block')
-           .css('position', 'relative')
-           .css('cursor', 'pointer')
-           .css('height', '24px')
-           .css('width', '24px')
+    return diePic('refresh')
            .click(function() { jQuery.post('/refillSource', {}, redrawGame) })
 
   }
 
 
   function drawDie(d) {
-    var me = $('<img/>')
-             .attr('src', manaUrl(d))
-             .css('display', 'inline-block')
-             .css('margin', '2px')
-             .css('width', '24px')
-             .css('height', '24px')
-             .css('cursor', 'pointer')
-             .click(function () {
-                jQuery.post('/useDie', { color: d }, redrawGame)
-              })
-
-
-    return me
+    return diePic(d)
+           .click(function () {
+              jQuery.post('/useDie', { color: d }, redrawGame)
+           })
   }
 
+  function diePic(d) {
+    return $('<img/>')
+           .attr('src', manaUrl(d))
+           .css('display', 'inline-block')
+           .css('margin', '2px')
+           .css('width',  '24px')
+           .css('height', '24px')
+           .css('cursor', 'pointer')
+  }
 }
 

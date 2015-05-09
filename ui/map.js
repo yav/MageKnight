@@ -4,7 +4,7 @@ function drawLand(land, p, lastSafe) {
                .css('position', 'relative')
                .css('font-family', 'Almendra')
 
-  var map  = drawMap(land.map, land.time, p, lastSafe)
+  var map  = drawMap(land.map, p, lastSafe)
 
   var next = $('<div/>')
              .css('left', '5px')
@@ -248,7 +248,7 @@ function drawHexShadow(m,x,y,dir) {
                   .css('bottom',   '1em')
                   .css('z-index',  '10')
         dom.click(function () { dom.remove() })
-        $('#game').append(dom)
+        topDom.append(dom)
       })
     return
 
@@ -290,14 +290,12 @@ function drawHexShadow(m,x,y,dir) {
   return img
 }
 
-function drawMap(map, t, p, lastSafe) {
-  var bg = t === 'night' ? 'linear-gradient(#003,#303,#003,#000)'
-                         : 'linear-gradient(to right, #036,#0cf,#036)'
+function drawMap(map, p, lastSafe) {
 
   var div = $('<div/>')
             .css('position', 'relative')
             .css('overflow', 'auto')
-            .css('background-image', bg)
+            .css('background-color', 'black')
 
   var maxX = 0;
   var maxY = 0;

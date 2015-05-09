@@ -28,7 +28,7 @@ function drawGame(g) {
                 .attr('id','game')
                 .append(drawPlayerStats(g.player))
                 .append(l.dom)
-                .append(drawSource(g.source))
+                .append(drawSource(g.source, g.land.time))
                 .append(drawPlayArea(g.playArea))
                 .append(drawPlayerCards(g.player))
                 .append(drawPlayerUnits(g.player))
