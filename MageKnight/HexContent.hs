@@ -137,7 +137,7 @@ hexRemovePlayer p HexContent { .. } =
 
 -- | Are there any players on this hex.
 hexHasPlayers :: HexContent -> Bool
-hexHasPlayers HexContent { .. } = Set.null hexPlayers
+hexHasPlayers HexContent { .. } = not (Set.null hexPlayers)
 
 --------------------------------------------------------------------------------
 
