@@ -1,4 +1,9 @@
-function drawPlayerStats(player) {
+function drawPlayerStats(player, sourcemana, time) {
+
+  time = 'day'
+
+  var bg = time === 'night' ? 'linear-gradient(to right, #936, #000)'
+                            : 'linear-gradient(to right, #0cf,#036)'
 
   var img = $('<img/>')
             .attr('src', charUrl(player.name, 'art'))
@@ -10,18 +15,26 @@ function drawPlayerStats(player) {
   var l   = drawLevel()
   var cs  = drawCrystals(player.crystals)
   var ds  = drawDeedDeck()
-
+  var src = drawSource(sourcemana)
 
   var stats = $('<table/>')
               .attr('id','playerStats')
               .css('font-family', 'Almendra')
-              .css('background-color', '#303')
+              // .css('background-color', '#303')
+              .css('background-image', bg)
               .css('border', '2px solid black')
               .append($('<tr/>')
                       .append($('<td/>').attr('rowspan','2').append(img))
                       .append($('<td/>').attr('rowspan','2').append(l))
                       .append($('<td/>').append(rep))
-                      .append($('<td/>').attr('rowspan','2').append(cs))
+                      .append($('<td/>')
+                              .attr('rowspan','2')
+                              .css('background-color', 'rgba(0,0,0,0.3)')
+                              .append(cs))
+                      .append($('<td/>')
+                              .attr('rowspan','2')
+                              .css('background-color', 'rgba(0,0,0,0.3)')
+                              .append(src))
                       .append($('<td/>').attr('rowspan','2').append(ds))
                       )
               .append($('<tr/>').append($('<td/>').append(fam)))
@@ -227,7 +240,6 @@ function drawPlayerStats(player) {
     })
 
     return $('<table/>')
-           .css('background-color', 'rgba(0,0,0,0.3)')
            .append(newRow)
            .append(curRow)
   }

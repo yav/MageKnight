@@ -1,19 +1,9 @@
-function drawSource(manas, time) {
-
-//  time = 'day'
-
-  var bg = time === 'night' ? 'linear-gradient(to right, #936, #000)'
-                            : 'linear-gradient(to right, #0cf,#036)'
-
+function drawSource(manas) {
 
   var source = $('<div/>')
                .attr('id', 'source')
                .css('font-family', 'Almendra')
-               .css('background-image', bg)
-               .css('border', '1px solid black')
-               .css('margin', '5px')
-               .css('line-height', '0')
-
+               .css('width', Math.ceil(manas.length / 2) * 30)
 
 
   jQuery.each(manas, function(ix,mana) {
@@ -46,7 +36,7 @@ function drawSource(manas, time) {
     return $('<img/>')
            .attr('src', manaUrl(d))
            .css('display', 'inline-block')
-           .css('margin', '2px')
+           .css('margin', '3px')
            .css('width',  '24px')
            .css('height', '24px')
            .css('cursor', 'pointer')
