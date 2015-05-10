@@ -31,4 +31,8 @@ perhaps t mb = case mb of
                  Nothing -> Failed t
                  Just a  -> Ok a
 
+isOk :: Perhaps a -> Maybe a
+isOk a = case a of
+           Ok a     -> Just a
+           Failed _ -> Nothing
 
