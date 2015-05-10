@@ -270,10 +270,10 @@ updateAddr Addr { .. } f Land { .. } =
   Land { theMap = Map.adjust (gameTileUpdateAt addrLocal f) addrGlobal theMap
        , .. }
 
--- | Place a player on the map.
+-- | Place a player on the map.  If during the day, reveal *adjecent*
+-- relevant locations.  It does not reveal enemies *on* the location.
 placePlayer :: Player -> Land -> Land
-placePlayer p = revealHidden loc
-              . revealHiddenNeighbours loc
+placePlayer p = revealHiddenNeighbours loc
               . updateAddr loc (\_ _ -> hexAddPlayer p)
   where loc = playerLocation p
 
@@ -281,11 +281,14 @@ placePlayer p = revealHidden loc
 removePlayer :: Player -> Land -> Land
 removePlayer p = updateAddr (playerLocation p) (\_ _ -> hexRemovePlayer p)
 
--- | Move a player to the given address.  While most of the time, the address
--- will be adjacent to the player, this might not be the case if
--- "Space Bending" is activated.
-movePlayer :: Player -> Addr -> Land -> (Player, Land)
-movePlayer p newLoc l = (p1, placePlayer p1 l1)
+{- | Move a player to the given address.  Most of the time the address
+will be adjacent to the player, however, this might not be the case if
+"Space Bending" is activated.
+Fails if the address is not on the map. -}
+movePlayer :: Player -> Addr -> Land -> Perhaps (Player, Land)
+movePlayer p newLoc l
+  | isRevealed newLoc l = Ok (p1, placePlayer p1 l1)
+  | otherwise           = Failed "This address is not on the map."
   where
   l1      = removePlayer p l
   p1      = playerSetLoc (isSafe (playerName p) newLoc l1) newLoc p

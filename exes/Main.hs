@@ -14,6 +14,7 @@ import MageKnight.Enemies(EnemyType(..))
 import MageKnight.Player as Player
 import MageKnight.DeedDecks(findDeed)
 import MageKnight.Loc
+import MageKnight.Perhaps
 
 import           Snap.Http.Server (quickHttpServe)
 import           Snap.Core (Snap)
@@ -74,6 +75,8 @@ main =
 
        , ("/mapHelpUrl",     snapGetMapHelpUrl s)
 
+       , ("/move",           snapMovePlayer s)
+
        -- testing
        , ("/newGame",                    newGame s)
        , ("/click",           snapClickHex s)
@@ -112,9 +115,21 @@ textParam p = decodeUtf8 `fmap` requiredParam p
 intParam :: ByteString -> Snap Int
 intParam p =
   do txt <- textParam p
+     let (neg,numTxt) = case Text.uncons txt of
+                          Just ('-',t) -> (negate, t)
+                          _            -> (id, txt)
+     case decimal numTxt of
+       Right (a,t) | Text.null t -> return (neg a)
+       _ -> badInput ("Malformed integer parameter: " `BS.append` p)
+
+natParam :: ByteString -> Snap Int
+natParam p =
+  do txt <- textParam p
      case decimal txt of
        Right (a,t) | Text.null t -> return a
-       _ -> badInput ("Malformed integer parameter: " `BS.append` p)
+       _ -> badInput ("Malformed natural parameter: " `BS.append` p)
+
+
 
 boolParam :: ByteString -> Snap Bool
 boolParam p =
@@ -275,7 +290,6 @@ newGame s = sendJSON =<< liftIO go
           writeIORef s SnapState { snapGame = t, snapHistory = [] }
           return t
 
-
 snapUpdateGameMaybe :: IORef SnapState -> (Game -> Maybe Game) -> Snap ()
 snapUpdateGameMaybe ref f =
   do s1 <- liftIO $ atomicModifyIORef' ref $ \s ->
@@ -317,7 +331,7 @@ snapClickHex s =
 takeOffered :: Act
 takeOffered ref =
   do offer <- textParam "offer"
-     card  <- intParam  "card"
+     card  <- natParam  "card"
      upd'  <- case offer of
                 "advancedActions" -> takeDeed $ takeAdvancedAction card
                 "spells"          -> takeDeed $ takeSpell card
@@ -349,14 +363,14 @@ snapRefreshOffers ref =
 
 updateFame :: Act
 updateFame ref =
-  do amt <- intParam "amount"
+  do amt <- natParam "amount"
      inc <- boolParam "increase"
      let d = if inc then amt else negate amt
      snapMaybeUpdatePlayer ref (playerAddFame d)
 
 setReputation :: Act
 setReputation ref =
-  do r <- intParam "reputation"
+  do r <- natParam "reputation"
      snapMaybeUpdatePlayer ref (playerSetReputation (r - 7))
 
 snapAddCrystal :: Act
@@ -367,28 +381,28 @@ snapAddCrystal ref =
 snapAssignDamage :: Act
 snapAssignDamage ref =
   do p <- boolParam "poison"
-     d <- intParam "damage"
+     d <- natParam "damage"
      snapUpdatePlayer ref (snd . assignDamage d p)
 
 
 snapWoundUnit :: Act
 snapWoundUnit ref =
-  do u <- intParam "unit"
+  do u <- natParam "unit"
      snapMaybeUpdatePlayer ref (woundUnit u)
 
 snapHealUnit :: Act
 snapHealUnit ref =
-  do u <- intParam "unit"
+  do u <- natParam "unit"
      snapMaybeUpdatePlayer ref (healUnit u)
 
 snapUnitToggleReady :: Act
 snapUnitToggleReady ref =
-  do u <- intParam "unit"
+  do u <- natParam "unit"
      snapMaybeUpdatePlayer ref (unitToggleReady u)
 
 snapDisbandUnit :: Act
 snapDisbandUnit ref =
-  do u <- intParam "unit"
+  do u <- natParam "unit"
      snapUpdateGameMaybe ref $ \g ->
        do (uni,p1) <- Player.disbandUnit u (player g)
           return g { player = p1
@@ -404,12 +418,12 @@ snapDrawCard ref = snapMaybeUpdatePlayer ref drawCard
 
 snapPlayCard :: Act
 snapPlayCard ref =
-  do n <- intParam "card"
+  do n <- natParam "card"
      snapUpdateGame ref (playCard n)
 
 snapPlayCardFor :: Act
 snapPlayCardFor ref =
-  do n <- intParam "card"
+  do n <- natParam "card"
      a <- textParam "action"
      act <- case a of
               "move"      -> return Movement
@@ -437,7 +451,7 @@ snapRefillSource ref = snapUpdateGame ref gameRefillSource
 
 snapPowerUp :: Act
 snapPowerUp ref =
-  do i <- intParam "card"    -- power up this card
+  do i <- natParam "card"    -- power up this card
      snapUpdateGame ref (\g -> writeLoc g thePlayArea (powerUpCard i))
 
 
@@ -445,4 +459,14 @@ snapSpendMana :: Act
 snapSpendMana ref =
   do c <- manaParam "color"
      snapUpdateGame ref (\g -> writeLoc g thePlayArea (removeManaToken c))
+
+
+--------------------------------------------------------------------------------
+
+snapMovePlayer :: Act
+snapMovePlayer ref =
+  do a <- addrParam
+     snapUpdateGameMaybe ref $ \g ->
+       isOk (if addrOnMap a g then movePlayerTo a g else explore a g)
+
 

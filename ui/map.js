@@ -237,6 +237,11 @@ function drawHexShadow(m,x,y,dir) {
 
 
   img.click(function() {
+
+    jQuery.post('/move',  { tile_x: x, tile_y: y, hex: dir }, redrawGame)
+    return
+
+    // Ask for help about a location
     jQuery.post('/mapHelpUrl',  { tile_x: x, tile_y: y, hex: dir },
       function(info) {
         if (info.helpUrl === null) return
@@ -252,6 +257,7 @@ function drawHexShadow(m,x,y,dir) {
       })
     return
 
+    // Render a menu for what to do
     jQuery.post('/click',  { tile_x: x, tile_y: y, hex: dir },
       function(r) {
         switch (r.tag) {
@@ -305,7 +311,7 @@ function drawMap(map, p, lastSafe) {
     if (tile.y > maxY) maxY = tile.y;
   });
 
-  var m = prepareMap(maxX,maxY,300);
+  var m = prepareMap(maxX,maxY,200);
   div.css('height', $(window).height() - 30);
 
   jQuery.each(map, function(ix,tile) {

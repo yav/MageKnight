@@ -33,7 +33,7 @@ testGame g =
        }
   where
   offers0     = setupOffers offerRNG (defaultOfferSetup 1 True)
-  Ok (l,ms)   = setupLand landRNG (defaultLandSetup Wedge 7 2 [3,5])
+  Ok (l,ms)   = setupLand landRNG (defaultLandSetup openMap4 7 2 [3,5])
                                       { useStartTime = Night }
   (offerRNG, g1)        = split g
   (landRNG,g2)          = split g1
@@ -105,29 +105,26 @@ playCardFor a n Game { .. } =
     Nothing     -> Game { .. }
 
 
-{-
 -- | Move the player 1 unit the given direction.
-movePlayer :: Dir -> Game -> Game
-movePlayer d Game { .. } =
-  let (p1,l1) = MageKnight.Land.movePlayer player d theLand
-  in Game { theLand = l1, player = p1, .. }
--}
+movePlayerTo :: Addr -> Game -> Perhaps Game
+movePlayerTo a Game { .. } =
+  do (p1,l1) <- MageKnight.Land.movePlayer player a land
+     return Game { land = l1, player = p1, .. }
 
 addrOnMap :: Addr -> Game -> Bool
 addrOnMap a g = MageKnight.Land.isRevealed a (land g)
 
 
-{-
 -- | The player tries to explore the given address.
-explore :: Addr -> Game -> Maybe Game
+-- Currently, unchecked.
+explore :: Addr -> Game -> Perhaps Game
 explore addr g0 =
   -- XXX: check distance
   do (l,ms) <- exploreAt (playerLocation (player g0))
                          (addrGlobal addr)
-                         (theLand g0)
+                         (land g0)
      let addMon g = g { offers = newMonastery (offers g) }
-     return (iterate addMon g0 { theLand = l } !! ms)
--}
+     return (iterate addMon g0 { land = l } !! ms)
 
 --------------------------------------------------------------------------------
 
