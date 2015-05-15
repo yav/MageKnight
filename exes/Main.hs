@@ -42,7 +42,10 @@ import           System.Random (newStdGen)
 main :: IO ()
 main =
   do r <- newStdGen
-     s <- newIORef SnapState { snapGame = testGame r, snapHistory = [] }
+     s <- newIORef SnapState { snapGame = testGame r
+                             , snapHistory = []
+                             , snapFuture  = []
+                             }
 
      quickHttpServe $ Snap.route
        [ ("/deed/:deed",        getDeedImage)
@@ -77,6 +80,10 @@ main =
 
        , ("/move",           snapMovePlayer s)
 
+
+       , ("/undo",           snapUndo s)
+       , ("/redo",           snapRedo s)
+
        -- testing
        , ("/newGame",                    newGame s)
        , ("/click",           snapClickHex s)
@@ -85,6 +92,7 @@ main =
 data SnapState = SnapState
   { snapGame      :: Game
   , snapHistory   :: [Game]
+  , snapFuture    :: [Game]
   }
 
 type Act = IORef SnapState -> Snap ()
@@ -287,8 +295,37 @@ newGame s = sendJSON =<< liftIO go
   where
   go = do r <- liftIO newStdGen
           let t = testGame r
-          writeIORef s SnapState { snapGame = t, snapHistory = [] }
+          writeIORef s SnapState { snapGame    = t
+                                 , snapHistory = []
+                                 , snapFuture  = []
+                                 }
           return t
+
+snapUndo :: Act
+snapUndo ref =
+  do g <- liftIO $ atomicModifyIORef' ref $ \s ->
+          case snapHistory s of
+            []     -> (s, snapGame s)
+            g : gs -> ( SnapState { snapFuture  = snapGame s : snapFuture s
+                                  , snapGame    = g
+                                  , snapHistory = gs
+                                  }
+                      , g
+                      )
+     sendJSON g
+
+snapRedo :: Act
+snapRedo ref =
+  do g <- liftIO $ atomicModifyIORef' ref $ \s ->
+          case snapFuture s of
+            []     -> (s, snapGame s)
+            g : gs -> ( SnapState { snapFuture  = gs
+                                  , snapGame    = g
+                                  , snapHistory = snapGame s : snapHistory s
+                                  }
+                      , g
+                      )
+     sendJSON g
 
 snapUpdateGameMaybe :: IORef SnapState -> (Game -> Maybe Game) -> Snap ()
 snapUpdateGameMaybe ref f =
@@ -296,8 +333,9 @@ snapUpdateGameMaybe ref f =
         let g = snapGame s
         in (\x -> (x,x)) $
            case f g of
-             Just g1 -> SnapState { snapGame = g1
+             Just g1 -> SnapState { snapGame    = g1
                                   , snapHistory = g : snapHistory s
+                                  , snapFuture  = []
                                   }
              Nothing -> s
      sendJSON (snapGame s1)
