@@ -1,10 +1,23 @@
 <!DOCTYPE html
 ><html>
 <head>
+<meta name="mobile-web-app-capable" content="yes">
 <style>
 @font-face {
   font-family: 'Almendra';
   src: url('/fonts/Almendra-Bold.ttf');
+}
+
+body {
+  background-color: #000;
+  margin: 0
+}
+
+.column {
+  width: 50%;
+  height: 90%;
+  overflow-x: auto;
+  overflow-y: auto;
 }
 </style>
 <script src="jquery.js"></script>
@@ -15,30 +28,29 @@
 <script src="player_cards.js"></script>
 <script src="player_units.js"></script>
 <script src="play_area.js"></script>
+
+
 <script>
 
 
 var drawOffers = newOffers()
 
-function drawGame(g) {
-
-  var l = drawLand(g.land, g.player.name, g.player.unsafe)
-
-  return { dom: $('<div/>')
-                .attr('id','game')
-                .append(drawPlayerStats(g.player, g.source, g.land.time))
-                .append(drawPlayArea(g.playArea))
-                .append(l.dom)
-                .append(drawPlayerCards(g.player))
-                .append(drawPlayerUnits(g.player))
-                .append(drawOffers(g.offers))
-        , focus: l.focus
-        }
-}
 
 function redrawGame(g) {
-  var l = drawGame(g)
-  $('#game').replaceWith(l.dom)
+  var l = drawLand(g.land, g.player.name, g.player.unsafe)
+
+  $('#top').empty()
+           .append(drawPlayerStats(g.player, g.source, g.land.time))
+           .append(drawPlayArea(g.playArea))
+
+  $('#left').empty()
+            .append(l.dom)
+            .append(drawOffers(g.offers))
+
+  $('#right').empty()
+             .append(drawPlayerCards(g.player))
+             .append(drawPlayerUnits(g.player))
+
   l.focus(g.player.location.x, g.player.location.y)
 }
 
@@ -54,7 +66,11 @@ $(document).ready(function() {
 });
 </script>
 </head>
-<body><div id="game"></div></body>
-</html>
+<body
+><div id="top"   class="header"></div
+><div id="left"  class="column" style="float: left"></div
+><div id="right" class="column" style="float: right"></div
+></body
+></html>
 
 
