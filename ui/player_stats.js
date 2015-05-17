@@ -1,8 +1,6 @@
 function drawPlayerStats(player, sourcemana, time) {
 
-  time = 'day'
-
-  var bg = time === 'night' ? 'linear-gradient(to right, #936, #000)'
+  var bg = time === 'night' ? 'linear-gradient(to right, #639, #000)'
                             : 'linear-gradient(to right, #0cf,#036)'
 
   var img = $('<img/>')
