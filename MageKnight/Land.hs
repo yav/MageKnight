@@ -232,10 +232,12 @@ revealHiddenNeighbours a Land { .. } =
 revealHidden :: Addr -> Land -> Land
 revealHidden a l = updateAddr a upd l
   where
-  upd (City _) _            = hexReveal -- XXX: reveal where state battle
+  during d f = if timeOfDay l == d then f else id
+
+  upd (City _) _            = hexReveal
   upd _ (Just AncientRuins) = hexReveal
-  upd _ (Just MageTower)    = hexReveal -- XXX: reveal when starting battle
-  upd _ (Just Keep)         = hexReveal -- XXX: reveal when starting battle
+  upd _ (Just MageTower)    = during Day hexReveal
+  upd _ (Just Keep)         = during Day hexReveal
   upd _ _                   = id
 
 
@@ -274,6 +276,7 @@ updateAddr Addr { .. } f Land { .. } =
 -- relevant locations.  It does not reveal enemies *on* the location.
 placePlayer :: Player -> Land -> Land
 placePlayer p = revealHiddenNeighbours loc
+              . revealHidden loc
               . updateAddr loc (\_ _ -> hexAddPlayer p)
   where loc = playerLocation p
 
