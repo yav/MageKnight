@@ -9,6 +9,7 @@ import           MageKnight.Deed
 import           MageKnight.Offers
 import           MageKnight.Source
 import           MageKnight.Land
+import           MageKnight.Units
 import           MageKnight.Random
 import           MageKnight.Terrain
 import           MageKnight.JSON
@@ -20,6 +21,7 @@ import           MageKnight.Loc
 
 import           Data.Text (Text)
 import           Data.Maybe(fromMaybe)
+import qualified Data.Set as Set
 
 
 
@@ -125,6 +127,48 @@ explore addr g0 =
                          (land g0)
      let addMon g = g { offers = newMonastery (offers g) }
      return (iterate addMon g0 { land = l } !! ms)
+
+-- | Show the units in the offer that may be hired at the given location
+unitsForHire :: Addr -> Game -> [Unit]
+unitsForHire addr Game { .. } =
+  case getFeatureAt addr land of
+    Nothing -> []
+    Just (City White, _)  -> offeringUnits offers -- any unit may be bought
+    Just (City _, _)      -> available FromCity
+    Just (_, Just feat)   ->
+      case feat of
+        Village   -> available FromVillage
+        Monastery -> available FromMonastery
+        Keep      -> available FromKeep
+        MageTower -> available FromMageTower
+        _         -> []
+    Just (_, Nothing) -> []
+
+  where
+  available loc       = filter (isAvailableAt loc) (offeringUnits offers)
+  isAvailableAt loc u = loc `Set.member` unitSource u
+
+
+-- | Show the deeds from the offer that may be obtained here
+availableDeeds :: Addr -> Game -> [Deed]
+availableDeeds addr Game { .. } =
+  case getFeatureAt addr land of
+    Nothing -> []
+    Just (City c, _) ->
+      case c of
+        Blue  -> offeringSpells offers
+        Green -> offeringAdvancedActions offers
+        _     -> []
+
+    Just (_, Just feat)   ->
+      case feat of
+        Monastery -> offeringMonasteries offers
+        MageTower -> offeringSpells offers
+        _         -> []
+    Just (_, Nothing) -> []
+
+
+
 
 --------------------------------------------------------------------------------
 

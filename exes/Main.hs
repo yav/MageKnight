@@ -9,8 +9,8 @@ import MageKnight.Units
 import MageKnight.Terrain
 import MageKnight.JSON
 import MageKnight.Game
-import MageKnight.Land(getFeatureAt)
-import MageKnight.Enemies(EnemyType(..))
+import MageKnight.Land(getFeatureAt, getRevealedEnemiesAt)
+import MageKnight.Enemies
 import MageKnight.Player as Player
 import MageKnight.DeedDecks(findDeed)
 import MageKnight.Loc
@@ -29,6 +29,8 @@ import           Data.Text (Text)
 import           Data.Text.Encoding(decodeUtf8)
 import           Data.Text.Read(decimal)
 import qualified Data.Text as Text
+import qualified Data.Set  as Set
+import           Data.List ( nub )
 import           Data.IORef ( IORef, newIORef, writeIORef, atomicModifyIORef'
                             , readIORef )
 
@@ -86,7 +88,7 @@ main =
 
        -- testing
        , ("/newGame",                    newGame s)
-       , ("/click",           snapClickHex s)
+       -- , ("/click",           snapClickHex s)
        ] <|> serveDirectory "ui"
 
 data SnapState = SnapState
@@ -218,7 +220,10 @@ nameToPath = Text.unpack . Text.map cvt
   cvt _                             = '_'
 
 deedPath :: Deed -> FilePath
-deedPath Deed { .. } = dir </> nameToPath deedName <.> "png"
+deedPath d = "ui" </> deedUrl d
+
+deedUrl :: Deed -> FilePath
+deedUrl Deed { .. } = dir </> nameToPath deedName <.> "png"
   where
   dir = case deedType of
           Wound            -> pref
@@ -226,7 +231,7 @@ deedPath Deed { .. } = dir </> nameToPath deedName <.> "png"
           AdvancedAction c -> pref </> "advanced_actions" </> color c
           Spell c          -> pref </> "spells" </> color c
           Artifact         -> pref </> "artifacts"
-  pref = "ui" </> "img" </> "cards"
+  pref = "img" </> "cards"
   color c = case c of
               Red   -> "red"
               Blue  -> "blue"
@@ -234,11 +239,16 @@ deedPath Deed { .. } = dir </> nameToPath deedName <.> "png"
               White -> "white"
 
 unitPath :: Unit -> FilePath
-unitPath Unit { .. } = "ui" </> "img" </> "units" </> ty </> name <.> "png"
+unitPath u = "ui" </> unitUrl u
+
+unitUrl :: Unit -> FilePath
+unitUrl Unit { .. } = "img" </> "units" </> ty </> name <.> "png"
   where ty = case unitType of
                RegularUnit -> "regular"
                EliteUnit   -> "elite"
         name = nameToPath unitName
+
+
 
 featureHelpUrl :: Feature -> Maybe FilePath
 featureHelpUrl f =
@@ -264,6 +274,42 @@ featureHelpUrl f =
   img x = Just ("img" </> "manual" </> "features" </> x <.> "png")
 
 
+enemyPowerHelpUrl :: Enemy -> [FilePath]
+enemyPowerHelpUrl Enemy { .. } =
+  coldFireDefense ++
+    concatMap defenseInfo (Set.toList enemyAbilities) ++ attackInfo
+  where
+  attackInfo = case enemyAttack of
+                 AttacksWith el _ ->
+                  case el of
+                    Physycal      -> []
+                    Fire          -> [ url "fire_attack" ]
+                    Ice           -> [ url "ice_attack" ]
+                    ColdFire      -> [ url "cold_fire_attack" ]
+
+                 Summoner         -> [ url "summon_attack" ]
+
+  coldFireDefense
+    | Resists Fire `Set.member` enemyAbilities &&
+      Resists Ice  `Set.member` enemyAbilities =
+      [ url "fire_and_ice_resistance" ]
+    | otherwise = []
+
+  defenseInfo x = case x of
+                    Fortified     -> [ url "fortified" ]
+                    Resists e ->
+                      case e of
+                        Fire        -> [ url "fire_resistance" ]
+                        Ice         -> [ url "ice_resistance" ]
+                        Physycal    -> [ url "physycal_resistance" ]
+                        ColdFire    -> []
+                    Swift         -> [ url "swift" ]
+                    Brutal        -> [ url "brutal" ]
+                    Poisons       -> [ url "poison" ]
+                    Paralyzes     -> [ url "paralyze" ]
+
+  url x = "img" </> "manual" </> "enemy_abilities" </> x <.> "png"
+
 
 --------------------------------------------------------------------------------
 -- RO
@@ -286,7 +332,14 @@ snapGetMapHelpUrl ref =
      sendJSON $
        object [ "helpUrl" .=
                   fmap Text.pack
-                     (featureHelpUrl =<< getFeatureAt a (land g)) ]
+                     (featureHelpUrl =<< snd =<< getFeatureAt a (land g))
+              , "enemyPowers" .=
+                      nub (concatMap (map Text.pack . enemyPowerHelpUrl)
+                               (getRevealedEnemiesAt a (land g)))
+              , "offerUrls" .=
+                  nub ( fmap (Text.pack . unitUrl) (unitsForHire a g) ++
+                        fmap (Text.pack . deedUrl) (availableDeeds a g) )
+              ]
 
 --------------------------------------------------------------------------------
 
@@ -351,19 +404,18 @@ snapMaybeUpdatePlayer :: IORef SnapState -> (Player -> Maybe Player) -> Snap ()
 snapMaybeUpdatePlayer ref f = snapUpdateGameMaybe ref $
                               \g -> doWriteLoc g thePlayer f
 
-
-
-
-
+{-
 snapClickHex :: Act
-snapClickHex s =
+snapClickHex ref =
   do addr <- addrParam
+     s    <- readIORef ref
+     let g = snapGame s
      sendJSON $ object [ "tag"   .= ("menu" :: Text)
-                       , "items" .= [ Text.pack ("move to " ++ show addr)
+                       , "items" .= [ "go"
                                     , "info"
                                     ]
                        ]
-
+-}
 
 
 takeOffered :: Act

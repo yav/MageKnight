@@ -22,6 +22,7 @@ module MageKnight.Land
 
     -- * Info about tiles
   , getFeatureAt
+  , getRevealedEnemiesAt
   ) where
 
 import           MageKnight.Terrain
@@ -37,7 +38,7 @@ import qualified MageKnight.ResourceQ as RQ
 import           MageKnight.JSON
 import           MageKnight.Perhaps
 
-import           Data.Maybe ( mapMaybe )
+import           Data.Maybe ( mapMaybe, fromMaybe )
 import           Data.Map ( Map )
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -251,11 +252,20 @@ exploreAt loc newTilePos l =
      return (revealHiddenNeighbours loc l1, m)
 
 -- | Get the feature of a tile at the given address.
-getFeatureAt :: Addr -> Land -> Maybe Feature
+getFeatureAt :: Addr -> Land -> Maybe (Terrain, Maybe Feature)
 getFeatureAt Addr { .. } Land { .. } =
   do GameTile { gameTile = Tile { .. } } <- Map.lookup addrGlobal theMap
-     let (_,mbF) = tileTerrain addrLocal
-     mbF
+     return (tileTerrain addrLocal)
+
+-- | Get the revealed enemies at the given locaiton.
+getRevealedEnemiesAt :: Addr -> Land -> [Enemy]
+getRevealedEnemiesAt Addr { .. } Land { .. } =
+  fromMaybe [] $
+  do GameTile { .. } <- Map.lookup addrGlobal theMap
+     hex             <- Map.lookup addrLocal gameTileContent
+     return (hexActiveEnemies hex)
+
+
 
 -- | Setup a new tile at the given position.
 initialTile :: Bool -> TileAddr -> Land -> Perhaps (Land, Int)
