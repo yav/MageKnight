@@ -173,7 +173,7 @@ coldToughnessBlockBonus Enemy  { .. } = fromAttack + fromAbilities
   where
   fromAttack    = case enemyAttack of
                     Summoner -> 0 -- Shouldn't be blocking this
-                    AttcaksWith e _ ->
+                    AttacksWith e _ ->
                       case e of
                         Physycal -> 0
                         Fire     -> 1
