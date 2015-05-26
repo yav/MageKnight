@@ -39,7 +39,7 @@ function drawPlayerCards(player) {
         .css('width','16px')
         .css('height','18px')
         .click(function(ev) {
-          console.log('heal wound')
+          jQuery.post('/healPlayerWound', {}, redrawGame)
           return false
         }))
     } else {

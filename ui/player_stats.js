@@ -14,6 +14,7 @@ function drawPlayerStats(player, sourcemana, time) {
   var cs  = drawCrystals(player.crystals)
   var ds  = drawDeedDeck()
   var src = drawSource(sourcemana)
+  var dmg = drawAddDamage()
 
   function td() { return $('<td/>').addClass('mayHide').hide() }
 
@@ -39,6 +40,7 @@ function drawPlayerStats(player, sourcemana, time) {
                               .css('background-color', 'rgba(0,0,0,0.3)')
                               .append(src))
                       .append(td().attr('rowspan','2').append(ds))
+                      .append(td().attr('rowspan','2').append(dmg))
                       )
               .append($('<tr/>').append(td().append(fam)))
 
@@ -48,12 +50,8 @@ function drawPlayerStats(player, sourcemana, time) {
     vis = !vis
     var tds = $('.mayHide')
     if (vis) {
-      //stats.css('left', '0px')
-      //stats.css('right', 'auto')
       tds.show()
     } else {
-      //stats.css('left', 'auto')
-      //stats.css('right', '0px')
       tds.hide()
     }
   })
@@ -64,6 +62,35 @@ function drawPlayerStats(player, sourcemana, time) {
   function levelUrl(which)  { return imgUrl('level/' + which) }
   function charUrl(ch,ty)   { return imgUrl('characters/' + ch + '/' + ty) }
   function crystalUrl(c,n)  { return imgUrl('mana/crystal/' + c + '/' + n) }
+
+
+  // Temporary
+  function drawAddDamage() {
+    var damage = $('<input/>')
+                 .attr('cols', '3')
+    var poison = $('<input/>')
+                 .attr('type','checkbox')
+    var btn    = $('<button/>')
+                 .text('Damage!')
+                 .css('cursor', 'pointer')
+
+    btn.click(function() {
+      jQuery.post('/addPlayerDamage', { amount: damage.val()
+                                      , poison: poison[0].checked
+                                      }, redrawGame) })
+
+    return $('<table/>')
+           .append($('<tr/>')
+                   .append($('<td/>')
+                           .attr('colspan','2')
+                           .append(damage)))
+           .append($('<tr/>')
+                   .append($('<td/>')
+                           .text('Poison?')
+                           .append(poison))
+                   .append($('<td/>')
+                           .append(btn)))
+  }
 
   function drawLevel() {
     var lvl      = player.fameInfo.level
@@ -281,17 +308,28 @@ function drawPlayerStats(player, sourcemana, time) {
 
 
   function drawDeedDeck () {
+    var deeds = $('<div/>')
+                .text('Deeds: ' + player.deeds)
+
+    var newDeed = $('<div/>')
+                  .css('background-image', 'url("/img/cards/back.png")')
+                  .css('background-size', '64px 96px')
+                  .css('width',  '64px')
+                  .css('height', '96px')
+                  .css('background-repeat', 'no-repeat')
+                  .css('border-radius', '10px')
+                  .css('cursor','pointer')
+                  .click(function() {
+                     jQuery.post('/drawCard', {}, redrawGame)
+                   })
+
+    var discards = $('<div/>')
+                   .text('Discards: ' + player.discards)
+
     return $('<div/>')
-           .css('background-image', 'url("/img/cards/back.png")')
-           .css('background-size', '64px 96px')
-           .css('width',  '64px')
-           .css('height', '96px')
-           .css('background-repeat', 'no-repeat')
-           .css('border-radius', '10px')
-           .css('cursor','pointer')
-           .click(function() {
-              jQuery.post('/drawCard', {}, redrawGame)
-            })
+             .append(deeds)
+             .append(newDeed)
+             .append(discards)
   }
 
 

@@ -39,6 +39,8 @@ module MageKnight.Player
 
   -- * Damage
   , assignDamage
+  , healWound
+  , healDiscardedWound
 
   -- * Position
   , playerLocation
@@ -217,6 +219,8 @@ playerCardLimit p
 
 -- | Check if this player passed out.
 -- The blloean indicates if the player passed out.
+-- XXX: Question: should we only count wound received this round, or
+-- also old wounds in the hand (i.e., ones that came from the deed deck)
 checkPassOut :: Player -> (Bool, Player)
 checkPassOut p@Player { .. }
   | length wounds >= playerCardLimit p =
@@ -235,6 +239,27 @@ assignDamage d poison p =
   armor         = playerArmor p
   woundNum      = div (max 0 d + armor - 1) armor
   poisonDamage  = if poison then woundNum else 0
+
+-- | Remove a wound from the hand.
+healWound :: Player -> Maybe Player
+healWound Player { .. } =
+  do cs <- removeWound hand
+     return Player { hand = cs, .. }
+
+-- | Remove a wound from the discard pile
+healDiscardedWound :: Player -> Maybe Player
+healDiscardedWound Player { .. } =
+  do cs <- removeWound discardPile
+     return Player { discardPile = cs, .. }
+
+-- | Remove one wound, if possible.
+removeWound :: [Deed] -> Maybe [Deed]
+removeWound ds =
+  case ds of
+    [] -> Nothing
+    d : ds | d == wound -> Just ds
+           | otherwise  -> (d :) `fmap` removeWound ds
+
 
 -- | Set the player's location
 playerSetLoc :: Bool {- ^ Is this a safe locaiton? -} ->
@@ -323,6 +348,8 @@ instance Export Player where
       , "crystals"    .= object [ toKeyJS x .= n
                                           | (x,n) <- bagToListGrouped crystals ]
       , "cards"       .= hand
+      , "deeds"       .= length deedDeck
+      , "discards"    .= length discardPile
       , "location"    .= location
       , "unsafe"      .= fmap fst onUnsafe
       ]

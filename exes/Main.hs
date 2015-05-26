@@ -71,6 +71,10 @@ main =
        , ("/useDie",       snapUseDie s)
        , ("/powerUp",      snapPowerUp s)
        , ("/spendMana",    snapSpendMana s)
+       , ("/addPlayerDamage", snapAddPlayerDamage s)
+       , ("/healPlayerWound", snapHealPlayerWound s)
+       , ("/healDiscardedWound", snapHealDiscardedPlayerWound s)
+
 
        , ("/takeOffered",    takeOffered s)
        , ("/refreshOffers",  snapRefreshOffers s)
@@ -86,6 +90,7 @@ main =
 
        , ("/undo",           snapUndo s)
        , ("/redo",           snapRedo s)
+
 
        -- testing
        , ("/newGame",                    newGame s)
@@ -575,5 +580,24 @@ snapMovePlayer ref =
   do a <- addrParam
      snapUpdateGameMaybe ref $ \g ->
        isOk (if addrOnMap a g then movePlayerTo a g else explore a g)
+
+
+
+snapAddPlayerDamage :: Act
+snapAddPlayerDamage ref =
+  do a <- natParam "amount"
+     p <- boolParam "poison"
+     snapUpdateGame ref $ \g -> writeLoc g thePlayer (snd . assignDamage a p)
+
+snapHealPlayerWound :: Act
+snapHealPlayerWound ref =
+  snapUpdateGameMaybe ref $ \g -> doWriteLoc g thePlayer healWound
+
+snapHealDiscardedPlayerWound :: Act
+snapHealDiscardedPlayerWound ref =
+  snapUpdateGameMaybe ref $ \g -> doWriteLoc g thePlayer healDiscardedWound
+
+
+
 
 
