@@ -25,6 +25,7 @@ import           Snap.Util.FileServe(serveDirectory, serveFile)
 import           Data.Char(toLower, isAlphaNum, isAscii)
 import           Data.ByteString(ByteString)
 import qualified Data.ByteString as BS
+import           Data.Maybe(maybeToList)
 import           Data.Text (Text)
 import           Data.Text.Encoding(decodeUtf8)
 import           Data.Text.Read(decimal)
@@ -273,6 +274,20 @@ featureHelpUrl f =
   where
   img x = Just ("img" </> "manual" </> "features" </> x <.> "png")
 
+getBuildingHelpUrls :: (Terrain, Maybe Feature) -> [FilePath]
+getBuildingHelpUrls (t,mb) =
+  case t of
+    City c -> [ img "city", img $ case c of
+                                    Red   -> "city_red"
+                                    Blue  -> "city_blue"
+                                    Green -> "city_green"
+                                    White -> "city_white" ]
+    _      -> case mb of
+                Nothing -> []
+                Just f  -> maybeToList (featureHelpUrl f)
+  where
+  img x = "img" </> "manual" </> "features" </> x <.> "png"
+
 
 enemyPowerHelpUrl :: Enemy -> [FilePath]
 enemyPowerHelpUrl Enemy { .. } =
@@ -325,6 +340,7 @@ getUnitImage =
   do unit <- unitParam "unit"
      serveFile (unitPath unit)
 
+
 snapGetMapHelpUrl :: Act
 snapGetMapHelpUrl ref =
   do a  <- addrParam
@@ -332,7 +348,8 @@ snapGetMapHelpUrl ref =
      sendJSON $
        object [ "helpUrl" .=
                   fmap Text.pack
-                     (featureHelpUrl =<< snd =<< getFeatureAt a (land g))
+                     (getBuildingHelpUrls =<<
+                       maybeToList (getFeatureAt a (land g)))
               , "enemyPowers" .=
                       nub (concatMap (map Text.pack . enemyPowerHelpUrl)
                                (getRevealedEnemiesAt a (land g)))

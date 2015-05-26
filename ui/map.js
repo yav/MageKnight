@@ -287,8 +287,7 @@ function drawHexShadow(m,x,y,dir) {
         }
       , 'Offering': function () { getInfo(function(i) { return i.offerUrls }) }
       , 'Help: building': function () {
-          getInfo(function(i) {
-                             return (i.helpUrl === null) ? [] : [i.helpUrl] }) }
+          getInfo(function(i) { return i.helpUrl }) }
       ,'Help: enemy': function () { getInfo(function(i) { return i.enemyPowers}) }
       }
 
@@ -334,7 +333,7 @@ function drawMap(map, p, lastSafe, atWar) {
     if (tile.y > maxY) maxY = tile.y
   });
 
-  var m = prepareMap(maxX,maxY,200)
+  var m = prepareMap(maxX,maxY,300)
   // div.css('height', $(window).height() - 30);
 
   var mapW = 0, mapH = 0

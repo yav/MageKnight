@@ -59,15 +59,8 @@ function redrawGame(g) {
   l.focus(g.player.location.x, g.player.location.y)
 }
 
-
-function testAll() {
-  jQuery.get('/newGame', {}, redrawGame)
-}
-
-
-
 $(document).ready(function() {
-  testAll();
+  jQuery.get('/newGame', {}, redrawGame)
 });
 </script>
 </head>
