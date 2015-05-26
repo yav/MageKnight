@@ -1,10 +1,10 @@
-function drawLand(land, p, lastSafe) {
+function drawLand(land, p, lastSafe, atWar) {
   var topDom = $('<div/>')
                .attr('id','land')
                .css('position', 'relative')
                .css('font-family', 'Almendra')
 
-  var map  = drawMap(land.map, p, lastSafe)
+  var map  = drawMap(land.map, p, lastSafe, atWar)
 
   var next = $('<div/>')
              .css('top', '0px')
@@ -156,7 +156,7 @@ function positionItems(m, items, x, y, dir, lower) {
 //
 //  XXX: Currnetly, this code assumes that we are drawing a "wedge" type map.
 //  The assumption ahs to do with drawing the "ocean" around the map's edges.
-function drawTile(m, t) {
+function drawTile(m, t, atWar) {
 
   var x      = t.x
   var y      = t.y
@@ -175,7 +175,7 @@ function drawTile(m, t) {
   img.attr('src',tileUrl(t.tile.tile.type,t.tile.tile.name))
 
   jQuery.each(t.tile.content, function(ix,c) {
-    var deco = drawTileContent(m,x,y,c.location,c.content)
+    var deco = drawTileContent(m,x,y,c.location,c.content,atWar)
     jQuery.each(deco, function(ix,d) { imgs.push(d); })
   })
 
@@ -188,7 +188,7 @@ function drawTile(m, t) {
 
 
 // Draw the various things on a hex in tile.
-function drawTileContent(m,x,y,dir,c) {
+function drawTileContent(m,x,y,dir,c,atWar) {
   var items = []
 
   if (c.ruins !== null) {
@@ -200,7 +200,7 @@ function drawTileContent(m,x,y,dir,c) {
   })
 
   jQuery.each (c.enemies, function(ix,enemy) {
-    items.push (enemyToken(m, enemy.type, enemy.name))
+    items.push(enemyToken(m, enemy.type, enemy.name))
   })
 
   positionItems(m, items, x, y, dir, false)
@@ -213,6 +213,26 @@ function drawTileContent(m,x,y,dir,c) {
   })
 
   positionItems(m, shields, x, y, dir, true)
+
+  var hasRage = false;
+  jQuery.each(atWar, function(ix,l) {
+    if (l.x === x && l.y === y && l.hex === dir) hasRage = true
+  })
+
+  if (hasRage) {
+    var poly = 'polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)'
+    var rage = $('<div/>')
+               .css('background-color', 'rgba(255,0,0,0.5)')
+               .css('position', 'absolute')
+               .css('width',  m.hexWidth + 'px')
+               .css('height', m.hexHeight + 'px')
+               .css('-webkit-clip-path', poly)
+               .css('clip-path', poly)
+               .css('position', 'absolute')
+    positionItems(m, [rage], x, y, dir, false)
+    items.push(rage)
+  }
+
 
   return items
 }
@@ -300,7 +320,7 @@ function drawHexShadow(m,x,y,dir) {
   return img
 }
 
-function drawMap(map, p, lastSafe) {
+function drawMap(map, p, lastSafe, atWar) {
 
   var div = $('<div/>')
             .css('position', 'relative')
@@ -319,7 +339,7 @@ function drawMap(map, p, lastSafe) {
 
   var mapW = 0, mapH = 0
   jQuery.each(map, function(ix,tile) {
-    var t = drawTile(m,tile)
+    var t = drawTile(m,tile, atWar)
 
     function num(x) { return parseInt(t[0].css(x), 10) }
     var w = num('left') + num('width')

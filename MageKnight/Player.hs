@@ -71,6 +71,7 @@ data Player = Player
   , hand        :: [ Deed ]
   , discardPile :: [ Deed ]
   , location    :: Addr
+  , prevLocation  :: Maybe Addr
 
   , onUnsafe    :: Maybe (Addr, Int)
     -- ^ `Nothing`, if we are currently safe.
@@ -106,7 +107,6 @@ playerLocation :: Player -> Addr
 playerLocation = location
 
 
-
 -- | A new player with the given deck.
 newPlayer :: StdGen -> Text -> [Deed] -> Player
 newPlayer g name deeds = Player
@@ -119,6 +119,7 @@ newPlayer g name deeds = Player
   , hand        = []
   , discardPile = []
   , location    = Addr { addrGlobal = (0,0), addrLocal = Center }
+  , prevLocation  = Nothing
   , onUnsafe    = Nothing
   , rng         = g1
   }

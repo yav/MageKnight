@@ -43,7 +43,7 @@ var drawOffers = newOffers()
 
 
 function redrawGame(g) {
-  var l = drawLand(g.land, g.player.name, g.player.unsafe)
+  var l = drawLand(g.land, g.player.name, g.player.unsafe, g.atWar)
 
   $('#header').empty()
               .append(drawPlayerStats(g.player, g.source, g.land.time))

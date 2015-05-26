@@ -32,6 +32,7 @@ testGame g =
        , land       = placePlayer pl l
        , player     = pl
        , playArea   = emptyPlayArea
+       , atWar      = []
        }
   where
   offers0     = setupOffers offerRNG (defaultOfferSetup 1 True)
@@ -56,6 +57,7 @@ data Game = Game
   , land        :: Land
   , player      :: Player   -- just one for now
   , playArea    :: PlayArea
+  , atWar       :: [Addr]
   }
 
 thePlayer :: MonoLoc Game Player
@@ -107,10 +109,11 @@ playCardFor a n Game { .. } =
     Nothing     -> Game { .. }
 
 
--- | Move the player 1 unit the given direction.
+-- | Move the player to the given address.
 movePlayerTo :: Addr -> Game -> Perhaps Game
 movePlayerTo a Game { .. } =
   do (p1,l1) <- MageKnight.Land.movePlayer player a land
+     let atWar = map fst (provoked l1 (playerLocation player) a)
      return Game { land = l1, player = p1, .. }
 
 addrOnMap :: Addr -> Game -> Bool
@@ -180,7 +183,9 @@ instance Export Game where
       , "land"      .= readLoc g theLand
       , "player"    .= readLoc g thePlayer
       , "playArea"  .= readLoc g thePlayArea
+      , "atWar"     .= atWar g
       ]
+
 
 --------------------------------------------------------------------------------
 

@@ -15,7 +15,7 @@ function drawPlayerStats(player, sourcemana, time) {
   var ds  = drawDeedDeck()
   var src = drawSource(sourcemana)
 
-  function td() { return $('<td/>').addClass('mayHide') }
+  function td() { return $('<td/>').addClass('mayHide').hide() }
 
   var stats = $('<table/>')
               .attr('id','playerStats')
@@ -23,7 +23,7 @@ function drawPlayerStats(player, sourcemana, time) {
               .css('background-image', bg)
               .css('border', '2px solid black')
               .css('position', 'fixed')
-              .css('left', '0')
+              .css('right', '0')
               .css('top', '0')
               .css('z-index', '11')
               .append($('<tr/>')
@@ -42,16 +42,19 @@ function drawPlayerStats(player, sourcemana, time) {
                       )
               .append($('<tr/>').append(td().append(fam)))
 
-  var vis = true
+  var vis = false
 
   img.click(function() {
     vis = !vis
     var tds = $('.mayHide')
     if (vis) {
-      tds.fadeIn()
-      stats.css('left', '0px')
+      //stats.css('left', '0px')
+      //stats.css('right', 'auto')
+      tds.show()
     } else {
-      tds.fadeOut('fast', function() { stats.css('bottom', '10px') })
+      //stats.css('left', 'auto')
+      //stats.css('right', '0px')
+      tds.hide()
     }
   })
 
@@ -286,7 +289,9 @@ function drawPlayerStats(player, sourcemana, time) {
            .css('background-repeat', 'no-repeat')
            .css('border-radius', '10px')
            .css('cursor','pointer')
-           .click(function() { jQuery.post('/drawCard', {}, redrawGame) })
+           .click(function() {
+              jQuery.post('/drawCard', {}, redrawGame)
+            })
   }
 
 

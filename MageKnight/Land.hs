@@ -38,7 +38,7 @@ import qualified MageKnight.ResourceQ as RQ
 import           MageKnight.JSON
 import           MageKnight.Perhaps
 
-import           Data.Maybe ( mapMaybe, fromMaybe )
+import           Data.Maybe ( mapMaybe, fromMaybe, maybeToList )
 import           Data.Map ( Map )
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -229,7 +229,7 @@ revealHiddenNeighbours a Land { .. } =
   shouldReveal _ _                = False
 
 
--- | Reveal information when a player enters a location.
+-- | Reveal information when a player enters a hex.
 revealHidden :: Addr -> Land -> Land
 revealHidden a l = updateAddr a upd l
   where
@@ -307,22 +307,39 @@ movePlayer p newLoc l
   p1      = playerSetLoc (isSafe (playerName p) newLoc l1) newLoc p
 
 
+
+
 -- | Compute which addresses get provoked, if we move from one location
 -- to another normally (i.e., "walking").
 provoked :: Land -> Addr -> Addr -> [(Addr,[Enemy])]
 provoked Land { .. } from to =
-    mapMaybe hasRampaging
+  maybeToList (hasWar isDangerous to) ++
+  ( mapMaybe (hasWar isRampaging)
   $ Set.toList
-  $ Set.intersection (neighboursOf from) (neighboursOf to)
+  $ Set.intersection (neighboursOf from) (neighboursOf to))
   where
   neighboursOf x = Set.fromList [ neighbour x d | d <- allDirections ]
-  hasRampaging a@Addr { .. } =
+  hasWar p a@Addr { .. } =
     do GameTile { .. }  <- Map.lookup addrGlobal theMap
-       RampagingEnemy _ <- snd (tileTerrain gameTile addrLocal)
-       hex <- Map.lookup addrLocal gameTileContent
+       guard (p (tileTerrain gameTile addrLocal))
+       hex              <- Map.lookup addrLocal gameTileContent
        let es = hexActiveEnemies hex
        guard (not (null es))
        return (a,es)
+
+  isRampaging (_,Just (RampagingEnemy _)) = True
+  isRampaging _ = False
+
+  -- XXX: Not dealing with other players
+
+  isDangerous x = case x of
+                    (City _, _)  -> True
+                    (_, Just m)  -> case m of
+                                      Keep      -> True
+                                      MageTower -> True
+                                      _         -> False
+                    (_, Nothing) -> False
+
 
 
 -- | Compute if moving onto this address will end the movement phase
@@ -353,7 +370,6 @@ setTime t Land { .. } = Land { timeOfDay = t, .. }
 -- | Is it day or night?
 getTime :: Land -> Time
 getTime Land { .. } = timeOfDay
-
 
 -- | Is this a safe location for the given player.
 isSafe :: PlayerName -> Addr -> Land -> Bool
@@ -474,5 +490,6 @@ instance Export Land where
           addBound x m
             | isValid x   = Map.insertWith (\_ old -> old) x pl m
             | otherwise   = m
+
 
 
