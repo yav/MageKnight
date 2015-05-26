@@ -7,9 +7,6 @@ function drawLand(land, p, lastSafe) {
   var map  = drawMap(land.map, p, lastSafe)
 
   var next = $('<div/>')
-         /*    .css('left', '5px')
-             .css('top', '5px')
-             .css('position', 'absolute') */
              .css('top', '0px')
              .css('left', '0px')
              .css('z-index','1')
@@ -24,7 +21,7 @@ function drawLand(land, p, lastSafe) {
     next.append(t)
   })
 
-  topDom.append([next,map.mode,map.dom])
+  topDom.append([next,map.dom])
 
   return { dom: topDom, focus: map.focus }
 
@@ -96,9 +93,6 @@ function prepareMap(pMaxX, pMaxY, pTileWidth) {
          , maxY         : maxY
          , x_off        : x_off
          , y_off        : y_off
-
-         , mapModes     : [ 'Move', 'Help' ]
-         , mapMode      : 0   // mutable
          }
 }
 
@@ -241,68 +235,68 @@ function drawHexShadow(m,x,y,dir) {
 
   img.click(function() {
 
-    switch(m.mapMode) {
-
-      // Move player
-      case 0:
-        jQuery.post('/move',  { tile_x: x, tile_y: y, hex: dir }, redrawGame)
-        break
-
-      // Ask for help about a location
-      case 1:
+    function getInfo(f) {
         jQuery.post('/mapHelpUrl',  { tile_x: x, tile_y: y, hex: dir },
           function(info) {
-            if (info.helpUrl === null) return
 
-            var dom = $('<img/>')
-                      .attr('src', info.helpUrl)
-                      .css('position', 'absolute')
-                      .css('left',    '1em')
-                      .css('bottom',  '30%')
-                      .css('z-index', '10')
-            dom.click(function () { dom.remove() })
-            topDom.append(dom)
+            var help = $('<div/>')
+                       .css('position', 'absolute')
+                       .css('left',    l.left + m.hexWidth + 'px')
+                       .css('top',     l.top + 'px')
+                       .css('z-index', '10')
+
+            help.click(function () { help.remove() })
+
+            var add = false
+
+            jQuery.each(f(info), function(ix,url) {
+              add = true
+              help.append( $('<img/>')
+                           .attr('src', url) )
+            })
+
+            if (add) topDom.append(help)
           })
-        return
+    }
 
-      // Render a menu for what to do
-      default:
-        jQuery.post('/click',  { tile_x: x, tile_y: y, hex: dir },
-          function(r) {
-            switch (r.tag) {
-              case 'menu':
-                var menu = $('<div/>')
-                           .css('background-color', 'white')
-                           .css('border', '2px solid black')
-                           .css('position', 'absolute')
-                           .css('z-index', '5')
-                           .css('left', l.left)
-                           .css('top', l.top)
+    var menuOpts =
+      { '(hide)': function() {}
 
-                jQuery.each(r.items, function(ix,lab) {
-                  var item = $('<div/>')
-                             .text(lab)
-                             .css('padding', '0.5em')
-                  item.hover( function () { item.css('background-color', '#ccc') }
-                            , function () { item.css('background-color', '#fff') }
-                            )
-
-                       .click(function() {
-                               console.log('I choose ' + ix)
-                               menu.remove()
-                             })
-                  menu.append(item)
-                })
-                img.parent().append(menu)
-                break
-             }
-        })
+      , 'Move / Explore': function() {
+          jQuery.post('/move',  { tile_x: x, tile_y: y, hex: dir }, redrawGame)
+        }
+      , 'Offering': function () { getInfo(function(i) { return i.offerUrls }) }
+      , 'Help: building': function () {
+          getInfo(function(i) {
+                             return (i.helpUrl === null) ? [] : [i.helpUrl] }) }
+      ,'Help: enemy': function () { getInfo(function(i) { return i.enemyPowers}) }
       }
+
+      var menu = $('<div/>')
+                 .css('background-color', 'white')
+                 .css('border', '2px solid black')
+                 .css('position', 'absolute')
+                 .css('z-index', '5')
+                 .css('left', l.left)
+                 .css('top', l.top)
+
+      jQuery.each(menuOpts, function(lab,f) {
+        var item = $('<div/>')
+                   .text(lab)
+                   .css('padding', '0.5em')
+        item.hover( function () { item.css('background-color', '#ccc') }
+                  , function () { item.css('background-color', '#fff') }
+                  )
+
+             .click(function () { f(); menu.remove() })
+        menu.append(item)
+      })
+      img.parent().append(menu)
+
   })
   .hover( function() { img.css('background-color', 'rgba(255,255,255,0.5)') }
         , function() { img.css('background-color', 'rgba(255,255,255,0)') }
         )
-
   return img
 }
 
@@ -349,21 +343,8 @@ function drawMap(map, p, lastSafe) {
     div.append(deco);
   }
 
-  var mode = $('<div/>')
-             .css('display', 'inline-block')
-             .css('color', 'white')
-             .css('cursor', 'pointer')
-             .text(m.mapModes[m.mapMode])
-
-  mode.click(function() {
-    console.log('click')
-    m.mapMode = (m.mapMode + 1) % m.mapModes.length
-    mode.text(m.mapModes[m.mapMode])
-  })
-
   return { dom: div
          , focus: function(x,y) { focusMap(m,div,x,y); }
-         , mode: mode
          }
 }
 

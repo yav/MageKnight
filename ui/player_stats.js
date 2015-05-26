@@ -15,28 +15,45 @@ function drawPlayerStats(player, sourcemana, time) {
   var ds  = drawDeedDeck()
   var src = drawSource(sourcemana)
 
+  function td() { return $('<td/>').addClass('mayHide') }
+
   var stats = $('<table/>')
               .attr('id','playerStats')
               .css('font-family', 'Almendra')
-              // .css('background-color', '#303')
               .css('background-image', bg)
               .css('border', '2px solid black')
+              .css('position', 'fixed')
+              .css('left', '0')
+              .css('top', '0')
+              .css('z-index', '11')
               .append($('<tr/>')
                       .append($('<td/>').attr('rowspan','2').append(img))
-                      .append($('<td/>').attr('rowspan','2').append(l))
-                      .append($('<td/>').append(rep))
-                      .append($('<td/>')
+                      .append(td().attr('rowspan','2').append(l))
+                      .append(td().append(rep))
+                      .append(td()
                               .attr('rowspan','2')
                               .css('background-color', 'rgba(0,0,0,0.3)')
                               .append(cs))
-                      .append($('<td/>')
+                      .append(td()
                               .attr('rowspan','2')
                               .css('background-color', 'rgba(0,0,0,0.3)')
                               .append(src))
-                      .append($('<td/>').attr('rowspan','2').append(ds))
+                      .append(td().attr('rowspan','2').append(ds))
                       )
-              .append($('<tr/>').append($('<td/>').append(fam)))
+              .append($('<tr/>').append(td().append(fam)))
 
+  var vis = true
+
+  img.click(function() {
+    vis = !vis
+    var tds = $('.mayHide')
+    if (vis) {
+      tds.fadeIn()
+      stats.css('left', '0px')
+    } else {
+      tds.fadeOut('fast', function() { stats.css('bottom', '10px') })
+    }
+  })
 
   return stats
 

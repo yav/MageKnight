@@ -20,15 +20,11 @@ body {
 
 .column {
   width: 50%;
-  height: 90%;
-  overflow-x: auto;
-  overflow-y: auto;
+  height: 100%;
+  overflow: auto;
+  position: relative;
 }
 
-.header {
-  height: 10%;
-  overflow-y: auto;
-}
 </style>
 <script src="jquery.js"></script>
 <script src="map.js"></script>
@@ -49,15 +45,14 @@ var drawOffers = newOffers()
 function redrawGame(g) {
   var l = drawLand(g.land, g.player.name, g.player.unsafe)
 
-  $('#top').empty()
-           .append(drawPlayerStats(g.player, g.source, g.land.time))
-           .append(drawPlayArea(g.playArea))
-
+  $('#header').empty()
+              .append(drawPlayerStats(g.player, g.source, g.land.time))
   $('#left').empty()
             .append(l.dom)
             .append(drawOffers(g.offers))
 
   $('#right').empty()
+             .append(drawPlayArea(g.playArea))
              .append(drawPlayerCards(g.player))
              .append(drawPlayerUnits(g.player))
 
@@ -77,9 +72,9 @@ $(document).ready(function() {
 </script>
 </head>
 <body
-><div id="top"   class="header"></div
-><div id="left"  class="column" style="float: left"></div
-><div id="right" class="column" style="float: right"></div
+><div id="header"  style="height: 0"></div
+><div id="left"    class="column" style="float: left"></div
+><div id="right"   class="column" style="float: right"></div
 ></body
 ></html>
 
