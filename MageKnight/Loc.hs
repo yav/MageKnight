@@ -11,6 +11,9 @@ loc get set = Loc upd
   where upd f y = fmap (set y) (f (get y))
 
 
+swapWrite :: (x -> loc -> fun -> y) -> loc -> fun -> x -> y
+swapWrite w loc fun x = w x loc fun
+
 readLoc :: x -> Loc x y a b -> a
 readLoc x (Loc f) = y
   where K y = f K x

@@ -39,8 +39,8 @@ module MageKnight.Player
 
   -- * Damage
   , assignDamage
+  , WoundLocation(..)
   , healWound
-  , healDiscardedWound
 
   -- * Position
   , playerLocation
@@ -240,17 +240,22 @@ assignDamage d poison p =
   woundNum      = div (max 0 d + armor - 1) armor
   poisonDamage  = if poison then woundNum else 0
 
--- | Remove a wound from the hand.
-healWound :: Player -> Maybe Player
-healWound Player { .. } =
-  do cs <- removeWound hand
-     return Player { hand = cs, .. }
 
--- | Remove a wound from the discard pile
-healDiscardedWound :: Player -> Maybe Player
-healDiscardedWound Player { .. } =
-  do cs <- removeWound discardPile
-     return Player { discardPile = cs, .. }
+data WoundLocation = WoundInHand | WoundInDiscardPile
+
+-- | Remove a wound from the hand.
+healWound :: WoundLocation -> Player -> Maybe Player
+healWound which Player { .. } =
+  case which of
+
+    WoundInHand ->
+      do cs <- removeWound hand
+         return Player { hand = cs, .. }
+
+    WoundInDiscardPile ->
+      do cs <- removeWound discardPile
+         return Player { discardPile = cs, .. }
+
 
 -- | Remove one wound, if possible.
 removeWound :: [Deed] -> Maybe [Deed]

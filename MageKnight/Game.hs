@@ -75,7 +75,45 @@ theLand = loc land (\g a -> g { land = a })
 thePlayArea :: MonoLoc Game PlayArea
 thePlayArea = loc playArea (\g a -> g { playArea = a })
 
+--------------------------------------------------------------------------------
 
+
+endOfTurn magiGalgeOracle =
+  -- XXX
+  gainBenefits .
+  cleanupPlayArea .
+  swapWrite writeLoc thePlayer (snd . backToSafety) .
+  swapWrite writeLoc theSource refillSource
+
+  where
+  cleanupPlayArea Game { playArea = PlayArea { .. }, .. } =
+    Game { playArea = emptyPlayArea
+         , player   = foldr newDiscardedDeed player
+                    $ discardedCards ++ concatMap activeDeeds activeCards
+         , ..
+         }
+
+  gainBenefits Game { .. } =
+    fromMaybe Game { .. } $
+    do (_, mbFeature) <- getFeatureAt (playerLocation player) land
+       feature <- mbFeature
+       case feature of
+
+         MagicalGlade ->
+          do which <- magiGalgeOracle
+             p1    <- healWound which player
+             return Game { player = p1, .. }
+
+         Mine c ->
+          do p1 <- addCrystal c player
+             return Game { player = p1, .. }
+
+         _ -> Nothing
+
+
+
+
+--------------------------------------------------------------------------------
 useCrystal :: BasicMana -> Game -> Game
 useCrystal m Game { .. } =
   case removeCrystal m player of
@@ -200,6 +238,12 @@ data ActiveCard   = SidewaysCard ActionType Deed
                   | NormalCard Bool {- powered up? -} Deed
 
 data ActionType   = Movement | Influence | Block | Attack
+
+activeDeeds :: ActiveCard -> [Deed]
+activeDeeds a =
+  case a of
+    SidewaysCard _ d -> [d]
+    NormalCard _ d   -> [d]
 
 
 emptyPlayArea :: PlayArea

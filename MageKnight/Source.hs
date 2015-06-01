@@ -49,7 +49,7 @@ refillSource Source { .. } =
   currentDice = bagUnion sourceFixed sourceMana
   (ds, rng)   = rollDice (sourceSize - bagSize currentDice) sourceRNG
 
--- | Setup a whole new source.  Used at the end of a turn.
+-- | Setup a whole new source.  Used at the end of a round.
 -- Assumes that stolen mana has been returned.
 renewSource :: Source -> Source
 renewSource Source { .. } = newSource sourceRNG sourceSize

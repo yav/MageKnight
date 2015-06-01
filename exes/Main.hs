@@ -73,7 +73,6 @@ main =
        , ("/spendMana",    snapSpendMana s)
        , ("/addPlayerDamage", snapAddPlayerDamage s)
        , ("/healPlayerWound", snapHealPlayerWound s)
-       , ("/healDiscardedWound", snapHealDiscardedPlayerWound s)
 
 
        , ("/takeOffered",    takeOffered s)
@@ -591,12 +590,7 @@ snapAddPlayerDamage ref =
 
 snapHealPlayerWound :: Act
 snapHealPlayerWound ref =
-  snapUpdateGameMaybe ref $ \g -> doWriteLoc g thePlayer healWound
-
-snapHealDiscardedPlayerWound :: Act
-snapHealDiscardedPlayerWound ref =
-  snapUpdateGameMaybe ref $ \g -> doWriteLoc g thePlayer healDiscardedWound
-
+  snapUpdateGameMaybe ref $ \g -> doWriteLoc g thePlayer (healWound WoundInHand)
 
 
 
