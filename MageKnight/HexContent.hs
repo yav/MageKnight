@@ -20,7 +20,9 @@ module MageKnight.HexContent
     -- * Shields
   , hexAddShield
   , hexRemoveShield
+  , hexPlayerShields
   , hexHasShield
+  , hexShieldLeader
 
     -- * Ruins
   , hexWithRuins
@@ -39,8 +41,9 @@ import           MageKnight.ResourceQ (ResourceQ)
 import qualified MageKnight.ResourceQ as RQ
 import           MageKnight.JSON
 
-import           Data.Maybe ( fromMaybe )
-import           Data.List ( delete )
+import           Data.Maybe ( fromMaybe, listToMaybe )
+import           Data.List ( delete, sortBy, groupBy, find )
+import           Data.Function ( on )
 import           Data.Set ( Set )
 import qualified Data.Set as Set
 import qualified Data.Map as Map
@@ -49,7 +52,10 @@ import qualified Data.Text as Text
 
 -- | The contents of a single hex cell.
 data HexContent = HexContent
-  { hexShields  :: [ PlayerName ] -- in reversed order
+  { hexShields  :: [ PlayerName ]
+    -- ^ In reversed order.  The order is used to break ties when
+    -- computing city leaders.
+
   , hexEnemies  :: Bag (Visibility, Enemy)
   , hexRuins    :: Maybe (Visibility, Ruins)
   , hexPlayers  :: Set Player
@@ -74,11 +80,28 @@ hexRemoveShield :: PlayerName -> HexContent -> HexContent
 hexRemoveShield s HexContent { .. } =
   HexContent { hexShields = delete s hexShields, .. }
 
--- | Does the player have a shield.
+-- | How many shields does a player have on this hex.
+hexPlayerShields :: PlayerName -> HexContent -> Int
+hexPlayerShields s HexContent { .. } = length (filter (s ==) hexShields)
+
+-- | Does the player have a shield on this hex.
 hexHasShield :: PlayerName -> HexContent -> Bool
-hexHasShield s HexContent { .. } = s `elem` hexShields
+hexHasShield s h = hexPlayerShields s h > 0
 
+-- | Compute which player, if any, has the most shields on a tile.
+-- The ties are won by the player who placed a shield first.
+hexShieldLeader :: HexContent -> Maybe PlayerName
+hexShieldLeader HexContent { .. } =
+  do most <- listToMaybe
+           $ groupBy ((==) `on` snd)
+           $ sortBy moreFirst
+           $ bagToListGrouped
+           $ bagFromList hexShields
 
+     find (`elem` map fst most) (reverse hexShields)
+
+  where
+  moreFirst (_,m) (_,n) = compare n m
 
 --------------------------------------------------------------------------------
 

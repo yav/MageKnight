@@ -1,0 +1,131 @@
+{-# LANGUAGE Safe, OverloadedStrings, RecordWildCards #-}
+-- | An active game tile.
+module MageKnight.GameTile
+  ( GameTile
+  , gameTilePlaceHolder
+  , emptyGameTile
+  , HexInfo(..)
+  , gameTileInfo
+  , gameTileUpdateAt
+  , gameTileSearch
+  , gameTileIsSafe
+  ) where
+
+import MageKnight.Terrain
+import MageKnight.HexContent
+import MageKnight.Player (PlayerName)
+import MageKnight.JSON
+
+import           Data.Map ( Map )
+import qualified Data.Map as Map
+
+
+-- | An active game tile.  Keeps track of what's on each hex.
+data GameTile = GameTile
+  { gameTile        :: Tile
+  , gameTileContent :: Map HexAddr HexContent
+    -- ^ A missing entry, and `emptyHexContent` should be equivalent.
+  }
+
+-- | A place-holder tile.  This is used to indicate where we can explore next.
+gameTilePlaceHolder :: TileType -> GameTile
+gameTilePlaceHolder t = GameTile { gameTileContent = Map.empty
+                                 , gameTile        = placeHolderTile t
+                                 }
+
+emptyGameTile :: Tile -> GameTile
+emptyGameTile gameTile = GameTile { gameTileContent = Map.empty, .. }
+
+
+-- | Information about a single hex on an active tile.
+data HexInfo = HexInfo
+  { hexTerrain  :: Terrain        -- ^ Terrain of the tile
+  , hexFeature  :: Maybe Feature  -- ^ An optional static "feature" (e.g., keep)
+  , hexContent  :: HexContent     -- ^ Dynamic information
+  }
+
+-- | Information about the content of a specific tile.
+gameTileInfo :: HexAddr -> GameTile -> HexInfo
+gameTileInfo a GameTile { .. } =
+  HexInfo { hexContent = Map.findWithDefault hexEmpty a gameTileContent, .. }
+  where
+  (hexTerrain, hexFeature) = tileTerrain gameTile a
+
+-- | Update the content of a hex.
+gameTileUpdateAt :: HexAddr -> (HexInfo -> HexContent) -> GameTile -> GameTile
+gameTileUpdateAt a f gt =
+  gt { gameTileContent = Map.insert a (f (gameTileInfo a gt))
+                                      (gameTileContent gt) }
+
+-- | Find addresses on the tile satisfying a predicate.
+gameTileSearch :: (HexInfo -> Bool) -> GameTile -> [ HexAddr ]
+gameTileSearch p GameTile { .. } =
+  [ a | (a, hexContent) <- Map.toList gameTileContent
+      , let (hexTerrain, hexFeature) = tileTerrain gameTile a
+      , p HexInfo { .. }
+      ]
+
+
+-- | Is this a safe location for the given player.
+gameTileIsSafe :: GameTile -> HexAddr -> PlayerName -> Bool
+gameTileIsSafe gt loc p =
+  case hexTerrain of
+    City _    -> noEnemies
+    Lake      -> False
+    Mountain  -> False
+    Ocean     -> False
+    _ -> case hexFeature of
+           Nothing -> True
+           Just f  -> not (hexHasPlayers hexContent) &&
+             (case f of
+                Keep             -> hexHasShield p hexContent
+                MageTower        -> noEnemies
+                RampagingEnemy _ -> noEnemies
+                _                -> True)
+  where
+  HexInfo { .. } = gameTileInfo loc gt
+  noEnemies      = not (hexHasEnemies hexContent)
+
+-- | Would (normal) moving on this tile end the movement phase?
+-- XXX: does not aacount for provoking
+gameTileEndsMovement :: GameTile -> HexAddr -> PlayerName -> Bool
+gameTileEndsMovement gt loc p =
+  case hexTerrain of
+    City _ -> enemies
+    _ -> case hexFeature of
+           Just MageTower          -> enemies
+           Just Keep               -> enemies || not (hexHasShield p hexContent)
+           Just (RampagingEnemy _) -> enemies
+           _                       -> False
+
+  where HexInfo { .. } = gameTileInfo loc gt
+        enemies        = hexHasEnemies hexContent
+
+-- | Can we walk onto this hex at all?
+-- XXX: Not quite right;
+--      during normal walking we can't go into mountains
+--      using special effects we can go onto rampaging enemies (e.g., flying)
+gameTileIsWalkable :: GameTile -> HexAddr -> Bool
+gameTileIsWalkable gt loc =
+  case hexTerrain of
+    Ocean -> False
+    _ -> case hexFeature of
+           Just (RampagingEnemy _) -> not (hexHasEnemies hexContent)
+           _                       -> True
+
+  where HexInfo { .. } = gameTileInfo loc gt
+
+
+
+
+--------------------------------------------------------------------------------
+
+instance Export GameTile where
+  toJS GameTile { .. } =
+    object [ "tile"    .= gameTile
+           , "content" .= map export (Map.toList gameTileContent)
+           ]
+    where
+    export (l,c) = object [ "location" .= l, "content"  .= c ]
+
+

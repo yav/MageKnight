@@ -13,8 +13,6 @@ module MageKnight.Land
   , removePlayer
   , movePlayer
   , provoked
-  , isLastMove
-  , mayWalkOnto
 
     -- * Time
   , setTime
@@ -27,6 +25,7 @@ module MageKnight.Land
 
 import           MageKnight.Terrain
 import           MageKnight.HexContent
+import           MageKnight.GameTile
 import           MageKnight.Enemies( Enemy(..), EnemyType(..)
                                    , allEnemies, allEnemyTypes )
 import           MageKnight.Player
@@ -177,16 +176,16 @@ selectTile noCheck pt Land { .. }
 -- This is returned so that we can add the appropriate monaetry tech to
 -- the offers.
 populateTile :: Tile -> Land -> (GameTile, Int, Land)
-populateTile gameTile g = (GameTile { .. }, mons, g1)
+populateTile tile g = (gt, mons, g1)
   where
-  (gameTileContent, mons, g1) = foldr setupHex (Map.empty,0,g) allHexAddrs
+  (gt , mons, g1) = foldr setupHex (emptyGameTile tile, 0, g) allHexAddrs
 
   setupHex a nothing@(c,ms,Land { .. }) =
-    let addHex h  = Map.insert a h c
+    let addHex h  = gameTileUpdateAt a (\_ -> h) c
         enemy v t = case hexWithEnemy v t enemyPool of
                       (h,p) -> (addHex h, ms, Land { enemyPool = p, .. })
 
-    in case tileTerrain gameTile a of
+    in case tileTerrain tile a of
 
          (City color, _) | l : ls <- cityLevels ->
            case hexWithCity color l enemyPool of
@@ -221,7 +220,9 @@ revealHiddenNeighbours a Land { .. } =
   checkAt Addr { .. } mp = Map.adjust (gameTileUpdateAt addrLocal check)
                                       addrGlobal mp
 
-  check t f h = if shouldReveal t f then hexReveal h else h
+  check HexInfo { .. }
+    | shouldReveal hexTerrain hexFeature = hexReveal hexContent
+    | otherwise                          = hexContent
 
   shouldReveal (City _) _         = True
   shouldReveal _ (Just Keep)      = timeOfDay == Day
@@ -231,16 +232,18 @@ revealHiddenNeighbours a Land { .. } =
 
 -- | Reveal information when a player enters a hex.
 revealHidden :: Addr -> Land -> Land
-revealHidden a l = updateAddr a upd l
+revealHidden a l = updateAddr a (\h -> upd h (hexContent h)) l
   where
   during d f = if timeOfDay l == d then f else id
 
-  upd (City _) _            = hexReveal
-  upd _ (Just AncientRuins) = hexReveal
-  upd _ (Just MageTower)    = during Day hexReveal
-  upd _ (Just Keep)         = during Day hexReveal
-  upd _ _                   = id
-
+  upd HexInfo { .. } =
+    case hexTerrain of
+      City _                    -> hexReveal
+      _ -> case hexFeature of
+             Just AncientRuins -> hexReveal
+             Just MageTower    -> during Day hexReveal
+             Just Keep         -> during Day hexReveal
+             _                 -> id
 
 -- | Try to explore the given address.
 -- If successful, returns an updated land, and the number of
@@ -254,16 +257,17 @@ exploreAt loc newTilePos l =
 -- | Get the feature of a tile at the given address.
 getFeatureAt :: Addr -> Land -> Maybe (Terrain, Maybe Feature)
 getFeatureAt Addr { .. } Land { .. } =
-  do GameTile { gameTile = Tile { .. } } <- Map.lookup addrGlobal theMap
-     return (tileTerrain addrLocal)
+  do gt <- Map.lookup addrGlobal theMap
+     let HexInfo { .. } = gameTileInfo addrLocal gt
+     return (hexTerrain, hexFeature)
 
 -- | Get the revealed enemies at the given locaiton.
 getRevealedEnemiesAt :: Addr -> Land -> [Enemy]
 getRevealedEnemiesAt Addr { .. } Land { .. } =
   fromMaybe [] $
-  do GameTile { .. } <- Map.lookup addrGlobal theMap
-     hex             <- Map.lookup addrLocal gameTileContent
-     return (hexActiveEnemies hex)
+  do gt <- Map.lookup addrGlobal theMap
+     let HexInfo { .. } = gameTileInfo addrLocal gt
+     return (hexActiveEnemies hexContent)
 
 
 
@@ -275,9 +279,7 @@ initialTile noCheck addr l =
      return (l2 { theMap = Map.insert addr gt (theMap l2) }, ms)
 
 -- | Update a location on the map.
-updateAddr :: Addr ->
-              (Terrain -> Maybe Feature -> HexContent -> HexContent) ->
-              Land -> Land
+updateAddr :: Addr -> (HexInfo -> HexContent) -> Land -> Land
 updateAddr Addr { .. } f Land { .. } =
   Land { theMap = Map.adjust (gameTileUpdateAt addrLocal f) addrGlobal theMap
        , .. }
@@ -287,12 +289,12 @@ updateAddr Addr { .. } f Land { .. } =
 placePlayer :: Player -> Land -> Land
 placePlayer p = revealHiddenNeighbours loc
               . revealHidden loc
-              . updateAddr loc (\_ _ -> hexAddPlayer p)
+              . updateAddr loc (hexAddPlayer p . hexContent)
   where loc = playerLocation p
 
 -- | Remove a player from the map.
 removePlayer :: Player -> Land -> Land
-removePlayer p = updateAddr (playerLocation p) (\_ _ -> hexRemovePlayer p)
+removePlayer p = updateAddr (playerLocation p) (hexRemovePlayer p . hexContent)
 
 {- | Move a player to the given address.  Most of the time the address
 will be adjacent to the player, however, this might not be the case if
@@ -309,7 +311,7 @@ movePlayer p newLoc l
 
 
 
--- | Compute which addresses get provoked, if we move from one location
+-- | Compute which addresses start wars, if we move from one location
 -- to another normally (i.e., "walking").
 provoked :: Land -> Addr -> Addr -> [(Addr,[Enemy])]
 provoked Land { .. } from to =
@@ -319,43 +321,29 @@ provoked Land { .. } from to =
   $ Set.intersection (neighboursOf from) (neighboursOf to))
   where
   neighboursOf x = Set.fromList [ neighbour x d | d <- allDirections ]
+
   hasWar p a@Addr { .. } =
-    do GameTile { .. }  <- Map.lookup addrGlobal theMap
-       guard (p (tileTerrain gameTile addrLocal))
-       hex              <- Map.lookup addrLocal gameTileContent
-       let es = hexActiveEnemies hex
+    do gt <- Map.lookup addrGlobal theMap
+       let i = gameTileInfo addrLocal gt
+       guard (p i)
+       let es = hexActiveEnemies (hexContent i)
        guard (not (null es))
        return (a,es)
 
-  isRampaging (_,Just (RampagingEnemy _)) = True
+  isRampaging HexInfo { hexFeature = Just (RampagingEnemy _) } = True
   isRampaging _ = False
 
   -- XXX: Not dealing with other players
 
-  isDangerous x = case x of
-                    (City _, _)  -> True
-                    (_, Just m)  -> case m of
-                                      Keep      -> True
-                                      MageTower -> True
-                                      _         -> False
-                    (_, Nothing) -> False
+  isDangerous HexInfo { .. } =
+    case hexTerrain of
+      City _ -> True
+      _ -> case hexFeature of
+             Just Keep      -> True
+             Just MageTower -> True
+             _              -> False
 
 
-
--- | Compute if moving onto this address will end the movement phase
--- if moving normally ("walking").
-isLastMove :: PlayerName -> Addr -> Land -> Bool
-isLastMove p Addr { .. } Land { .. } =
-  case Map.lookup addrGlobal theMap of
-    Nothing -> True   -- We fell off the map?
-    Just gt -> gameTileEndsMovement gt addrLocal p
-
--- | Can we walk into the given address?
-mayWalkOnto :: Addr -> Land -> Bool
-mayWalkOnto Addr { .. } Land { .. } =
-  case Map.lookup addrGlobal theMap of
-    Nothing -> False
-    Just gt -> gameTileIsWalkable gt addrLocal
 
 
 -- | Is this address revealed?
@@ -379,84 +367,20 @@ isSafe p Addr { .. } Land { .. } =
     Just gt -> gameTileIsSafe gt addrLocal p
 
 
+searchLand :: (HexInfo -> Bool) -> Land -> [Addr]
+searchLand p Land { .. } =
+  [ Addr { .. } | (addrGlobal, t) <- Map.toList theMap
+                , addrLocal       <- gameTileSearch p t
+  ]
 
---------------------------------------------------------------------------------
-
-data GameTile = GameTile
-  { gameTile        :: Tile
-  , gameTileContent :: Map HexAddr HexContent
-  }
-
-gameTileUpdateAt :: HexAddr ->
-                    (Terrain -> Maybe Feature -> HexContent -> HexContent) ->
-                    GameTile -> GameTile
-gameTileUpdateAt a f GameTile { .. } =
-  GameTile { gameTileContent =
-               case Map.updateLookupWithKey upd a gameTileContent of
-                 (Nothing, _)  -> Map.insert a (g hexEmpty) gameTileContent
-                 (Just _, gtc) -> gtc
-           , .. }
-    where g = case tileTerrain gameTile a of
-                (x,y) -> f x y
-
-          upd _ h = Just (g h)
-
--- | Is this a safe location for the given player.
-gameTileIsSafe :: GameTile -> HexAddr -> PlayerName -> Bool
-gameTileIsSafe GameTile { .. } loc p =
-  case tileTerrain gameTile loc of
-    (City _, _)    -> False
-    (Lake, _)      -> False
-    (Mountain, _)  -> False
-    (Ocean, _)     -> False
-    (_, Nothing)   -> True
-    (_, Just f)    ->
-      case Map.lookup loc gameTileContent of
-        Nothing  -> True
-        Just hex ->
-          not (hexHasPlayers hex) &&
-          (case f of
-             Keep             -> hexHasShield p hex
-             MageTower        -> not (hexHasEnemies hex)
-             RampagingEnemy _ -> not (hexHasEnemies hex)
-             _                -> True)
-
--- | Would moving on this tile end the movement phase?
-gameTileEndsMovement :: GameTile -> HexAddr -> PlayerName -> Bool
-gameTileEndsMovement GameTile { .. } loc p =
-  case Map.lookup loc gameTileContent of
-    Nothing  -> False
-    Just hex ->
-      case tileTerrain gameTile loc of
-        (City _, _)           -> hexHasEnemies hex
-        (_, Just MageTower)   -> hexHasEnemies hex
-        (_, Just Keep)        -> hexHasEnemies hex || not (hexHasShield p hex)
-        (_, Just (RampagingEnemy _)) -> hexHasEnemies hex
-        _                     -> False
-
--- | Can we walk onto this hex at all?
-gameTileIsWalkable :: GameTile -> HexAddr -> Bool
-gameTileIsWalkable GameTile { .. } loc =
-  case tileTerrain gameTile loc of
-    (Ocean, _) -> False
-    (_, Just (RampagingEnemy _)) ->
-      case Map.lookup loc gameTileContent of
-        Just hex | hexHasEnemies hex -> False
-        _                            -> True
-    _ -> True
-
-
-
-
---------------------------------------------------------------------------------
-
-instance Export GameTile where
-  toJS GameTile { .. } =
-    object [ "tile"    .= gameTile
-           , "content" .= map export (Map.toList gameTileContent)
-           ]
-    where
-    export (l,c) = object [ "location" .= l, "content"  .= c ]
+-- | How many keeps are owned by this player.
+numberOfOwnedKeeps :: PlayerName -> Land -> Int
+numberOfOwnedKeeps p = length . searchLand hasKeep
+  where
+  hasKeep h =
+    case hexFeature h of
+      Just Keep -> hexHasShield p (hexContent h)
+      _         -> False
 
 instance Export Land where
   toJS Land { .. } =
@@ -471,13 +395,9 @@ instance Export Land where
     mbPlace = case (unexploredTiles, backupTiles) of
                ([],[]) -> Nothing
                (Tile { .. } : _, _) ->
-                  Just (placeHolder tileType, valid tileType False)
+                  Just (gameTilePlaceHolder tileType, valid tileType False)
                (_, Tile { .. } : _) ->
-                  Just (placeHolder tileType, valid tileType True)
-
-    placeHolder t = GameTile { gameTileContent = Map.empty
-                             , gameTile        = placeHolderTile t
-                             }
+                  Just (gameTilePlaceHolder tileType, valid tileType True)
 
     valid = validPlacement mapShape (`Map.member` theMap)
 

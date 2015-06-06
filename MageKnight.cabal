@@ -27,6 +27,7 @@ library
     MageKnight.Ruins,
 
     MageKnight.Land,
+    MageKnight.GameTile,
     MageKnight.HexContent,
     MageKnight.Terrain,
 
