@@ -73,6 +73,7 @@ executable MageKnight
     text,
     filepath,
     bytestring,
+    containers,
     snap-core,
     snap-server,
     transformers,

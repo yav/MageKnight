@@ -128,7 +128,7 @@ successfulAttack attackTypes enemies =
 successfulBlock :: Bag Element -> ActiveEnemy -> Bool
 successfulBlock blocks enemy =
   case enemyAttack (enemyStats enemy) of
-    AttcaksWith ty amt -> sum (div (sum inefficient) 2 : efficient) >= attack
+    AttacksWith ty amt -> sum (div (sum inefficient) 2 : efficient) >= attack
       where
       attack
         | enemyHasAbility Swift enemy = 2 * amt
