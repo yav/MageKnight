@@ -22,7 +22,7 @@ module MageKnight.HexContent
   , hexRemoveShield
   , hexPlayerShields
   , hexHasShield
-  , hexShieldLeader
+  , hexOwners
 
     -- * Ruins
   , hexWithRuins
@@ -41,8 +41,8 @@ import           MageKnight.ResourceQ (ResourceQ)
 import qualified MageKnight.ResourceQ as RQ
 import           MageKnight.JSON
 
-import           Data.Maybe ( fromMaybe, listToMaybe )
-import           Data.List ( delete, sortBy, groupBy, find )
+import           Data.Maybe ( fromMaybe )
+import           Data.List ( delete, sortBy, groupBy, nub )
 import           Data.Function ( on )
 import           Data.Set ( Set )
 import qualified Data.Set as Set
@@ -88,20 +88,34 @@ hexPlayerShields s HexContent { .. } = length (filter (s ==) hexShields)
 hexHasShield :: PlayerName -> HexContent -> Bool
 hexHasShield s h = hexPlayerShields s h > 0
 
--- | Compute which player, if any, has the most shields on a tile.
--- The ties are won by the player who placed a shield first.
-hexShieldLeader :: HexContent -> Maybe PlayerName
-hexShieldLeader HexContent { .. } =
-  do most <- listToMaybe
-           $ groupBy ((==) `on` snd)
-           $ sortBy moreFirst
-           $ bagToListGrouped
-           $ bagFromList hexShields
+{- | Find players that have shields on this hex.
+If there are still monsters present, then we return no owners.
+If there are multiple owners, the first player in the list
+we be the one with most shields, or in the case of a draw
+whoever got a shielf first (i.e., the city leader of a city). -}
+hexOwners :: HexContent -> [PlayerName]
+hexOwners HexContent { .. }
+  | bagIsEmpty hexEnemies =
+    case hexShields of
+      [s] -> [s]    -- the common case
 
-     find (`elem` map fst most) (reverse hexShields)
+      -- For cities, and also Maze/Labyrint from expansion, there may be
+      -- multiple shields. We arrange these so that the "city" leader
+      -- is first in the list.
+      _ -> concat
+         $ map (reorder . map fst)  -- 
+         $ groupBy ((==) `on` snd)  -- group by same number of shields
+         $ sortBy moreFirst         -- sort players, most shields first
+         $ bagToListGrouped         -- count shields per player
+         $ bagFromList hexShields
+
+  | otherwise = []
 
   where
+  player
+
   moreFirst (_,m) (_,n) = compare n m
+  reorder ps            = filter (`elem` ps) (nub (reverse hexShields))
 
 --------------------------------------------------------------------------------
 

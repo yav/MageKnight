@@ -58,6 +58,9 @@ bagLookup r (Bag m) = Map.findWithDefault 0 r m
 bagToListGrouped :: Bag a -> [(a,Int)]
 bagToListGrouped (Bag m) = Map.toList m
 
+bagToMap :: Bag a -> Map a Int
+bagToMap (Bag m) = m
+
 bagToList :: Bag a -> [a]
 bagToList = flatGrouped . bagToListGrouped
 
