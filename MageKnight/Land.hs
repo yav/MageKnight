@@ -344,8 +344,6 @@ provoked Land { .. } from to =
              _              -> False
 
 
-
-
 -- | Is this address revealed?
 isRevealed :: Addr -> Land -> Bool
 isRevealed Addr { .. } Land { .. } = addrGlobal `Map.member` theMap
@@ -381,6 +379,33 @@ numberOfOwnedKeeps p = length . searchLand hasKeep
     case hexFeature h of
       Just Keep -> hexHasShield p (hexContent h)
       _         -> False
+
+
+-- | How many extra cards does a player get based on their location
+-- (i.e., due to conquered keeps and cities)
+locationCardBonus :: Player -> Land -> Int
+locationCardBonus p l = maximum $ map bounus
+                                $ loc : [ neighbour loc d | d <- allDirections ]
+  where
+  loc = playerLocation p
+
+  bounus Addr { .. } =
+    fromMaybe 0 $
+    do gt <- Map.lookup addrGlobal (theMap l)
+       let HexInfo { .. } = gameTileInfo addrLocal gt
+           pn             = playerName p
+       case hexTerrain of
+         City _ -> case hexOwners hexContent of
+                     q : qs | pn == q       -> Just 2
+                            | pn `elem` qs  -> Just 1
+                     _                      -> Nothing
+
+         _ -> case hexFeature of
+                Just Keep
+                  | hexHasShield pn hexContent -> Just (numberOfOwnedKeeps pn l)
+                _ -> Nothing
+
+
 
 instance Export Land where
   toJS Land { .. } =
