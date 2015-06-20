@@ -63,12 +63,14 @@ takeMana m Source { .. } =
      return Source { sourceMana = b, .. }
 
 -- | Take some mana from the source, and reduce its size.
+-- Used for mana steal.
 stealMana :: Mana -> Source -> Maybe Source
 stealMana m s =
   do Source { .. } <- takeMana m s
      guard (sourceSize > 0)
      return Source { sourceSize = sourceSize - 1, .. }
 
+-- | Increases the number of dice in the source by one.
 returnStolenMana :: Source -> Source
 returnStolenMana Source { .. } = Source { sourceSize = 1 + sourceSize, .. }
 
