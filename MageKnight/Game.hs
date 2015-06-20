@@ -17,7 +17,7 @@ import           MageKnight.Player
 import           MageKnight.DeedDecks(makeCustomDeck, arytheaDeck)
 import           MageKnight.Perhaps
 import           MageKnight.Bag
-import           MageKnight.Loc
+import           MageKnight.Attr
 
 import           Data.Text (Text)
 import           Data.Maybe(fromMaybe)
@@ -60,20 +60,20 @@ data Game = Game
   , atWar       :: [Addr]
   }
 
-thePlayer :: MonoLoc Game Player
-thePlayer = loc player (\g a -> g { player = a })
+thePlayer :: Attr (Mono Game Player)
+thePlayer = attr player (\g a -> g { player = a })
 
-theSource :: MonoLoc Game Source
-theSource = loc manaSource (\g a -> g { manaSource = a })
+theSource :: Attr (Mono Game Source)
+theSource = attr manaSource (\g a -> g { manaSource = a })
 
-theOffers :: MonoLoc Game Offers
-theOffers = loc offers (\g a -> g { offers = a })
+theOffers :: Attr (Mono Game Offers)
+theOffers = attr offers (\g a -> g { offers = a })
 
-theLand :: MonoLoc Game Land
-theLand = loc land (\g a -> g { land = a })
+theLand :: Attr (Mono Game Land)
+theLand = attr land (\g a -> g { land = a })
 
-thePlayArea :: MonoLoc Game PlayArea
-thePlayArea = loc playArea (\g a -> g { playArea = a })
+thePlayArea :: Attr (Mono Game PlayArea)
+thePlayArea = attr playArea (\g a -> g { playArea = a })
 
 --------------------------------------------------------------------------------
 
@@ -82,8 +82,8 @@ endOfTurn magiGalgeOracle =
   -- XXX
   gainBenefits .
   cleanupPlayArea .
-  swapWrite writeLoc thePlayer (snd . backToSafety) .
-  swapWrite writeLoc theSource refillSource
+  writeAttr thePlayer (snd . backToSafety) .
+  writeAttr theSource refillSource
 
   where
   cleanupPlayArea Game { playArea = PlayArea { .. }, .. } =
@@ -130,7 +130,7 @@ useDie m Game { .. } =
                  , .. }
 
 gameRefillSource :: Game -> Game
-gameRefillSource g = writeLoc g theSource refillSource
+gameRefillSource = writeAttr theSource refillSource
 
 playCard :: Int -> Game -> Game
 playCard n Game { .. } =
@@ -216,11 +216,11 @@ availableDeeds addr Game { .. } =
 instance Export Game where
   toJS g =
     object
-      [ "source"    .= readLoc g theSource
-      , "offers"    .= readLoc g theOffers
-      , "land"      .= readLoc g theLand
-      , "player"    .= readLoc g thePlayer
-      , "playArea"  .= readLoc g thePlayArea
+      [ "source"    .= readAttr theSource g
+      , "offers"    .= readAttr theOffers g
+      , "land"      .= readAttr theLand g
+      , "player"    .= readAttr thePlayer g
+      , "playArea"  .= readAttr thePlayArea g
       , "atWar"     .= atWar g
       ]
 

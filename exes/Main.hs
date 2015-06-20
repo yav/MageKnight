@@ -13,7 +13,7 @@ import MageKnight.Land(getFeatureAt, getRevealedEnemiesAt)
 import MageKnight.Enemies
 import MageKnight.Player as Player
 import MageKnight.DeedDecks(findDeed)
-import MageKnight.Loc
+import MageKnight.Attr
 import MageKnight.Perhaps
 
 import           Snap.Http.Server (quickHttpServe)
@@ -423,7 +423,7 @@ snapUpdatePlayer ref f = snapMaybeUpdatePlayer ref (Just . f)
 
 snapMaybeUpdatePlayer :: IORef SnapState -> (Player -> Maybe Player) -> Snap ()
 snapMaybeUpdatePlayer ref f = snapUpdateGameMaybe ref $
-                              \g -> doWriteLoc g thePlayer f
+                              writeAttr' thePlayer f
 
 {-
 snapClickHex :: Act
@@ -465,7 +465,7 @@ takeOffered ref =
                          return g { offers = o1, player = upd c (player g) }
 
 snapUpdateOffers :: IORef SnapState -> (Offers -> Offers) -> Snap ()
-snapUpdateOffers ref f = snapUpdateGame ref $ \g -> writeLoc g theOffers f
+snapUpdateOffers ref f = snapUpdateGame ref $ writeAttr theOffers f
 
 snapRefreshOffers :: Act
 snapRefreshOffers ref =
@@ -563,13 +563,13 @@ snapRefillSource ref = snapUpdateGame ref gameRefillSource
 snapPowerUp :: Act
 snapPowerUp ref =
   do i <- natParam "card"    -- power up this card
-     snapUpdateGame ref (\g -> writeLoc g thePlayArea (powerUpCard i))
+     snapUpdateGame ref $ writeAttr thePlayArea (powerUpCard i)
 
 
 snapSpendMana :: Act
 snapSpendMana ref =
   do c <- manaParam "color"
-     snapUpdateGame ref (\g -> writeLoc g thePlayArea (removeManaToken c))
+     snapUpdateGame ref $ writeAttr thePlayArea (removeManaToken c)
 
 
 --------------------------------------------------------------------------------
@@ -586,11 +586,11 @@ snapAddPlayerDamage :: Act
 snapAddPlayerDamage ref =
   do a <- natParam "amount"
      p <- boolParam "poison"
-     snapUpdateGame ref $ \g -> writeLoc g thePlayer (snd . assignDamage a p)
+     snapUpdateGame ref $ writeAttr thePlayer (snd . assignDamage a p)
 
 snapHealPlayerWound :: Act
 snapHealPlayerWound ref =
-  snapUpdateGameMaybe ref $ \g -> doWriteLoc g thePlayer (healWound WoundInHand)
+  snapUpdateGameMaybe ref $ writeAttr' thePlayer (healWound WoundInHand)
 
 
 
