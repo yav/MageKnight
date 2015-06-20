@@ -9,6 +9,7 @@ module MageKnight.Bag
   , bagIsEmpty, bagSize
   , bagKeys
   , bagToListGrouped, flatGrouped
+  , bagToMap
   , bagToList
   , bagFromList
   ) where
