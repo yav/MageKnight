@@ -20,7 +20,6 @@ module MageKnight.HexContent
     -- * Shields
   , hexAddShield
   , hexRemoveShield
-  , hexPlayerShields
   , hexHasShield
   , hexOwners
 
@@ -80,13 +79,9 @@ hexRemoveShield :: PlayerName -> HexContent -> HexContent
 hexRemoveShield s HexContent { .. } =
   HexContent { hexShields = delete s hexShields, .. }
 
--- | How many shields does a player have on this hex.
-hexPlayerShields :: PlayerName -> HexContent -> Int
-hexPlayerShields s HexContent { .. } = length (filter (s ==) hexShields)
-
 -- | Does the player have a shield on this hex.
 hexHasShield :: PlayerName -> HexContent -> Bool
-hexHasShield s h = hexPlayerShields s h > 0
+hexHasShield s h = s `elem` hexShields h
 
 {- | Find players that have shields on this hex.
 If there are still monsters present, then we return no owners.
@@ -112,8 +107,6 @@ hexOwners HexContent { .. }
   | otherwise = []
 
   where
-  player
-
   moreFirst (_,m) (_,n) = compare n m
   reorder ps            = filter (`elem` ps) (nub (reverse hexShields))
 
