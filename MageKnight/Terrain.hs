@@ -201,23 +201,20 @@ isOnMap sh (x,y) =
     Wedge -> x >= 0 && y >= 0
     OpenMap up down -> x >= 0 && y <= up && down <= y && (y >= 0 || -x <= y)
 
--- | Assuming the position is on the map.
-isCoastal :: MapShape -> TileAddr -> Bool
-isCoastal sh (x,y) =
-  case sh of
-    Wedge           -> x == 0 || y == 0
-    OpenMap up down -> y == up || y == down || (-x == y)
-
 validPlacement :: MapShape -> (TileAddr -> Bool) -> TileType -> Bool ->
                   TileAddr -> Bool
-validPlacement sh explored t backup pt =
+validPlacement sh explored t backup pt@(x,y) =
   isOnMap sh pt && not (explored pt) &&
   (case (t, neighboursOf pt) of
      (BasicTile, _ : _ : xs) -> backupCheck xs
      (BasicTile, [b]) | not backup -> case neighboursOf b of
                                         _ : _ : _ -> True
                                         _         -> False
-     (CoreTile, _ : _ : xs)  -> not (isCoastal sh pt) && backupCheck xs
+     (CoreTile, _ : _ : xs)  ->
+       case sh of
+          Wedge -> x /= 0 && y /= 0 && backupCheck xs
+                   -- In wedge maps, core tiles can't be on the coast.
+          _     -> backupCheck xs
      _                       -> False)
   where
   backupCheck xs  = not backup || not (null xs)

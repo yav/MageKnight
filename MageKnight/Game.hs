@@ -36,7 +36,7 @@ testGame g =
        }
   where
   offers0     = setupOffers offerRNG (defaultOfferSetup 1 True)
-  Ok (l,ms)   = setupLand landRNG (defaultLandSetup Wedge 7 2 [3,5])
+  Ok (l,ms)   = setupLand landRNG (defaultLandSetup openMap5 7 2 [3,5])
                                       { useStartTime = Day }
   (offerRNG, g1)        = split g
   (landRNG,g2)          = split g1
