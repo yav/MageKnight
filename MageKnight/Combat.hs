@@ -13,6 +13,22 @@ import           Data.Either (partitionEithers)
 import           Data.Foldable (any, foldr)
 import           Prelude hiding (any, foldr)
 
+data CombatReason =
+    AttackFortified
+  | AttackAdventure
+  | BurnMonastery
+  | AttackRampaging
+  | ProvokeRampaging
+
+-- As it happens, these are exactly the "forced" combat.
+mayAddRampagingNeighbours :: CombatReason -> Bool
+mayAddRampagingNeighbours reason =
+  case reason of
+    AttackFortified  -> True
+    ProvokeRampaging -> True
+    _                -> False
+
+
 data ActiveEnemy = ActiveEnemy
   { enemyId       :: Int    -- ^ Used to distinguish enemies during a combat
   , enemyFortLoc  :: Bool   -- ^ In a fortified location
