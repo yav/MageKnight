@@ -1,0 +1,46 @@
+<html>
+<head>
+<script src="jquery.js"></script>
+<style>
+.card {
+  width:         300px;
+  height:        375px;
+  border-radius: 10px;
+  position: relative;
+  border: 10px solid black;
+}
+
+.which {
+  background-image: url("img/cards/basic_actions/blue/cold_toughness.png");
+  background-image: url("img/cards/advanced_actions/green/regeneration.png");
+  background-image: url("img/cards/advanced_actions/red/blood_ritual.png");
+  background-image: url("img/cards/advanced_actions/white/diplomacy.png");
+  background-size: 300px 375px;
+}
+
+.block {
+  position: absolute;
+  background-color: #ffd;
+  box-shadow: 0px 0px 10px 5px #ffd;
+  border-radius: 10px;
+}
+
+.upper { width: 225px; height: 45px; top: 225px; left: 40px; }
+.lower { width: 240px; height: 50px; top: 310px; left: 30px; }
+</style>
+
+
+<script>
+$(document).ready(function () {
+  $('#c').click(function() {
+    $('#it').toggleClass('upper').toggleClass('lower')
+  })
+})
+</script>
+
+
+
+</head>
+<body><div id="c" class="which card"><div id="it" class="lower block"></div></div>
+</body>
+</html>
