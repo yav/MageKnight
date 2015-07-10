@@ -3,10 +3,10 @@
 <script src="jquery.js"></script>
 <style>
 .card {
-  width:           200px;
-  height:          250px;
+  width:           250px;
+  height:          312px;
   position:        relative;
-  background-size: 200px 250px;
+  background-size: 250px 312px;
   display:         inline-block;
   margin:          5px;
   box-shadow:      2px 2px 2px 2px #000;
@@ -14,18 +14,29 @@
 
 .block { position: absolute; cursor: pointer; }
 
-.action>.block { border-radius: 5px; background-color: rgba(255,255,223,0.8); }
-.action>.upper { width: 160px; height: 37px;  top: 145px; left: 20px; }
-.action>.lower { width: 160px; height: 37px;  top: 205px; left: 20px; }
+.action>.block { border-radius: 5px;
+                 background-color: rgba(255,255,223,0.8);
+                 width: 200px;
+                 height: 42px;
+                 left: 25px;
+               }
+.action>.upper { top: 185px; }
+.action>.lower { top: 256px; }
 
-.spell>.block { background-color: rgba(0,0,0,0.8); }
-.spell>.upper { width: 200px; height: 125px; top: 0px;   left: 0px; }
-.spell>.lower { width: 200px; height: 125px; top: 125px; left: 0px; }
+.spell>.block { background-color: rgba(0,0,0,0.8);
+              ; width: 250px; height: 156px; left: 0px;
+              }
+.spell>.upper { top: 0px; }
+.spell>.lower { top: 156px; }
 
-.artifact>.block { border-radius: 5px; }
-.artifact>.upper { width: 180px; height: 50px;  top: 135px; left: 10px;
+.artifact>.block { border-radius: 5px;
+                   width: 220px;
+                   left: 15px;
+                   height: 60px;
+                 }
+.artifact>.upper { top: 170px; height: 60px;
                  ; background-color: rgba(255,255,223,0.8); }
-.artifact>.lower { width: 180px; height: 46px;  top: 190px; left: 10px;
+.artifact>.lower { top: 240px; height: 52px;
                  ; background-color: rgba(180,160,100,0.8); }
 
 
