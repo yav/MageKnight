@@ -71,7 +71,7 @@ readAttr (Attr f) x = y
 
 -- | Modify the value associated with an object.
 writeAttr :: Attr a -> (Val a -> Val' a) -> Obj a -> Obj' a
-writeAttr l u x = undefined y
+writeAttr l u x = y
   where I y = writeAttr' l (I . u) x
 
 -- | Modify the value associated with an object, in the context of a functor.
