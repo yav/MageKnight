@@ -3,33 +3,35 @@
 <script src="jquery.js"></script>
 <style>
 .card {
-  width:           300px;
-  height:          375px;
-  border-radius:   10px;
+  width:           200px;
+  height:          250px;
   position:        relative;
-  border:          5px solid black;
-  background-size: 300px 375px;
+  background-size: 200px 250px;
   display:         inline-block;
   margin:          5px;
+  box-shadow:      2px 2px 2px 2px #000;
 }
 
-.block {
-  position:         absolute;
-  background-color: rgba(255,255,223,0.8);
-  box-shadow:       0px 0px 5px 5px rgba(255,255,223,0.7);
-  border-radius:    10px;
-}
+.block { position: absolute; cursor: pointer; }
 
-.action>   .upper { width: 225px; height: 45px;  top: 225px; left: 40px; }
-.action>   .lower { width: 240px; height: 50px;  top: 310px; left: 30px; }
-.spell>    .upper { width: 232px; height: 120px; top: 40px;  left: 48px; }
-.spell>    .lower { width: 220px; height: 110px; top: 230px; left: 55px; }
-.artifact> .upper { width: 225px; height: 45px;  top: 215px; left: 40px; }
-.artifact> .lower { width: 240px; height: 50px;  top: 290px; left: 30px; }
+.action>.block { border-radius: 5px; background-color: rgba(255,255,223,0.8); }
+.action>.upper { width: 160px; height: 37px;  top: 145px; left: 20px; }
+.action>.lower { width: 160px; height: 37px;  top: 205px; left: 20px; }
+
+.spell>.block { background-color: rgba(0,0,0,0.8); }
+.spell>.upper { width: 200px; height: 125px; top: 0px;   left: 0px; }
+.spell>.lower { width: 200px; height: 125px; top: 125px; left: 0px; }
+
+.artifact>.block { border-radius: 5px; }
+.artifact>.upper { width: 180px; height: 50px;  top: 135px; left: 10px;
+                 ; background-color: rgba(255,255,223,0.8); }
+.artifact>.lower { width: 180px; height: 46px;  top: 190px; left: 10px;
+                 ; background-color: rgba(180,160,100,0.8); }
+
 
 
 #hand {
-  background-color: rgba(0,0,0,0.5);
+  background-color: #303;
 }
 </style>
 
@@ -37,21 +39,36 @@
 <script>
 function card(ty, url) {
   var b = $('<div/>').addClass('lower block')
+  b.click(function() { b.toggleClass('lower').toggleClass('upper') })
+
   return $('<div/>')
          .addClass(ty)
          .addClass('card')
-         .css('background-image', 'url("' + url + '")')
+         .css('background-image', 'url("img/cards/' + url + '.png")')
          .append(b)
-         .click(function() { b.toggleClass('lower').toggleClass('upper') })
 }
 
 $(document).ready(function () {
   $('#hand')
-  .append(card('action',   'img/cards/advanced_actions/white/diplomacy.png'))
-  .append(card('action',   'img/cards/basic_actions/green/march.png'))
-  .append(card('spell',    'img/cards/spells/red/demolish.png'))
-  .append(card('spell',    'img/cards/spells/blue/mana_bolt.png'))
-  .append(card('artifact', 'img/cards/artifacts/amulet_of_darkness.png'))
+  .append($('<div/>')
+          .append(card('artifact', 'artifacts/amulet_of_darkness'))
+          .append(card('artifact', 'artifacts/banner_of_protection'))
+          .append(card('artifact', 'artifacts/emerald_ring')))
+
+  .append($('<div/>')
+          .append(card('spell', 'spells/red/burning_shield'))
+          .append(card('spell', 'spells/red/demolish'))
+          .append(card('spell', 'spells/red/fireball')))
+
+  .append($('<div/>')
+          .append(card('action', 'advanced_actions/green/ambush'))
+          .append(card('action', 'advanced_actions/green/crushing_bolt'))
+          .append(card('action', 'advanced_actions/green/in_need'))
+          .append(card('action', 'advanced_actions/green/path_finding'))
+          .append(card('action', 'advanced_actions/green/refreshing_walk'))
+          .append(card('action', 'advanced_actions/green/training')))
+
+
 })
 </script>
 
