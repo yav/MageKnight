@@ -82,7 +82,7 @@ endOfTurn magiGalgeOracle =
   -- XXX
   gainBenefits .
   cleanupPlayArea .
-  writeAttr thePlayer (snd . backToSafety) .
+  writeAttr thePlayer backToSafety .
   writeAttr theSource refillSource
 
   where

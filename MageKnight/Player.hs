@@ -217,24 +217,24 @@ playerCardLimit p
 
 
 
--- | Check if this player passed out.
--- The blloean indicates if the player passed out.
--- XXX: Question: should we only count wound received this round, or
--- also old wounds in the hand (i.e., ones that came from the deed deck)
-checkPassOut :: Player -> (Bool, Player)
-checkPassOut p@Player { .. }
-  | length wounds >= playerCardLimit p =
-      (True, Player { hand = wounds, discardPile = others ++ discardPile, .. })
-  | otherwise = (False, Player { .. })
-  where
-  (wounds,others) = partition (== wound) hand
+-- | If a player gets too many wounds in a combat, then they get knocked out.
+knockOut :: Player -> Player
+knockOut p@Player { .. } =
+  let (wounds,others) = partition (== wound) hand
+  in Player { hand = wounds, discardPile = others ++ discardPile, .. }
 
--- | Assign combat damage to a player.  Returns 'True' if the player passed out.
-assignDamage :: Int -> Bool {- ^ Poison? -} -> Player -> (Bool, Player)
+-- | Assign combat damage to a player.
+assignDamage :: Int    {- ^ Damage to assign -} ->
+                Bool   {- ^ Poison? -} ->
+                Player {- ^ Player to assign the damage to -} ->
+                (Int, Player)
+                -- ^ How many wounds we assigned and updated player
 assignDamage d poison p =
-  checkPassOut p { hand = replicate woundNum wound ++ hand p
-                 , discardPile = replicate poisonDamage wound ++ discardPile p
-                 }
+  ( woundNum
+  , p { hand        = replicate woundNum wound ++ hand p
+      , discardPile = replicate poisonDamage wound ++ discardPile p
+      }
+  )
   where
   armor         = playerArmor p
   woundNum      = div (max 0 d + armor - 1) armor
@@ -282,13 +282,11 @@ playerSetLoc safe loc Player { .. } =
 
 
 -- | Move the player back to their last safe location.
--- Return 'True' if the player passed out in the process.
-backToSafety :: Player -> (Bool, Player)
+backToSafety :: Player -> Player
 backToSafety Player { .. } =
   case onUnsafe of
-    Nothing    -> (False, Player { .. })
-    Just (a,w) ->
-      checkPassOut Player { location = a, hand = replicate w wound ++ hand, .. }
+    Nothing    -> Player { .. }
+    Just (a,w) -> Player { location = a, hand = replicate w wound ++ hand, .. }
 
 -- | Try to add a unit to the player.  Failes if there are no open slots.
 -- XXX: Active unite
