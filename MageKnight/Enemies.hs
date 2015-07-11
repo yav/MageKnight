@@ -14,12 +14,13 @@ type EnemyPool = Map EnemyType (ResourceQ Enemy)
 
 data EnemyAbility =
 
-    Fortified
-  | Resists Element -- ^ "ColdFire" does not appear as a resiatnce
-  | Swift
-  | Brutal
-  | Poisons
-  | Paralyzes
+    Fortified       -- ^ No ranged attack
+  | Resists Element -- ^ "ColdFire" does not appear as a separate resiatnce;
+                    --   instead, an enemy would have fire and ice reistance.
+  | Swift           -- ^ Needs twice the usual block
+  | Brutal          -- ^ Deals twice the usual damage
+  | Poisons         -- ^ Get twice the wounds. Hero: half in discard pile.
+  | Paralyzes       -- ^ Hero: discard non-wound cards;  Unit: destroyed.
     deriving (Show,Eq,Ord)
 
 data EnemyAttack = AttacksWith Element Int
@@ -35,7 +36,7 @@ allEnemyTypes = [ minBound .. maxBound ]
 data Enemy = Enemy
   { enemyName       :: Text
   , enemyType       :: EnemyType
-  , enemyArmor     :: Int
+  , enemyArmor      :: Int
   , enemyAttack     :: EnemyAttack
   , enemyFameGain   :: Int
   , enemyAbilities  :: Set EnemyAbility
