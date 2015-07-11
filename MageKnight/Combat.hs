@@ -13,6 +13,9 @@ import           Data.Either (partitionEithers)
 import           Data.Foldable (any, foldr)
 import           Prelude hiding (any, foldr)
 
+
+--------------------------------------------------------------------------------
+
 data CombatReason =
     AttackFortified
   | AttackAdventure
@@ -69,6 +72,7 @@ data Battle = Battle
   { activeEnemies   :: Map Int ActiveEnemy
   , defeatedEnemies :: Set ActiveEnemy
   , combatPhase     :: CombatPhase
+  , assignedWounds  :: Int
   }
 
 newBattle :: [(Enemy,Bool)] -> Battle
@@ -76,6 +80,7 @@ newBattle foes = Battle
   { activeEnemies   = Map.fromList (zipWith activate [0 .. ] foes)
   , defeatedEnemies = Set.empty
   , combatPhase     = RangedAttackPhase Set.empty
+  , assignedWounds  = 0
   }
   where
   activate n (e,inFort) = (n, ActiveEnemy { enemyId      = n
