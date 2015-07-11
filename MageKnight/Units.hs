@@ -34,13 +34,13 @@ endOfCombat :: ActiveUnit -> ActiveUnit
 endOfCombat u = u { unitAssignedDamageThisCombat = False }
 
 -- | Assign some type of damage to a unit.
-assignDamage :: Bool        {- ^ Is this poison damage? -} ->
-                Element     {- ^ Type of damage -} ->
-                Int         {- ^ Amount of damage -} ->
-                ActiveUnit  {-^ Unit to be damaged -} ->
-                Perhaps (Int, ActiveUnit)
-                -- ^ Remaining damage and updated unit.
-assignDamage poison el damage ActiveUnit { .. }
+unitAssignDamage :: Bool        {- ^ Is this poison damage? -} ->
+                    Element     {- ^ Type of damage -} ->
+                    Int         {- ^ Amount of damage -} ->
+                    ActiveUnit  {-^ Unit to be damaged -} ->
+                    Perhaps (Int, ActiveUnit)
+                    -- ^ Remaining damage and updated unit.
+unitAssignDamage poison el damage ActiveUnit { .. }
 
   | damage < 1 =
     Failed "Units may be assigned only positive amount of damage."
