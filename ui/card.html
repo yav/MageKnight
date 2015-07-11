@@ -17,33 +17,20 @@
 .normal.card>.icons   { display: none; }
 
 .icons {
-  background-color: rgba(0,0,0,0.7);
+  color: #ccc;
+  background-color: rgba(0,0,0,0.8);
   padding: 20px;
   position: absolute;
-  bottom: 0;
-  box-shadow: 1px -1px 5px 5px black;
-}
-
-.card .selected.icon {
-  background-color: rgba(255,255,255,0.5);
-  box-shadow: 1px 1px 1px 1px black;
-}
-
-.card .icon {
-  width:  30px;
-  height: 30px;
-  background-size: 30px 30px;
+  left: 10px;
+  top: 100px;
   transform: rotate(-90deg);
-  background-repeat: no-repeat;
-  margin: 10px;
-  border: 5px solid rgba(0,0,0,0);
+  width: 200px;
+  box-shadow: 2px 2px 2px 2px black;
 }
 
-.card .move.icon       { background-image: url("img/cards/icons/move.png"); }
-.card .block.icon      { background-image: url("img/cards/icons/block.png"); }
-.card .attack.icon     { background-image: url("img/cards/icons/attack.png"); }
-.card .influence.icon  { background-image: url("img/cards/icons/influence.png"); }
-
+.card .icon:hover    { color: white; background-color: rgba(255,255,255,0.1); }
+.card .selected.icon { color: white; background-color: rgba(255,255,255,0.3); }
+.card .icon          { cursor: pointer; padding: 2px; }
 
 .card>.shade           { position: absolute; cursor: pointer; }
 .action.card>.shade { border-radius: 5px;
@@ -86,8 +73,8 @@ function card(ty, url) {
   b.click(function() { b.toggleClass('lower upper'); return false; })
 
   function makeIcon(x) {
-    var me = $('<div/>').addClass('icon').addClass(x)
-    if (x === 'move') me.addClass('selected')
+    var me = $('<div/>').addClass('icon').text(x)
+    if (x === 'Move') me.addClass('selected')
     me.click(function () {
               me.siblings().removeClass('selected')
               me.addClass('selected')
@@ -97,10 +84,10 @@ function card(ty, url) {
   }
 
   var icons = $('<div/>').addClass('icons')
-  icons.append([ makeIcon('move')
-               , makeIcon('block')
-               , makeIcon('attack')
-               , makeIcon('influence')])
+  icons.append([ makeIcon('Move')
+               , makeIcon('Block')
+               , makeIcon('Attack')
+               , makeIcon('Influence')])
 
   var c = $('<div/>')
          .addClass(ty)
