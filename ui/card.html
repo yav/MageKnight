@@ -11,34 +11,67 @@
   margin:          5px;
   box-shadow:      2px 2px 2px 2px #000;
 }
+.sideways.card        { transform: rotate(90deg); }
+.sideways.card>.shade { display: none; }
 
-.block { position: absolute; cursor: pointer; }
+.normal.card>.icons   { display: none; }
 
-.action>.block { border-radius: 5px;
-                 background-color: rgba(255,255,223,0.8);
-                 width: 200px;
-                 height: 42px;
-                 left: 25px;
-               }
-.action>.upper { top: 185px; }
-.action>.lower { top: 256px; }
+.icons {
+  background-color: rgba(0,0,0,0.7);
+  padding: 20px;
+  position: absolute;
+  bottom: 0;
+  box-shadow: 1px -1px 5px 5px black;
+}
 
-.spell>.block { background-color: rgba(0,0,0,0.8);
-              ; width: 250px; height: 156px; left: 0px;
-              }
-.spell>.upper { top: 0px; }
-.spell>.lower { top: 156px; }
+.card .selected.icon {
+  background-color: rgba(255,255,255,0.5);
+  box-shadow: 1px 1px 1px 1px black;
+}
 
-.artifact>.block { border-radius: 5px;
-                   width: 220px;
-                   left: 15px;
-                   height: 60px;
-                 }
-.artifact>.upper { top: 170px; height: 60px;
-                 ; background-color: rgba(255,255,223,0.8); }
-.artifact>.lower { top: 240px; height: 52px;
-                 ; background-color: rgba(180,160,100,0.8); }
+.card .icon {
+  width:  30px;
+  height: 30px;
+  background-size: 30px 30px;
+  transform: rotate(-90deg);
+  background-repeat: no-repeat;
+  margin: 10px;
+  border: 5px solid rgba(0,0,0,0);
+}
 
+.card .move.icon       { background-image: url("img/cards/icons/move.png"); }
+.card .block.icon      { background-image: url("img/cards/icons/block.png"); }
+.card .attack.icon     { background-image: url("img/cards/icons/attack.png"); }
+.card .influence.icon  { background-image: url("img/cards/icons/influence.png"); }
+
+
+.card>.shade           { position: absolute; cursor: pointer; }
+.action.card>.shade { border-radius: 5px;
+                      background-color: rgba(255,255,223,0.8);
+                      width: 200px;
+                      height: 42px;
+                      left: 25px;
+                     }
+.action.card>.upper.shade { top: 185px; }
+.action.card>.lower.shade { top: 256px; }
+
+.spell.card>.shade { background-color: rgba(0,0,0,0.8);
+                   ; width: 250px; height: 156px; left: 0px;
+                   }
+.spell.card>.upper.shade { top: 0px; }
+.spell.card>.lower.shade { top: 156px; }
+
+.artifact.card>.shade { border-radius: 5px;
+                        width: 220px;
+                        left: 15px;
+                        height: 60px;
+                      }
+.artifact.card>.upper.shade { top: 170px; height: 60px;
+                            ; background-color: rgba(255,255,223,0.8);
+                            }
+.artifact.card>.lower.shade { top: 240px; height: 52px;
+                            ; background-color: rgba(180,160,100,0.8);
+                            }
 
 
 #hand {
@@ -49,14 +82,34 @@
 
 <script>
 function card(ty, url) {
-  var b = $('<div/>').addClass('lower block')
-  b.click(function() { b.toggleClass('lower').toggleClass('upper') })
+  var b = $('<div/>').addClass('lower shade')
+  b.click(function() { b.toggleClass('lower upper'); return false; })
 
-  return $('<div/>')
+  function makeIcon(x) {
+    var me = $('<div/>').addClass('icon').addClass(x)
+    if (x === 'move') me.addClass('selected')
+    me.click(function () {
+              me.siblings().removeClass('selected')
+              me.addClass('selected')
+              return false
+              })
+    return me
+  }
+
+  var icons = $('<div/>').addClass('icons')
+  icons.append([ makeIcon('move')
+               , makeIcon('block')
+               , makeIcon('attack')
+               , makeIcon('influence')])
+
+  var c = $('<div/>')
          .addClass(ty)
-         .addClass('card')
+         .addClass('normal card')
          .css('background-image', 'url("img/cards/' + url + '.png")')
-         .append(b)
+         .append([b,icons])
+         .click(function() { c.toggleClass('normal sideways'); return false; })
+
+  return c;
 }
 
 $(document).ready(function () {
