@@ -4,6 +4,7 @@ module MageKnight.Units where
 import MageKnight.JSON
 import MageKnight.Rule
 import MageKnight.Common
+import MageKnight.Perhaps
 
 import           Data.Text (Text)
 import           Data.Set  (Set)
@@ -11,17 +12,57 @@ import qualified Data.Set as Set
 import           Data.Maybe (listToMaybe)
 
 
--- | A unit
+-- | A unit hired by a player.
 data ActiveUnit = ActiveUnit
   { baseUnit    :: Unit
   , unitReady   :: Bool
   , unitWounds  :: Int
+  , unitAssignedDamageThisCombat :: Bool
   }
 
-
+-- | Make a new active, when freshly hired from somewhere.
 activeateUnit :: Unit -> ActiveUnit
-activeateUnit u = ActiveUnit { baseUnit = u, unitReady = True, unitWounds = 0 }
+activeateUnit u = ActiveUnit
+  { baseUnit = u
+  , unitReady = True
+  , unitWounds = 0
+  , unitAssignedDamageThisCombat = False
+  }
 
+-- | Make any updates necessary at the end of a combat.
+endOfCombat :: ActiveUnit -> ActiveUnit
+endOfCombat u = u { unitAssignedDamageThisCombat = False }
+
+-- | Assign some type of damage to a unit.
+assignDamage :: Bool        {- ^ Is this poison damage? -} ->
+                Element     {- ^ Type of damage -} ->
+                Int         {- ^ Amount of damage -} ->
+                ActiveUnit  {-^ Unit to be damaged -} ->
+                Perhaps (Int, ActiveUnit)
+                -- ^ Remaining damage and updated unit.
+assignDamage poison el damage ActiveUnit { .. }
+
+  | damage < 1 =
+    Failed "Units may be assigned only positive amount of damage."
+
+  | unitWounds > 0 =
+    Failed "The unit is already wounded."
+
+  | unitAssignedDamageThisCombat =
+    Failed "The unit was already assigned damage this combat."
+
+  | otherwise =
+    let resistant = el `Set.member` unitResists baseUnit
+        armor     = unitArmor baseUnit
+        absorbed  = if resistant then 2 * armor else armor
+        wounds    = if poison then 2 else 1
+    in Ok ( max 0 (damage - absorbed)
+          , ActiveUnit { unitAssignedDamageThisCombat = True
+                       , unitWounds = if resistant && damage <= armor
+                                         then 0
+                                         else wounds
+                       , .. }
+          )
 
 data UnitType = RegularUnit | EliteUnit
 
