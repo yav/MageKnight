@@ -28,7 +28,7 @@ blueDeeds =
   , deed "Ice Shield"
       [ [] --> replicate 3 (Block Ice) ]
       []    -- XXX: Ice shield
-
+      -- armor reduced even on unsuccesful block
 
   -- XXX: Magic Talent
   , deed "Magic Talent" [] []
