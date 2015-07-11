@@ -29,10 +29,12 @@ mayAddRampagingNeighbours reason =
     _                -> False
 
 
+
 data ActiveEnemy = ActiveEnemy
-  { enemyId       :: Int    -- ^ Used to distinguish enemies during a combat
-  , enemyFortLoc  :: Bool   -- ^ In a fortified location
-  , enemyStats    :: Enemy  -- ^ Current enemy stats
+  { enemyId         :: Int    -- ^ Used to distinguish enemies during a combat
+  , enemyFortLoc    :: Bool   -- ^ In a fortified location
+  , enemyWillAttack :: Bool   -- ^ Usually yes, but it might be disabled.
+  , enemyStats      :: Enemy  -- ^ Current enemy stats
   }
 
 enemyHasAbility :: EnemyAbility -> ActiveEnemy -> Bool
