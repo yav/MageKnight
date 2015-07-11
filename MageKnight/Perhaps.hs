@@ -3,7 +3,7 @@ module MageKnight.Perhaps where
 
 import           Data.Text (Text)
 import qualified Data.Text as Text
-import           Control.Applicative
+import qualified Control.Applicative as A
 import           Control.Monad(liftM,ap)
 
 data Perhaps a = Failed Text
@@ -12,7 +12,7 @@ data Perhaps a = Failed Text
 instance Functor Perhaps where
   fmap = liftM
 
-instance Applicative Perhaps where
+instance A.Applicative Perhaps where
   pure  = return
   (<*>) = ap
 
@@ -33,6 +33,6 @@ perhaps t mb = case mb of
 
 isOk :: Perhaps a -> Maybe a
 isOk a = case a of
-           Ok a     -> Just a
+           Ok a'    -> Just a'
            Failed _ -> Nothing
 
