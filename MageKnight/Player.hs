@@ -12,6 +12,8 @@ module MageKnight.Player
   , takeCard
   , newDeed
   , newDiscardedDeed
+  , deedsEmpty
+  , handEmpty
 
   -- * Reputation
   , playerReputation
@@ -41,11 +43,16 @@ module MageKnight.Player
   , assignDamage
   , WoundLocation(..)
   , healWound
+  , knockOut
 
   -- * Position
   , playerLocation
   , playerSetLoc
   , backToSafety
+
+  -- * Resting
+  , slowRecovery
+  , standardRest
   ) where
 
 import MageKnight.Common
@@ -53,6 +60,7 @@ import MageKnight.Deed
 import MageKnight.Units
 import MageKnight.Bag
 import MageKnight.Terrain
+import MageKnight.Perhaps
 import MageKnight.JSON
 import MageKnight.Random(StdGen, shuffle)
 
@@ -73,14 +81,15 @@ data Player = Player
   , hand        :: [ Deed ]
   , discardPile :: [ Deed ]
   , location    :: Addr
-  , prevLocation  :: Maybe Addr
+  , rng         :: StdGen
+    -- ^ To shuffle the deed deck.
 
+
+  , prevLocation :: Maybe Addr
   , onUnsafe    :: Maybe (Addr, Int)
     -- ^ `Nothing`, if we are currently safe.
     -- If unsafe, then last safe location, and how many wounds to get there.
 
-  , rng         :: StdGen
-    -- ^ To shuffle the deed deck.
   }
 
 instance Eq Player where
@@ -151,6 +160,12 @@ takeCard n Player { .. } =
     _         -> Nothing
 
 
+deedsEmpty :: Player -> Bool
+deedsEmpty Player { .. } = null deedDeck
+
+handEmpty :: Player -> Bool
+handEmpty Player { .. } = null hand
+
 
 -- | Add a crystal to the player's inventory.
 -- Does nothign if the inventory already has 3 crystals of this color.
@@ -219,7 +234,7 @@ playerCardLimit p
 
 -- | If a player gets too many wounds in a combat, then they get knocked out.
 knockOut :: Player -> Player
-knockOut p@Player { .. } =
+knockOut Player { .. } =
   let (wounds,others) = partition (== wound) hand
   in Player { hand = wounds, discardPile = others ++ discardPile, .. }
 
@@ -259,8 +274,8 @@ healWound which Player { .. } =
 
 -- | Remove one wound, if possible.
 removeWound :: [Deed] -> Maybe [Deed]
-removeWound ds =
-  case ds of
+removeWound ds0 =
+  case ds0 of
     [] -> Nothing
     d : ds | d == wound -> Just ds
            | otherwise  -> (d :) `fmap` removeWound ds
@@ -336,6 +351,42 @@ unitToggleReady = updateUnit $ \ActiveUnit { .. } ->
 -- | Add an additional slot for a unit
 addUnitSlot :: Player -> Player
 addUnitSlot Player { .. } = Player { units = units ++ [Nothing], .. }
+
+
+slowRecovery :: Player -> Perhaps Player
+slowRecovery Player { .. } =
+  case hand of
+    [] -> Failed "Requires at least one wound"
+    c : cs
+      | any (/= wound) hand -> Failed "Requires only wounds in hand"
+      | otherwise -> Ok Player { hand = cs, discardPile = c : discardPile, .. }
+
+standardRest :: Int {-^ Discard this (non-wound) card -} ->
+                Int {-^ Discards this many wounds -} ->
+                Player -> Perhaps Player
+standardRest i woundNum Player { .. } =
+  case splitAt i hand of
+    (as,b:bs)
+      | b == wound -> Failed "Discarded card cannot be a wound"
+      | otherwise ->
+        let (ws,os) = getWounds woundNum (as ++ bs)
+        in Ok Player { hand = os, discardPile = b : ws ++ discardPile, .. }
+
+    _ -> Failed "Invalid card to discrad"
+
+  where
+  getWounds _ [] = ([],[])
+  getWounds n cs | n < 1  = ([], cs)
+  getWounds n (c : cs)
+    | c /= wound = let (xs,ys) = getWounds n cs
+                   in (xs, c:ys)
+    | otherwise = let (xs,ys) = getWounds (n-1) cs
+                  in (c:xs,ys)
+
+
+
+
+
 
 instance Export Player where
   toJS Player { .. } =
