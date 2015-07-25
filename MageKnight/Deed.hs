@@ -58,6 +58,7 @@ instance Export DeedType where
                      Artifact         -> "artifact"
 
 
+-- | Make a wound.
 wound :: Deed
 wound = Deed { deedName      = "Wound"
              , deedNamePower = Nothing
@@ -66,6 +67,7 @@ wound = Deed { deedName      = "Wound"
              , deedPower     = []
              }
 
+-- | Make a basic action.
 actionDeed :: BasicMana -> DeedName -> [Rule] -> [Rule] -> Deed
 actionDeed color deedName deedBasic deedPower =
   Deed { deedNamePower = Nothing
@@ -73,6 +75,7 @@ actionDeed color deedName deedBasic deedPower =
        , ..
        }
 
+-- | Make an advanced action.
 advancedActionDeed :: BasicMana -> DeedName -> [Rule] -> [Rule] -> Deed
 advancedActionDeed color deedName deedBasic deedPower =
   Deed { deedNamePower = Nothing
@@ -81,7 +84,7 @@ advancedActionDeed color deedName deedBasic deedPower =
        }
 
 
-
+-- | Make a spell.
 spellDeed :: BasicMana -> DeedName -> DeedName -> [Rule] -> [Rule] -> Deed
 spellDeed color deedName powerName deedBasic deedPower =
   Deed { deedNamePower = Just powerName
@@ -89,6 +92,7 @@ spellDeed color deedName powerName deedBasic deedPower =
        , ..
        }
 
+-- | Make an artifact.
 artifactDeed :: DeedName -> [Rule] -> [Rule] -> Deed
 artifactDeed deedName deedBasic deedPower =
   Deed { deedNamePower = Nothing
@@ -96,9 +100,13 @@ artifactDeed deedName deedBasic deedPower =
        , ..
        }
 
+--------------------------------------------------------------------------------
 
 
 
+-- | All possible ways to play a deed.  When we define an individual deed,
+-- we don't encode rules that are common to all deeds of the given type.
+-- It is here that we add these common patterns.
 deedRules :: Deed -> [Rule]
 deedRules Deed { .. } =
   case deedType of
