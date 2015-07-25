@@ -4,7 +4,7 @@ module MageKnight.Game where
 import Debug.Trace
 
 
-import           MageKnight.Common hiding (Resource(..))
+import           MageKnight.Common
 import           MageKnight.Deed
 import           MageKnight.Offers
 import           MageKnight.Source

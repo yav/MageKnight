@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Main where
 
-import MageKnight.Common hiding (Resource(..))
+import MageKnight.Common
 import MageKnight.Offers as Offers
 import MageKnight.Deed
 import MageKnight.Units

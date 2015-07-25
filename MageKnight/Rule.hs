@@ -10,6 +10,101 @@ import           Control.Monad (foldM)
 import           Text.PrettyPrint
 
 
+data TerrainCostChange =
+    DecreaseTo Int      -- ^ Decrease to the given value
+  | DecreaseBy Int Int  -- ^ Decrease by amount, to minimum
+    deriving (Eq,Ord,Show)
+
+
+data Resource =
+
+    ManaToken Mana
+  | ManaCrystal BasicMana
+
+  | ManaSource Mana
+  | ManaDie
+
+  | Movement
+  | Influence
+  | Attack AttackType Element
+  | Block Element
+
+  | Healing
+  | ReadyUnit Int   -- ^ Ready a unit of this level
+
+  | ADeed DeedName
+
+  | Blocking EnemyName
+
+  | ChangeTerrainCost Terrain TerrainCostChange
+
+  | DrawDeed
+
+  -- End of turn
+  | ReputationLoss
+  | RegainUsedCrystals
+  | ManaSourceFixed Mana    -- Not re-rolled
+  | FameGainIfInteract        -- ^ Noble Manners
+  | ReputationGainIfInteract  -- ^ Noble Manners
+  | ThrowAway DeedName
+  | ToDeedDeckBottom DeedName
+  | ToDeedDeckTop DeedName
+    deriving (Eq,Ord,Show)
+
+
+-- Pretty Print
+
+ppResource :: Resource -> Doc
+ppResource resource =
+  case resource of
+    ManaToken m -> ppMana m <+> text "token"
+    ManaCrystal m -> ppBasicMana m <+> text "crystal"
+    RegainUsedCrystals -> text "regain unused crystals"
+    ManaSource m -> ppMana m <+> text "source"
+    ManaSourceFixed m -> ppMana m <+> text "source (fixed)"
+    ManaDie -> text "mana die"
+
+    Movement -> text "movement"
+    Influence -> text "influence"
+    Attack at el -> elDoc <+> tyDoc <+> text "attack"
+      where elDoc = ppElement el
+            tyDoc = case at of
+                      Melee  -> empty
+                      Ranged -> text "ranged"
+                      Siege  -> text "siege"
+    Block e  -> ppElement e
+    Healing  -> text "healing"
+    ADeed x  -> text (show x) <+> text "card"
+
+    -- XXX
+    ChangeTerrainCost t c -> text "change terrain cost"
+
+    Blocking x -> text "blocking" <+> text (Text.unpack x)
+
+    ReputationLoss -> text "reputation -1"
+    DrawDeed -> text "draw a card"
+    FameGainIfInteract -> text "fame +1 (if interacted)"
+    ReputationGainIfInteract -> text "reputation + 1 (if interacted)"
+    ThrowAway x -> text "throw away" <+> text (show x)
+    ToDeedDeckBottom x -> text "place" <+> text (show x) <+>
+                          text "at the bottom of the deed deck"
+
+    ToDeedDeckTop x -> text "place" <+> text (show x) <+>
+                       text "at the top of the deed deck"
+
+
+
+ppResources :: Bag Resource -> Doc
+ppResources = vcat . map ppEntry . bagToListGrouped
+  where ppEntry (r,x) = int x <+> ppResource r
+
+
+
+
+
+
+
+
 data Rule = Rule
   { ruleName  :: Text
   , ruleIn    :: Bag Resource
