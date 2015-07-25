@@ -14,7 +14,6 @@ module MageKnight.Deed
 
 import MageKnight.Common
 import MageKnight.Rule
-import MageKnight.Bag
 import MageKnight.JSON
 
 import           Data.Text ( Text )
@@ -129,34 +128,23 @@ deedRules Deed { .. } =
                     Just nm -> nm
 
   basicRules =
-    [ Rule { ruleName = deedName
-           , ruleIn   = bagAdd 1 (DeedInHand deedName) ruleIn
-           , ..
-           } | Rule { .. } <- deedBasic ]
+    [ deedName === requires [ DeedInHand deedName ] &&& r | r <- deedBasic ]
 
   actionPowerRules c =
-    [ Rule { ruleName = powerRuleName
-           , ruleIn   = bagAdd 1 (DeedInHand deedName)
-                      $ bagAdd 1 (ManaToken (BasicMana c)) ruleIn
-           , ..
-           } | Rule { .. } <- deedPower
-    ]
+    [ powerRuleName ===
+        requires [ DeedInHand deedName, ManaToken (BasicMana c) ] &&& r
+                                                            | r <- deedPower ]
 
   spellBasicRules c =
-    [ Rule { ruleIn   = bagAdd 1 (ManaToken (BasicMana c)) ruleIn, ..  }
-        | Rule { .. } <- basicRules ]
+    [ requires [ ManaToken (BasicMana c) ] &&& r | r <- basicRules ]
 
   spellPowerRules c =
-    [ onlyDuring Night Rule { ruleIn  = bagAdd 1 (ManaToken Black) ruleIn, .. }
-        | Rule { .. } <- actionPowerRules c
-    ]
+    [ timeIs Night &&& requires [ ManaToken Black ] &&& r
+                                                    | r <- actionPowerRules c ]
 
   artifactPowerRules =
-    [ Rule { ruleName = powerRuleName
-           , ruleOut  = bagAdd 1 (DeedDestroyed deedName) ruleOut
-           , ..
-           } | Rule { .. } <- deedPower
-    ]
+    [ powerRuleName ===
+        produces [DeedDestroyed deedName] &&& r | r <- deedPower ]
 
 
 

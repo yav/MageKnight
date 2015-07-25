@@ -38,7 +38,8 @@ ppRule Rule { .. } = vcat [ text (Text.unpack ruleName) <> text ":"
 -- Rule DSL --------------------------------------------------------------------
 
 infix 1 ===
-infix 2 -->
+infixr 2 &&&
+infix 3 -->
 
 -- | Define an anonymous rule.
 (-->) :: [Resource] -> [Resource] -> Rule
@@ -51,20 +52,33 @@ rIn --> rOut = Rule { ruleName = ""
 (===) :: Text -> Rule -> Rule
 name === rule = rule { ruleName = name }
 
-onlyDuring :: Time -> Rule -> Rule
-onlyDuring t Rule { .. } =
-  Rule { ruleIn  = bagAdd 1 (TimeIs t) ruleIn
-       , ruleOut = bagAdd 1 (TimeIs t) ruleOut
-       , ..
-       }
+
+-- | Join two rules together.  The resulting rule has the requirements
+-- for both rules, and the results of both rules.  The name is computed
+-- by concatenating the two rules.
+(&&&) :: Rule -> Rule -> Rule
+r1 &&& r2 = Rule { ruleIn   = bagUnion (ruleIn r1) (ruleIn r2)
+                 , ruleOut  = bagUnion (ruleOut r1) (ruleOut r2)
+                 , ruleName = Text.append (ruleName r1) (ruleName r2)
+                 }
+
+-- | Used to restrict when other rules work.
+timeIs :: Time -> Rule
+timeIs t = [TimeIs t] --> [TimeIs t]
+
+-- | Usefd to add additional resource requirement.
+requires :: [ Resource ] -> Rule
+requires rs = rs --> []
+
+produces :: [ Resource ] -> Rule
+produces rs = [] --> rs
 
 
 rules :: [ Rule ]
 rules =
 
-  [ onlyDuring Day
-  $ Text.pack ("gold -> " ++ show (ppBasicMana b)) ===
-    [ ManaToken Gold ] --> [ ManaToken (BasicMana b) ]
+  [ Text.pack ("gold -> " ++ show (ppBasicMana b)) ===
+    timeIs Day &&& [ ManaToken Gold ] --> [ ManaToken (BasicMana b) ]
   | b <- anyBasicMana
   ]
   ++
@@ -103,6 +117,7 @@ data Resource =
   | Fame
   | Healing
 
+  | Hand [DeedName]
   | DeedInHand DeedName         -- ^ A specific card
   | DeedDestroyed DeedName      -- ^ This is out of the game
   | DeedDiscarded DeedName      -- ^ This was discarded
