@@ -1,14 +1,16 @@
-{-# LANGUAGE Safe, OverloadedStrings, RecordWildCards, FlexibleInstances #-}
+{-# LANGUAGE Safe, RecordWildCards, FlexibleInstances, OverloadedStrings #-}
 module MageKnight.Rule
   ( Rule
+  , ruleOutput
   , useRule
   , ppRule
   , (===)
   , (&&&)
   , (-->)
+  , (***)
   , requires
   , produces
-  , timeIs
+  , onlyWhen
   , rules
 
   , Resource(..)
@@ -55,6 +57,7 @@ ppRule Rule { .. } = vcat [ text (Text.unpack ruleName) <> text ":"
 infix  1 ===
 infixr 2 &&&
 infix  3 -->
+infix  4 ***
 
 -- | Define an anonymous rule.
 (-->) :: (Resources take, Resources make) => take -> make -> Rule
@@ -86,13 +89,17 @@ instance Resources Resource where
 instance Resources (Int,Resource) where
   resources (n,r) = replicate n r
 
+(***) :: Int -> Resource -> (Int,Resource)
+x *** y = (x,y)
+
 instance Resources a => Resources [a] where
   resources rs = concatMap resources rs
 
 
--- | Used to restrict when other rules work.
-timeIs :: Time -> Rule
-timeIs t = [TimeIs t] --> [TimeIs t]
+-- | A rule that ensure that some resources are present.
+-- It does not modify the state.
+onlyWhen :: Resources x => x -> Rule
+onlyWhen rs = rs --> rs
 
 -- | A rule that only requires the given resource.
 requires :: Resources take => take -> Rule
@@ -102,12 +109,16 @@ requires rs = rs --> ([] :: [Resource])
 produces :: Resources make => make -> Rule
 produces rs = ([] :: [Resource]) --> rs
 
+ruleOutput :: Rule -> [(Int,Resource)]
+ruleOutput Rule { .. } = [ (n,x) | (x,n) <- bagToListGrouped ruleOut ]
+
 
 rules :: [ Rule ]
 rules =
 
   [ Text.pack ("gold -> " ++ show (ppBasicMana b)) ===
-    timeIs Day &&& ManaToken Gold --> ManaToken (BasicMana b)
+    onlyWhen (TimeIs Day) &&& ManaToken Gold --> ManaToken (BasicMana b)
+
   | b <- anyBasicMana
   ]
   ++
@@ -137,6 +148,7 @@ data Resource =
   | UsedCrystal BasicMana       -- ^ A used crystal of this type
 
   | ManaSource Mana             -- ^ Mana in the source
+  | ManaSourceFixed Mana        -- Not re-rolled
   | ManaDie                     -- ^ Access to the source
 
   | Movement
@@ -145,6 +157,8 @@ data Resource =
   | Block Element
   | Fame
   | Healing
+  | Reputation
+  | BadReputation               -- ^ Loose reputation at end of turn
 
   | DeedInHand DeedName         -- ^ A specific card
   | DeedDestroyed DeedName      -- ^ This is out of the game
@@ -154,23 +168,22 @@ data Resource =
 
   | DrawDeed
 
+  | Blocking EnemyName          -- ^ We are blovking this enemy
+
+  | IfInteracted [Resource]     -- ^ Generalize to end of turn?
+
+
 {-
   | ReadyUnit Int               -- ^ Ready a unit of this level
 
 
 
-  | Blocking EnemyName
 
   | ChangeTerrainCost Terrain TerrainCostChange
 
 
   -- End of turn
-  | ReputationLoss
   | RegainUsedCrystals
-  | ManaSourceFixed Mana    -- Not re-rolled
-  | FameGainIfInteract        -- ^ Noble Manners
-  | ReputationGainIfInteract  -- ^ Noble Manners
-  | ThrowAway DeedName
   | ToDeedDeckBottom DeedName
   | ToDeedDeckTop DeedName
   -}
@@ -186,6 +199,7 @@ ppResource resource =
     ManaCrystal m -> ppBasicMana m <+> text "crystal"
     UsedCrystal m -> text "used" <+> ppBasicMana m <+> text "crystal"
     ManaSource m  -> ppMana m <+> text "in the source"
+    ManaSourceFixed m -> ppMana m <+> text "source (fixed)"
     ManaDie       -> text "use of source"
 
     Movement      -> text "movement"
@@ -199,6 +213,8 @@ ppResource resource =
     Block e  -> ppElement e <+> text "block"
     Healing  -> text "healing"
     Fame     -> text "fame"
+    BadReputation -> text "bad reputation"
+    Reputation    -> text "reputation"
 
     DeedInHand x    -> text (show x) <+> text "card"
     DeedDestroyed x -> text (show x) <+> text "was destroyed"
@@ -208,16 +224,16 @@ ppResource resource =
 
     DrawDeed -> text "draw a card"
 
+    IfInteracted rs -> ppResources (bagFromList rs) <+> text ", if interacted"
+    Blocking x -> text "blocking" <+> text (Text.unpack x)
+
     {-
-    ManaSourceFixed m -> ppMana m <+> text "source (fixed)"
     RegainUsedCrystals -> text "regain unused crystals"
 
     -- XXX
     ChangeTerrainCost t c -> text "change terrain cost"
 
-    Blocking x -> text "blocking" <+> text (Text.unpack x)
 
-    ReputationLoss -> text "reputation -1"
     FameGainIfInteract -> text "fame +1 (if interacted)"
     ReputationGainIfInteract -> text "reputation + 1 (if interacted)"
     ThrowAway x -> text "throw away" <+> text (show x)

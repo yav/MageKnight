@@ -11,20 +11,24 @@ import MageKnight.Common
 import MageKnight.Enemies
 import MageKnight.Rule
 import MageKnight.Deed
-import MageKnight.Bag
 
-import {-# SOURCE #-} MageKnight.DeedDecks (allDeeds, actions)
+-- import {-# SOURCE #-} MageKnight.DeedDecks (allDeeds, actions)
 
 import qualified Data.Set  as Set
+
+allDeeds = undefined
+actions = undefined
 
 blueSpecial :: Deed
 blueSpecial =
   actionDeed Blue "Cold Toughness"
-    [ [] --> replicate 2 (Attack Melee Ice)
-    , [] --> replicate 3 (Block Ice)
+
+    [ produces (2 *** Attack Melee Ice)
+    , produces (3 *** Block Ice)
     ]
-    [ [ Blocking name ] -->
-        Blocking name : replicate (5 + coldToughnessBlockBonus e) (Block Ice)
+
+    [ onlyWhen (Blocking name) &&&
+      produces ((5 + coldToughnessBlockBonus e) *** Block Ice)
       | e <- allEnemies, let name = enemyName e
     ]
 
@@ -32,35 +36,37 @@ blueSpecial =
 greenSpecial :: Deed
 greenSpecial =
   actionDeed Green "Will Focus"
-    ( ( [] --> [ ManaCrystal Green ] )
-    : [ [] --> [ ManaToken (BasicMana b) ] | b <- [ Blue, White, Red ] ])
+
+    (   produces (ManaCrystal Green)
+    : [ produces (ManaToken (BasicMana b)) | b <- [ Blue, White, Red ] ])
+
     [ r | c <- actions, r <- concentrate 3 c ]
 
 
 redSpecial :: Deed
 redSpecial =
   actionDeed Red "Battle Versatility"
-    [ [] --> replicate 2 (Attack Melee Physycal)
-    , [] --> replicate 2 (Block Physycal)
-    , [] --> [ Attack Ranged Physycal ]
+
+    [ produces (2 *** Attack Melee Physycal)
+    , produces (2 *** Block Physycal)
+    , produces (1 *** Attack Ranged Physycal)
     ]
-    [ [] --> replicate 4 (Attack Melee Physycal)
-    , [] --> replicate 4 (Block Physycal)
-    , [] --> replicate 3 (Attack Melee Fire)
-    , [] --> replicate 3 (Block Fire)
-    , [] --> replicate 3 (Attack Ranged Physycal)
-    , [] --> replicate 2 (Attack Siege Physycal)
+
+    [ produces (4 *** Attack Melee Physycal)
+    , produces (4 *** Block Physycal)
+    , produces (3 *** Attack Melee Fire)
+    , produces (3 *** Block Fire)
+    , produces (3 *** Attack Ranged Physycal)
+    , produces (2 *** Attack Siege Physycal)
     ]
 
 whiteSpecial :: Deed
 whiteSpecial =
   actionDeed White "Noble Manners"
-      [ [] --> FameGainIfInteract
-             : replicate 2 Influence ]
-      [ [] --> FameGainIfInteract
-             : ReputationGainIfInteract
-             : replicate 4 Influence ]
-
+      [ produces (2 *** Influence) &&&
+        produces (IfInteracted [ Fame ]) ]
+      [ produces (4 *** Influence) &&&
+        produces (IfInteracted [ Fame, Reputation ]) ]
 
 
 deeds :: [Deed]
@@ -69,37 +75,37 @@ deeds =
   -- Blue
 
   [ actionDeed Blue "Stamina"
-      [ [] --> replicate 2 Movement ]
-      [ [] --> replicate 4 Movement ]
+      [ produces (2 *** Movement) ]
+      [ produces (4 *** Movement) ]
 
   , actionDeed Blue "Determination"
-      [ [] --> replicate 2 (Attack Melee Physycal)
-      , [] --> replicate 2 (Block Physycal)
+      [ produces (2 *** Attack Melee Physycal)
+      , produces (2 *** Block Physycal)
       ]
-      [ [] --> replicate 5 (Block Physycal) ]
+      [ produces (5 *** Block Physycal) ]
 
   , actionDeed Blue "Crystallize"
-      [ [ ManaToken (BasicMana b) ] --> [ ManaCrystal b ] | b <- anyBasicMana ]
-      [ []                          --> [ ManaCrystal b ] | b <- anyBasicMana ]
+      [ ManaToken (BasicMana b) --> ManaCrystal b | b <- anyBasicMana ]
+      [ produces (ManaCrystal b) | b <- anyBasicMana ]
 
 
 
   -- Green
 
   , actionDeed Green "Concentration"
-      [ [] --> [ ManaToken (BasicMana b) ] | b <- [ Blue, White, Red ] ]
+      [ produces (ManaToken (BasicMana b)) | b <- [ Blue, White, Red ] ]
       [ r | c <- actions, r <- concentrate 2 c ]
 
   , actionDeed Green "March"
-      [ [] --> replicate 2 Movement ]
-      [ [] --> replicate 4 Movement ]
+      [ produces (2 *** Movement) ]
+      [ produces (4 *** Movement) ]
 
   , actionDeed Green "Tranquility"
-      [ [] --> [ Healing ]
-      , [] --> [ DrawDeed ]
+      [ produces Healing
+      , produces DrawDeed
       ]
-      [ [] --> replicate 2 Healing
-      , [] --> replicate 2 DrawDeed
+      [ produces (2 *** Healing)
+      , produces (2 *** DrawDeed)
       ]
 
 
@@ -112,32 +118,31 @@ deeds =
         (concatMap (improvise 5) nonWounds)
 
   , actionDeed Red "Rage"
-    [ [] --> replicate 2 (Attack Melee Physycal)
-    , [] --> replicate 2 (Block Physycal)
+    [ produces (2 *** Attack Melee Physycal)
+    , produces (2 *** Block Physycal)
     ]
-    [ [] --> replicate 4 (Attack Melee Physycal) ]
+    [ produces (4 *** Attack Melee Physycal) ]
 
   , actionDeed Red "Threaten"
-    [ [] --> replicate 2 Influence ]
-    [ [] --> ReputationLoss : replicate 5 Influence ]
+    [ produces (2 *** Influence) ]
+    [ produces (5 *** Influence) &&& produces BadReputation ]
 
 
   -- White
 
   , actionDeed White "Mana Draw"
-      [ [] --> [ ManaDie ] ]
-      [ [ ManaSource m ] -->
-                  (ManaSourceFixed n : replicate 3 (ManaToken n))
-      | m <- anyMana, n <- filter (/= Gold) anyMana
+      [ produces ManaDie ]
+      [ produces (ManaSourceFixed n) &&&
+        ManaSource n --> 3 *** ManaToken n | n <- filter (/= Gold) anyMana
       ]
 
   , actionDeed White "Promise"
-      [ [] --> replicate 2 Influence ]
-      [ [] --> replicate 4 Influence ]
+      [ produces (2 *** Influence) ]
+      [ produces (4 *** Influence) ]
 
   , actionDeed White "Swiftness"
-      [ [] --> replicate 2 Movement ]
-      [ [] --> replicate 3 (Attack Ranged Physycal) ]
+      [ produces (2 *** Movement) ]
+      [ produces (3 *** Attack Ranged Physycal) ]
 
   ]
 
@@ -146,7 +151,7 @@ deeds =
 
 improvise :: Int -> Deed -> [ Rule ]
 improvise amt Deed { .. } =
-  [ [ ADeed deedName ] --> replicate amt act
+  [ DeedInHand deedName --> (amt, act)
   | act <- [ Movement, Influence, Attack Melee Physycal, Block Physycal]
   ]
 
@@ -154,13 +159,10 @@ concentrate :: Int -> Deed -> [ Rule ]
 concentrate amt Deed { .. }
   | deedName `elem` [ "Concentration", "Will Focus" ] = []
   | otherwise =
-    [ ADeed deedName : bagToList ruleIn -->
-      flatGrouped [ (x, if affected x then a + amt else a)
-                  | (x,a) <- bagToListGrouped ruleOut
-                  ]
-    | Rule { .. } <- deedPower
-    ]
+    [ DeedInHand deedName --> map increase (ruleOutput r) | r <- deedPower ]
   where
+  increase (n,r) = if affected r then (n + amt, r) else (n,r)
+
   affected a = case a of
                  Movement  -> True
                  Influence -> True

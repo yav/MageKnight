@@ -139,7 +139,7 @@ deedRules Deed { .. } =
     [ requires [ ManaToken (BasicMana c) ] &&& r | r <- basicRules ]
 
   spellPowerRules c =
-    [ timeIs Night &&& requires (ManaToken Black) &&& r
+    [ onlyWhen (TimeIs Night) &&& requires (ManaToken Black) &&& r
                                                     | r <- actionPowerRules c ]
 
   artifactPowerRules =
