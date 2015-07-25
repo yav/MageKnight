@@ -72,6 +72,11 @@ ppMana m =
     Gold        -> text "gold"
     Black       -> text "black"
 
+ppTime :: Time -> Doc
+ppTime t =
+  case t of
+    Day   -> text "day"
+    Night -> text "night"
 
 --------------------------------------------------------------------------------
 
