@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe, OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE Safe, OverloadedStrings, RecordWildCards, FlexibleInstances #-}
 module MageKnight.Rule
   ( Rule
   , useRule
@@ -57,10 +57,10 @@ infixr 2 &&&
 infix  3 -->
 
 -- | Define an anonymous rule.
-(-->) :: [Resource] -> [Resource] -> Rule
+(-->) :: (Resources take, Resources make) => take -> make -> Rule
 rIn --> rOut = Rule { ruleName = ""
-                    , ruleIn   = bagFromList rIn
-                    , ruleOut  = bagFromList rOut
+                    , ruleIn   = bagFromList (resources rIn)
+                    , ruleOut  = bagFromList (resources rOut)
                     }
 
 -- | Set the name for a rule.
@@ -77,34 +77,47 @@ r1 &&& r2 = Rule { ruleIn   = bagUnion (ruleIn r1) (ruleIn r2)
                  , ruleName = Text.append (ruleName r1) (ruleName r2)
                  }
 
+class Resources r where
+  resources :: r -> [Resource]
+
+instance Resources Resource where
+  resources r = [r]
+
+instance Resources (Int,Resource) where
+  resources (n,r) = replicate n r
+
+instance Resources a => Resources [a] where
+  resources rs = concatMap resources rs
+
+
 -- | Used to restrict when other rules work.
 timeIs :: Time -> Rule
 timeIs t = [TimeIs t] --> [TimeIs t]
 
 -- | A rule that only requires the given resource.
-requires :: [ Resource ] -> Rule
-requires rs = rs --> []
+requires :: Resources take => take -> Rule
+requires rs = rs --> ([] :: [Resource])
 
 -- | A rule that only produces the given resource.
-produces :: [ Resource ] -> Rule
-produces rs = [] --> rs
+produces :: Resources make => make -> Rule
+produces rs = ([] :: [Resource]) --> rs
 
 
 rules :: [ Rule ]
 rules =
 
   [ Text.pack ("gold -> " ++ show (ppBasicMana b)) ===
-    timeIs Day &&& [ ManaToken Gold ] --> [ ManaToken (BasicMana b) ]
+    timeIs Day &&& ManaToken Gold --> ManaToken (BasicMana b)
   | b <- anyBasicMana
   ]
   ++
   [ Text.pack ("take " ++ show (ppMana m) ++ " die") ===
-    [ ManaDie, ManaSource m ] --> [ ManaToken m ]
+    [ ManaDie, ManaSource m ] --> ManaToken m
   | m <- anyMana
   ]
   ++
   [ Text.pack ("use " ++ show (ppBasicMana b) ++ " crystal") ===
-    [ ManaCrystal b ] --> [ ManaToken (BasicMana b), UsedCrystal b ]
+    ManaCrystal b --> [ ManaToken (BasicMana b), UsedCrystal b ]
   | b <- anyBasicMana
   ]
 
@@ -139,6 +152,8 @@ data Resource =
 
   | TimeIs Time                 -- ^ Time of day
 
+  | DrawDeed
+
 {-
   | ReadyUnit Int               -- ^ Ready a unit of this level
 
@@ -148,7 +163,6 @@ data Resource =
 
   | ChangeTerrainCost Terrain TerrainCostChange
 
-  | DrawDeed
 
   -- End of turn
   | ReputationLoss
@@ -192,6 +206,8 @@ ppResource resource =
 
     TimeIs t        -> text "it is" <+> ppTime t
 
+    DrawDeed -> text "draw a card"
+
     {-
     ManaSourceFixed m -> ppMana m <+> text "source (fixed)"
     RegainUsedCrystals -> text "regain unused crystals"
@@ -202,7 +218,6 @@ ppResource resource =
     Blocking x -> text "blocking" <+> text (Text.unpack x)
 
     ReputationLoss -> text "reputation -1"
-    DrawDeed -> text "draw a card"
     FameGainIfInteract -> text "fame +1 (if interacted)"
     ReputationGainIfInteract -> text "reputation + 1 (if interacted)"
     ThrowAway x -> text "throw away" <+> text (show x)

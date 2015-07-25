@@ -117,10 +117,10 @@ deedRules Deed { .. } =
 
   where
   sidewaysRules =
-    [ "use for 1 movement" === [DeedInHand deedName] --> [Movement]
-    , "use for 1 influece" === [DeedInHand deedName] --> [Influence]
-    , "use for 1 attack"   === [DeedInHand deedName] --> [Attack Melee Physycal]
-    , "use for 1 block"    === [DeedInHand deedName] --> [Block Physycal]
+    [ "use for 1 movement" === DeedInHand deedName --> Movement
+    , "use for 1 influece" === DeedInHand deedName --> Influence
+    , "use for 1 attack"   === DeedInHand deedName --> Attack Melee Physycal
+    , "use for 1 block"    === DeedInHand deedName --> Block Physycal
     ]
 
   powerRuleName = case deedNamePower of
@@ -128,7 +128,7 @@ deedRules Deed { .. } =
                     Just nm -> nm
 
   basicRules =
-    [ deedName === requires [ DeedInHand deedName ] &&& r | r <- deedBasic ]
+    [ deedName === requires (DeedInHand deedName) &&& r | r <- deedBasic ]
 
   actionPowerRules c =
     [ powerRuleName ===
@@ -139,12 +139,12 @@ deedRules Deed { .. } =
     [ requires [ ManaToken (BasicMana c) ] &&& r | r <- basicRules ]
 
   spellPowerRules c =
-    [ timeIs Night &&& requires [ ManaToken Black ] &&& r
+    [ timeIs Night &&& requires (ManaToken Black) &&& r
                                                     | r <- actionPowerRules c ]
 
   artifactPowerRules =
     [ powerRuleName ===
-        produces [DeedDestroyed deedName] &&& r | r <- deedPower ]
+        produces (DeedDestroyed deedName) &&& r | r <- deedPower ]
 
 
 
