@@ -1,5 +1,20 @@
 {-# LANGUAGE Safe, OverloadedStrings, RecordWildCards #-}
-module MageKnight.Rule where
+module MageKnight.Rule
+  ( Rule
+  , useRule
+  , ppRule
+  , (===)
+  , (&&&)
+  , (-->)
+  , requires
+  , produces
+  , timeIs
+  , rules
+
+  , Resource(..)
+  , ppResource
+  , ppResources
+  ) where
 
 import MageKnight.Common
 import MageKnight.Bag
@@ -37,9 +52,9 @@ ppRule Rule { .. } = vcat [ text (Text.unpack ruleName) <> text ":"
 
 -- Rule DSL --------------------------------------------------------------------
 
-infix 1 ===
+infix  1 ===
 infixr 2 &&&
-infix 3 -->
+infix  3 -->
 
 -- | Define an anonymous rule.
 (-->) :: [Resource] -> [Resource] -> Rule
@@ -66,10 +81,11 @@ r1 &&& r2 = Rule { ruleIn   = bagUnion (ruleIn r1) (ruleIn r2)
 timeIs :: Time -> Rule
 timeIs t = [TimeIs t] --> [TimeIs t]
 
--- | Usefd to add additional resource requirement.
+-- | A rule that only requires the given resource.
 requires :: [ Resource ] -> Rule
 requires rs = rs --> []
 
+-- | A rule that only produces the given resource.
 produces :: [ Resource ] -> Rule
 produces rs = [] --> rs
 
@@ -117,7 +133,6 @@ data Resource =
   | Fame
   | Healing
 
-  | Hand [DeedName]
   | DeedInHand DeedName         -- ^ A specific card
   | DeedDestroyed DeedName      -- ^ This is out of the game
   | DeedDiscarded DeedName      -- ^ This was discarded
