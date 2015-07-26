@@ -28,7 +28,7 @@ blueSpecial =
     ]
 
     [ onlyWhen (Blocking name) &&&
-      produces ((5 + coldToughnessBlockBonus e) *** Block Ice)
+      produces (5 + coldToughnessBlockBonus e *** Block Ice)
       | e <- allEnemies, let name = enemyName e
     ]
 
@@ -151,7 +151,8 @@ deeds =
 
 improvise :: Int -> Deed -> [ Rule ]
 improvise amt Deed { .. } =
-  [ DeedInHand deedName --> (amt, act)
+  [ DeedInHand deedName --> (amt, act) &&&
+    produces (DeedDiscarded deedName)
   | act <- [ Movement, Influence, Attack Melee Physycal, Block Physycal]
   ]
 
@@ -159,7 +160,8 @@ concentrate :: Int -> Deed -> [ Rule ]
 concentrate amt Deed { .. }
   | deedName `elem` [ "Concentration", "Will Focus" ] = []
   | otherwise =
-    [ DeedInHand deedName --> map increase (ruleOutput r) | r <- deedPower ]
+    [ requires (DeedInHand deedName) &&&
+      ruleInput r --> map increase (ruleOutput r) | r <- deedPower ]
   where
   increase (n,r) = if affected r then (n + amt, r) else (n,r)
 

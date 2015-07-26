@@ -147,4 +147,3 @@ deedRules Deed { .. } =
         produces (DeedDestroyed deedName) &&& r | r <- deedPower ]
 
 
-

@@ -51,8 +51,6 @@ anyAttack :: [ AttackType ]
 anyAttack = [ Melee, Ranged, Siege ]
 
 
--- Pretty Print
-
 
 ppElement :: Element -> Doc
 ppElement el =

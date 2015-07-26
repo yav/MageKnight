@@ -2,6 +2,7 @@
 module MageKnight.Rule
   ( Rule
   , ruleOutput
+  , ruleInput
   , useRule
   , ppRule
   , (===)
@@ -14,6 +15,7 @@ module MageKnight.Rule
   , rules
 
   , Resource(..)
+  , TerrainCostChange(..)
   , ppResource
   , ppResources
   ) where
@@ -109,6 +111,10 @@ requires rs = rs --> ([] :: [Resource])
 produces :: Resources make => make -> Rule
 produces rs = ([] :: [Resource]) --> rs
 
+
+ruleInput :: Rule -> [(Int,Resource)]
+ruleInput Rule { .. } = [ (n,x) | (x,n) <- bagToListGrouped ruleIn ]
+
 ruleOutput :: Rule -> [(Int,Resource)]
 ruleOutput Rule { .. } = [ (n,x) | (x,n) <- bagToListGrouped ruleOut ]
 
@@ -170,23 +176,25 @@ data Resource =
 
   | Blocking EnemyName          -- ^ We are blovking this enemy
 
-  | IfInteracted [Resource]     -- ^ Generalize to end of turn?
-
-
-{-
-  | ReadyUnit Int               -- ^ Ready a unit of this level
-
-
-
-
+  | RegainUsedCrystals
   | ChangeTerrainCost Terrain TerrainCostChange
 
+  | IfInteracted [Resource]     -- ^ Generalize to end of turn?
 
-  -- End of turn
-  | RegainUsedCrystals
+  | IfNotResist Element [Resource]
+
+  | DecreaseArmor               -- ^ Of the enemy that's being blocked.
+
   | ToDeedDeckBottom DeedName
   | ToDeedDeckTop DeedName
-  -}
+
+  | Ambush
+  | PowerAmbush
+
+  | ReadyUnit Int               -- ^ Ready a unit of this level
+
+  | GainWound
+
     deriving (Eq,Ord,Show)
 
 
@@ -226,12 +234,12 @@ ppResource resource =
 
     IfInteracted rs -> ppResources (bagFromList rs) <+> text ", if interacted"
     Blocking x -> text "blocking" <+> text (Text.unpack x)
+    RegainUsedCrystals -> text "regain used crystals"
+    ChangeTerrainCost t c -> text "change terrain cost"
 
     {-
-    RegainUsedCrystals -> text "regain unused crystals"
 
     -- XXX
-    ChangeTerrainCost t c -> text "change terrain cost"
 
 
     FameGainIfInteract -> text "fame +1 (if interacted)"
