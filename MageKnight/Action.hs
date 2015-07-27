@@ -12,12 +12,9 @@ import MageKnight.Enemies
 import MageKnight.Rule
 import MageKnight.Deed
 
--- import {-# SOURCE #-} MageKnight.DeedDecks (allDeeds, actions)
+import {-# SOURCE #-} MageKnight.DeedDecks (allDeeds, actions)
 
 import qualified Data.Set  as Set
-
-allDeeds = undefined
-actions = undefined
 
 blueSpecial :: Deed
 blueSpecial =

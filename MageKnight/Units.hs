@@ -121,10 +121,10 @@ regularUnits =
          , unitResists    = Set.empty
          , unitSource     = Set.fromList [ FromVillage ]
          , unitAbilities  =
-            [ [] --> replicate 2 (Attack Melee Physycal)
-            , [] --> replicate 2 (Block Physycal)
-            , [] --> replicate 2 Influence
-            , [] --> replicate 2 Movement
+            [ produces (2 *** Attack Melee Physycal)
+            , produces (2 *** Block Physycal)
+            , produces (2 *** Influence)
+            , produces (2 *** Movement)
             ]
          }
 
@@ -137,10 +137,10 @@ regularUnits =
          , unitResists    = Set.empty
          , unitSource     = Set.singleton FromVillage
          , unitAbilities  =
-            [ [] --> replicate 2 Movement ++
-                     [ ChangeTerrainCost t (DecreaseBy 1 0)
-                                        | t <- [ Forest, Hills, Swamp ] ]
-            , [] --> replicate 3 (Block Physycal)
+            [ produces (2 *** Movement) &&&
+              produces [ ChangeTerrainCost t (DecreaseBy 1 0)
+                                          | t <- [ Forest, Hills, Swamp ] ]
+            , produces (3 *** Block Physycal)
             ]
          }
 
@@ -153,10 +153,10 @@ regularUnits =
          , unitResists    = Set.empty
          , unitSource     = Set.fromList [ FromVillage, FromMonastery ]
          , unitAbilities  =
-            [ [ ManaToken (BasicMana Green) ] --> replicate 2 Healing
-            , [] --> [ ReadyUnit 1 ]
-            , [] --> [ ReadyUnit 2 ]
-            , [] --> [ ManaToken (BasicMana Green) ]
+            [ ManaToken (BasicMana Green) --> 2 *** Healing
+            , produces (2 *** ReadyUnit 1)
+            , produces (2 *** ReadyUnit 2)
+            , produces (2 *** ManaToken (BasicMana Green))
             ]
          }
 
@@ -172,10 +172,10 @@ regularUnits =
          , unitResists    = Set.empty
          , unitSource     = Set.fromList [ FromMonastery ]
          , unitAbilities  =
-            [ [] --> replicate 3 (Attack Melee Physycal)
-            , [] --> replicate 3 (Block Physycal)
-            , [ ManaToken (BasicMana Blue) ] --> replicate 4 (Attack Melee Ice)
-            , [ ManaToken (BasicMana Blue) ] --> replicate 4 (Block Ice)
+            [ produces (3 *** Attack Melee Physycal)
+            , produces (3 *** Block Physycal)
+            , ManaToken (BasicMana Blue) --> 4 *** Attack Melee Ice
+            , ManaToken (BasicMana Blue) --> 4 *** Block Ice
             ]
          }
 
@@ -188,10 +188,10 @@ regularUnits =
          , unitResists    = Set.empty
          , unitSource     = Set.fromList [ FromMonastery ]
          , unitAbilities  =
-            [ [] --> replicate 3 (Attack Melee Physycal)
-            , [] --> replicate 3 (Block Physycal)
-            , [ ManaToken (BasicMana Red) ] --> replicate 4 (Attack Melee Fire)
-            , [ ManaToken (BasicMana Red) ] --> replicate 4 (Block Fire)
+            [ produces (3 *** Attack Melee Physycal)
+            , produces (3 *** Block Physycal)
+            , ManaToken (BasicMana Red) --> 4 *** Attack Melee Fire
+            , ManaToken (BasicMana Red) --> 4 *** Block Fire
             ]
          }
 
@@ -204,10 +204,9 @@ regularUnits =
          , unitResists    = Set.empty
          , unitSource     = Set.fromList [ FromMonastery ]
          , unitAbilities  =
-            [ [] --> replicate 3 (Attack Melee Physycal)
-            , [] --> replicate 3 (Block Physycal)
-            , [ ManaToken (BasicMana Green) ] -->
-                                            replicate 4 (Attack Siege Physycal)
+            [ produces (3 *** Attack Melee Physycal)
+            , produces (3 *** Block Physycal)
+            , ManaToken (BasicMana Green) --> 4 *** Attack Siege Physycal
             ]
          }
 
@@ -221,9 +220,9 @@ regularUnits =
          , unitResists    = Set.empty
          , unitSource     = Set.fromList [ FromVillage, FromKeep ]
          , unitAbilities  =
-            [ [] --> replicate 3 (Attack Melee Physycal)
-            , [] --> replicate 3 (Block Physycal)
-            , [] --> replicate 2 (Attack Ranged Physycal)
+            [ produces (3 *** Attack Melee Physycal)
+            , produces (3 *** Block Physycal)
+            , produces (2 *** Attack Ranged Physycal)
             ]
          }
 
@@ -236,8 +235,8 @@ regularUnits =
          , unitResists    = Set.empty
          , unitSource     = Set.fromList [ FromVillage, FromKeep ]
          , unitAbilities  =
-            [ [] --> replicate 2 (Attack Melee Physycal)
-            , [] --> replicate 4 (Block Physycal) ++ []
+            [ produces (2 *** Attack Melee Physycal)
+            , produces (4 *** Block Physycal) {-++ []-}
                       -- XXX: An enemy blocked this way looses swiftness
             ]
          }
@@ -251,8 +250,8 @@ regularUnits =
          , unitResists    = Set.empty
          , unitSource     = Set.fromList [ FromKeep ]
          , unitAbilities  =
-            [ [] --> replicate 3 (Attack Melee Physycal)
-            , [] --> replicate 3 (Block Physycal)
+            [ produces (3 *** Attack Melee Physycal)
+            , produces (3 *** Block Physycal)
             -- XXX: Attack 6, become wounded
             -- XXX: Block 6, become wounded
             ]
@@ -267,10 +266,10 @@ regularUnits =
          , unitResists    = Set.singleton Physycal
          , unitSource     = Set.fromList [ FromKeep, FromMageTower ]
          , unitAbilities  =
-            [ [] --> replicate 2 (Attack Melee Physycal)
-            , [] --> replicate 2 (Block Physycal)
-            , [ ManaToken (BasicMana Red ) ] --> replicate 4 (Block Fire)
-            , [ ManaToken (BasicMana Blue) ] --> replicate 4 (Block Ice)
+            [ produces (2 *** Attack Melee Physycal)
+            , produces (2 *** Block Physycal)
+            , ManaToken (BasicMana Red ) --> 4 *** Block Fire
+            , ManaToken (BasicMana Blue) --> 4 *** Block Ice
             ]
          }
 
@@ -282,17 +281,8 @@ regularUnits =
          , unitArmor      = 2
          , unitResists    = Set.singleton Physycal
          , unitSource     = Set.fromList [ FromMonastery, FromMageTower ]
-         , unitAbilities  =
-            [ [] --> replicate 4 Influence
--- XXX
---            , [ ManaToken (BasicMana White) ] --> 
-                  -- Target unfortified enemy does not attack
-            , [] --> [ ManaToken (BasicMana White) ]
-            ]
+         , unitAbilities  = []
          }
-
-
-
   ]
 
 -- XXX

@@ -5,6 +5,8 @@ import MageKnight.Common
 import MageKnight.Deed
 import MageKnight.Rule
 
+import {-# SOURCE #-} MageKnight.DeedDecks (actions)
+
 
 deeds :: [Deed]
 deeds = blueDeeds ++ greenDeeds ++ redDeeds ++ whiteDeeds
@@ -85,7 +87,6 @@ greenDeeds =
   where
   deed = advancedActionDeed Green
 
--- XXX: red
 redDeeds :: [Deed]
 redDeeds =
   [ deed "Blood Rage"
@@ -112,9 +113,20 @@ redDeeds =
       [ produces p &&& produces (2 *** BadReputation)
           | p <- [ 8 *** Influence, 7 *** Attack Melee Physycal ] ]
 
-  , deed "Into the Heat" [] [] --- XXX
-  , deed "Maximal Effect" [] [] --- XXXX
-  , deed "Decompose" [] [] --- XXX
+  , deed "Decompose"
+      [ DeedInHand n --> DeedDestroyed n &&& produces (2 *** ManaCrystal c)
+          | a <- actions, let n = deedName a, n /= "Decompose"
+          , Just c <- [ deedColor a ]
+      ]
+      [ DeedInHand n --> DeedDestroyed n :
+                        [ ManaCrystal b | b <- anyBasicMana, b /= c ]
+          | a <- actions, let n = deedName a, n /= "Decompose"
+          , Just c <- [ deedColor a ]
+      ]
+
+
+  , deed "Maximal Effect" [] []
+  , deed "Into the Heat" [] [] -- XXX
 
   ]
   where

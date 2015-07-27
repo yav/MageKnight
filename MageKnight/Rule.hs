@@ -33,12 +33,17 @@ import           Text.PrettyPrint
 --------------------------------------------------------------------------------
 
 
-
 data Rule = Rule
   { ruleName  :: Text
   , ruleIn    :: Bag Resource   -- ^ We consume these
   , ruleOut   :: Bag Resource   -- ^ We produce these
   }
+
+instance Eq Rule where
+  x == y = ruleName x == ruleName y
+
+instance Ord Rule where
+  compare x y = compare (ruleName x) (ruleName y)
 
 useRule :: Rule -> Bag Resource -> Maybe (Bag Resource)
 useRule Rule { .. } rAvail =
@@ -194,8 +199,7 @@ data Resource =
   | ReadyUnit Int               -- ^ Ready a unit of this level
 
   | GainWound
-
-    deriving (Eq,Ord,Show)
+    deriving (Eq,Ord)
 
 
 -- Pretty Print

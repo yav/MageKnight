@@ -2,6 +2,7 @@
 module MageKnight.Deed
   ( Deed (..)
   , DeedType(..)
+  , deedColor
   , DeedName
   , wound
   , actionDeed
