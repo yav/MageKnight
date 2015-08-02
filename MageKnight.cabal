@@ -32,10 +32,13 @@ library
     MageKnight.Terrain,
 
     MageKnight.Player,
+    MageKnight.Tactic,
+    MageKnight.Skill,
     MageKnight.DummyPlayer,
     MageKnight.Combat,
 
     MageKnight.Game,
+    MageKnight.Game1,
     MageKnight.Common,
     MageKnight.Offers,
     MageKnight.Source,

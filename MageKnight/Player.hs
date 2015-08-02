@@ -65,6 +65,7 @@ import MageKnight.Units
 import MageKnight.Bag
 import MageKnight.Terrain
 import MageKnight.Skill
+import MageKnight.Tactic
 import MageKnight.Perhaps
 import MageKnight.JSON
 import MageKnight.Random(StdGen, shuffle)
@@ -87,6 +88,7 @@ data Player = Player
   , discardPile     :: [ Deed ]
   , skills          :: [ (Skill, Usable) ]  -- ^ Aquired skills
   , potentialSkills :: [ Skill ]            -- ^ Used when leveling up
+  , tactic          :: Maybe Tactic
   , location        :: Addr
   , rng             :: StdGen
     -- ^ To shuffle the deed deck.
@@ -137,6 +139,7 @@ newPlayer g name deeds ski = Player
   , hand            = []
   , discardPile     = []
   , skills          = []
+  , tactic          = Nothing
   , potentialSkills = ski
   , location        = Addr { addrGlobal = (0,0), addrLocal = Center }
   , prevLocation    = Nothing
