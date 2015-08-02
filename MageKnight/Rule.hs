@@ -159,7 +159,7 @@ data Resource =
   | UsedCrystal BasicMana       -- ^ A used crystal of this type
 
   | ManaSource Mana             -- ^ Mana in the source
-  | ManaSourceFixed Mana        -- Not re-rolled
+  | ManaSourceFixed Mana        -- ^ Not re-rolled
   | ManaDie                     -- ^ Access to the source
 
   | Movement
@@ -171,7 +171,7 @@ data Resource =
   | Reputation
   | BadReputation               -- ^ Loose reputation at end of turn
 
-  | DeedInHand DeedName         -- ^ A specific card
+  | DeedInHand    DeedName      -- ^ A specific card
   | DeedDestroyed DeedName      -- ^ This is out of the game
   | DeedDiscarded DeedName      -- ^ This was discarded
 
@@ -241,21 +241,6 @@ ppResource resource =
     RegainUsedCrystals -> text "regain used crystals"
     ChangeTerrainCost t c -> text "change terrain cost"
 
-    {-
-
-    -- XXX
-
-
-    FameGainIfInteract -> text "fame +1 (if interacted)"
-    ReputationGainIfInteract -> text "reputation + 1 (if interacted)"
-    ThrowAway x -> text "throw away" <+> text (show x)
-    ToDeedDeckBottom x -> text "place" <+> text (show x) <+>
-                          text "at the bottom of the deed deck"
-
-    ToDeedDeckTop x -> text "place" <+> text (show x) <+>
-                       text "at the top of the deed deck"
-
-    -}
 
 ppResources :: Bag Resource -> Doc
 ppResources = vcat . map ppEntry . bagToListGrouped
