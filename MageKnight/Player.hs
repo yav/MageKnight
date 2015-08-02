@@ -53,6 +53,10 @@ module MageKnight.Player
   -- * Resting
   , slowRecovery
   , standardRest
+
+  -- * Level-up
+  , nextSkillSet
+  , gainSkill
   ) where
 
 import MageKnight.Common
@@ -60,6 +64,7 @@ import MageKnight.Deed
 import MageKnight.Units
 import MageKnight.Bag
 import MageKnight.Terrain
+import MageKnight.Skill
 import MageKnight.Perhaps
 import MageKnight.JSON
 import MageKnight.Random(StdGen, shuffle)
@@ -72,21 +77,23 @@ import           Control.Monad(guard)
 type PlayerName = Text
 
 data Player = Player
-  { name        :: PlayerName
-  , fame        :: Int
-  , reputation  :: Int      -- ^ Index on board, *NOT* same as influence
-  , units       :: [ Maybe ActiveUnit ]
-  , crystals    :: Bag BasicMana
-  , deedDeck    :: [ Deed ]
-  , hand        :: [ Deed ]
-  , discardPile :: [ Deed ]
-  , location    :: Addr
-  , rng         :: StdGen
+  { name            :: PlayerName
+  , fame            :: Int
+  , reputation      :: Int      -- ^ Index on board, *NOT* same as influence
+  , units           :: [ Maybe ActiveUnit ]
+  , crystals        :: Bag BasicMana
+  , deedDeck        :: [ Deed ]
+  , hand            :: [ Deed ]
+  , discardPile     :: [ Deed ]
+  , skills          :: [ (Skill, Usable) ]  -- ^ Aquired skills
+  , potentialSkills :: [ Skill ]            -- ^ Used when leveling up
+  , location        :: Addr
+  , rng             :: StdGen
     -- ^ To shuffle the deed deck.
 
 
-  , prevLocation :: Maybe Addr
-  , onUnsafe    :: Maybe (Addr, Int)
+  , prevLocation    :: Maybe Addr
+  , onUnsafe        :: Maybe (Addr, Int)
     -- ^ `Nothing`, if we are currently safe.
     -- If unsafe, then last safe location, and how many wounds to get there.
 
@@ -119,20 +126,22 @@ playerLocation = location
 
 
 -- | A new player with the given deck.
-newPlayer :: StdGen -> Text -> [Deed] -> Player
-newPlayer g name deeds = Player
-  { name        = name
-  , fame        = 0
-  , reputation  = 0
-  , units       = [ Nothing ]
-  , crystals    = bagEmpty
-  , deedDeck    = shuffledDeeds
-  , hand        = []
-  , discardPile = []
-  , location    = Addr { addrGlobal = (0,0), addrLocal = Center }
-  , prevLocation  = Nothing
-  , onUnsafe    = Nothing
-  , rng         = g1
+newPlayer :: StdGen -> Text -> [Deed] -> [Skill] -> Player
+newPlayer g name deeds ski = Player
+  { name            = name
+  , fame            = 0
+  , reputation      = 0
+  , units           = [ Nothing ]
+  , crystals        = bagEmpty
+  , deedDeck        = shuffledDeeds
+  , hand            = []
+  , discardPile     = []
+  , skills          = []
+  , potentialSkills = ski
+  , location        = Addr { addrGlobal = (0,0), addrLocal = Center }
+  , prevLocation    = Nothing
+  , onUnsafe        = Nothing
+  , rng             = g1
   }
   where (shuffledDeeds, g1) = shuffle g deeds
 
@@ -383,10 +392,21 @@ standardRest i woundNum Player { .. } =
     | otherwise = let (xs,ys) = getWounds (n-1) cs
                   in (c:xs,ys)
 
+--------------------------------------------------------------------------------
+
+-- | Take 2 skills for level-up options.  In the unlikely case that there
+-- are not enough skills left, we return whatever is available.
+nextSkillSet :: Player -> ([Skill],Player)
+nextSkillSet p = (xs, p { potentialSkills = rest })
+  where
+  (xs,rest) = splitAt 2 (potentialSkills p)
+
+-- | Add a new skill to the player.
+gainSkill :: Skill -> Player -> Player
+gainSkill s p = p { skills = (s,Unused) : skills p }
 
 
-
-
+--------------------------------------------------------------------------------
 
 instance Export Player where
   toJS Player { .. } =
@@ -404,6 +424,8 @@ instance Export Player where
       , "cards"       .= hand
       , "deeds"       .= length deedDeck
       , "discards"    .= length discardPile
+      , "skills"      .= [ object [ "skill" .= s, "usable" .= (u == Unused) ]
+                                                            | (s,u) <- skills ]
       , "location"    .= location
       , "unsafe"      .= fmap fst onUnsafe
       ]

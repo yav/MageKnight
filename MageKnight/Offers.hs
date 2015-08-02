@@ -19,8 +19,10 @@ module MageKnight.Offers
   , takeSpell
   , takeUnit
   , takeMonasteryTech
+  , takeSkill
 
     -- * Others
+  , newSkill
   , newMonastery
   , burnMonastery
   , disbandUnit
@@ -30,6 +32,8 @@ import           MageKnight.ResourceQ (ResourceQ)
 import qualified MageKnight.ResourceQ as RQ
 import           MageKnight.Random
 import           MageKnight.Units
+import           MageKnight.Skill
+import           MageKnight.Perhaps
 import           MageKnight.DeedDecks
                    ( Deed,advancedActions, spells, interactiveSpell, artifacts)
 import           MageKnight.JSON
@@ -191,6 +195,8 @@ data Offers = Offers
 
   , unitNumber          :: Int
     -- ^ Number of units to load when restocking. Usually, is @playerNum + 2@.
+
+  , commonSkillOffer    :: [Skill]
   }
 
 data OfferSetup = OfferSetup
@@ -258,7 +264,7 @@ setupOffers r0 OfferSetup { .. } = Offers
 
   , artifactDeck        = RQ.fromListRandom randArt useArtifacts
 
-
+  , commonSkillOffer    = []
   }
   where
   (randAct,r1)        = split r0
@@ -363,6 +369,23 @@ refreshOffersDummy useElite o0 =
   (lastSpell,newSpells)   = refreshDeedOfferDummy spellOffer
 
 
+-- | Add a rejected skill to the common skill offer.
+newSkill :: Skill -> Offers -> Offers
+newSkill s o = o { commonSkillOffer = s : commonSkillOffer o }
+
+-- | Reject both skill, and take one from the offer.
+takeSkill :: Skill -> Skill -> Int -> Offers -> Perhaps (Skill, Offers)
+takeSkill s1 s2 n0 o =
+  do (s,others) <- get n0 (commonSkillOffer o)
+     return (s, o { commonSkillOffer = s1 : s2 : others })
+  where
+  get _ []        = Failed "This skill is not available."
+  get n (x : xs)
+    | n == 0      = Ok (x,xs)
+    | n >  0      = do (y,ys) <- get (n-1) xs
+                       return (y,x:ys)
+    | otherwise   = Failed "This skill is not available."
+
 --------------------------------------------------------------------------------
 
 instance Export Offers where
@@ -372,6 +395,7 @@ instance Export Offers where
       , "spells"          .= offeringSpells o
       , "units"           .= offeringUnits o
       , "monasteries"     .= offeringMonasteries o
+      , "skills"          .= commonSkillOffer o
       ]
 
 

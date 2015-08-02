@@ -14,6 +14,9 @@ type DeedName   = Text
 type EnemyName  = Text
 
 
+data Usable     = Unused | Used
+                  deriving (Show,Eq)
+
 data Visibility = Revealed | Hidden
                   deriving (Eq,Ord,Show)
 
