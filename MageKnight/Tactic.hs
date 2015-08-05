@@ -6,8 +6,7 @@ import MageKnight.Common
 import Data.Text
 
 data Tactic = Tactic
-  { tacticTime      :: Time
-  , tacticNumber    :: Int
+  { tacticNumber    :: Int
   , tacticName      :: Text
   , tacticActivates :: TacticActivates
   , tacticUsed      :: Usable
@@ -49,7 +48,6 @@ dayTactics =
            , .. }
   ]
   where
-  tacticTime = Day
   tacticUsed = Unused
 
 nightTactics :: [Tactic]
@@ -85,5 +83,4 @@ nightTactics =
            , .. }
   ]
   where
-  tacticTime = Night
   tacticUsed = Unused
