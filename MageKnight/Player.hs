@@ -57,6 +57,16 @@ module MageKnight.Player
   -- * Level-up
   , nextSkillSet
   , gainSkill
+
+  -- * Tactics
+  , setTactic
+
+  , tacticRethink
+  , tacticGreatStart
+  , tacticLlongNight
+  , tacticMidnightMeditation
+  , tacticPreparation
+  , tacticPreparation
   ) where
 
 import MageKnight.Common
@@ -70,7 +80,7 @@ import MageKnight.Perhaps
 import MageKnight.JSON
 import MageKnight.Random(StdGen, shuffle)
 
-import           Data.Maybe (isNothing)
+import           Data.Maybe (isNothing,fromMaybe)
 import           Data.Text (Text)
 import           Data.List (partition)
 import           Control.Monad(guard)
@@ -140,13 +150,14 @@ newPlayer g name deeds ski = Player
   , discardPile     = []
   , skills          = []
   , tactic          = Nothing
-  , potentialSkills = ski
   , location        = Addr { addrGlobal = (0,0), addrLocal = Center }
   , prevLocation    = Nothing
   , onUnsafe        = Nothing
-  , rng             = g1
+  , rng             = g2
+  , ..
   }
-  where (shuffledDeeds, g1) = shuffle g deeds
+  where (shuffledDeeds, g1)   = shuffle g deeds
+        (potentialSkills, g2) = shuffle g1 ski
 
 
 -- | Move a card from the player's deed deck to their hand.
@@ -408,6 +419,66 @@ nextSkillSet p = (xs, p { potentialSkills = rest })
 gainSkill :: Skill -> Player -> Player
 gainSkill s p = p { skills = (s,Unused) : skills p }
 
+
+--------------------------------------------------------------------------------
+
+setTactic :: Tactic -> Player -> Player
+setTactic t p = p { tactic = Just t }
+
+tacticRethink :: [Int] -> Player -> Perhaps Player
+tacticRethink xs p
+  | length xs > 3 = Failed "Cannot rethink ore than 3 cards"
+  | otherwise = go p xs
+  where
+  go p [] = let (cs, g) = shuffle (rng p) (discardPile p ++ deedDeck p)
+            in Ok p { discardPile = []
+                    , deedDeck = cs
+                    , rng = g
+                    }
+  go p (x : xs) = do p1 <- rethink p x
+                     go p1 xs
+  rethink p i =
+    case takeCard i p of
+      Nothing -> Failed "No such card"
+      Just (c,p1) ->
+        case drawCard (newDiscardedDeed c p1) of
+          Nothing -> Failed "Insufficient cards in deed deck"
+          Just p1 -> Ok p1
+
+tacticGreatStart :: Player -> Player
+tacticGreatStart = tryDraw . tryDraw
+  where tryDraw p = fromMaybe p (drawCard p)
+
+tacticLlongNight :: Player -> Perhaps Player
+tacticLlongNight Player { .. } =
+  case deedDeck of
+    [] -> let (ds,g)  = shuffle rng discardPile
+              (as,bs) = splitAt 3 ds
+          in Ok Player { deedDeck = as, discardPile = bs, rng = g, .. }
+
+    _  -> Failed "Long night requires an empty deed deck"
+
+tacticMidnightMeditation :: [Int] -> Player -> Perhaps Player
+tacticMidnightMeditation xs = go 0 xs
+    where
+    go n [] p = let (ds,g) = shuffle (rng p) (deedDeck p)
+                    p1 = p { deedDeck = ds, rng = g }
+                in Ok (iterate (\q -> fromMaybe q (drawCard q)) p1 !! n)
+    go n (a : as) p
+      | n >= 5 = Failed "Meditation is limited to 5"
+      | otherwise =
+        case takeCard a p of
+          Just (d,p1) -> go (n+1) as p1 { deedDeck = d : deedDeck p1 }
+          Nothing     -> Failed "Invalid card"
+
+
+tacticPreparation :: Int -> Player -> Maybe Player
+tacticPreparation n Player { .. } =
+  case splitAt n deedDeck of
+    (as,b:bs) ->
+      let (ds,g) = shuffle rng (as ++ bs)
+      in Just Player { hand = b : hand, deedDeck = ds, rng = g, .. }
+    _ -> Nothing
 
 --------------------------------------------------------------------------------
 
