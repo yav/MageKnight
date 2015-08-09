@@ -21,6 +21,9 @@ module MageKnight.Land
     -- * Info about tiles
   , getFeatureAt
   , getRevealedEnemiesAt
+  , locationCardBonus
+
+
   ) where
 
 import           MageKnight.Terrain
