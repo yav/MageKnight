@@ -66,7 +66,6 @@ module MageKnight.Player
   , tacticLlongNight
   , tacticMidnightMeditation
   , tacticPreparation
-  , tacticPreparation
   ) where
 
 import MageKnight.Common
@@ -426,9 +425,9 @@ setTactic :: Tactic -> Player -> Player
 setTactic t p = p { tactic = Just t }
 
 tacticRethink :: [Int] -> Player -> Perhaps Player
-tacticRethink xs p
-  | length xs > 3 = Failed "Cannot rethink ore than 3 cards"
-  | otherwise = go p xs
+tacticRethink xs0 p0
+  | length xs0 > 3 = Failed "Cannot rethink ore than 3 cards"
+  | otherwise      = go p0 xs0
   where
   go p [] = let (cs, g) = shuffle (rng p) (discardPile p ++ deedDeck p)
             in Ok p { discardPile = []
@@ -443,7 +442,7 @@ tacticRethink xs p
       Just (c,p1) ->
         case drawCard (newDiscardedDeed c p1) of
           Nothing -> Failed "Insufficient cards in deed deck"
-          Just p1 -> Ok p1
+          Just p2 -> Ok p2
 
 tacticGreatStart :: Player -> Player
 tacticGreatStart = tryDraw . tryDraw
