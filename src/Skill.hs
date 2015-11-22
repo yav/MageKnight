@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
-module MageKnight.Skill where
+module Skill where
 
-import MageKnight.JSON
+import Util.JSON
 
 import Data.Text (Text)
 

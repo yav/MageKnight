@@ -1,5 +1,5 @@
 {-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
-module MageKnight.Action
+module Action
   ( blueSpecial
   , redSpecial
   , greenSpecial
@@ -7,12 +7,12 @@ module MageKnight.Action
   , deeds
   ) where
 
-import MageKnight.Common
-import MageKnight.Enemies
-import MageKnight.Rule
-import MageKnight.Deed
+import Common
+import Enemies
+import Rule
+import Deed
 
-import {-# SOURCE #-} MageKnight.DeedDecks (allDeeds, actions)
+import {-# SOURCE #-} DeedDecks (allDeeds, actions)
 
 import qualified Data.Set  as Set
 

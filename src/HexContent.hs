@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
-module MageKnight.HexContent
+module HexContent
   ( -- * Basics
     HexContent
   , hexEmpty
@@ -31,14 +31,14 @@ module MageKnight.HexContent
   , hexWithCity
   ) where
 
-import           MageKnight.Common
-import           MageKnight.Enemies
-import           MageKnight.Ruins
-import           MageKnight.Player
-import           MageKnight.Bag
-import           MageKnight.ResourceQ (ResourceQ)
-import qualified MageKnight.ResourceQ as RQ
-import           MageKnight.JSON
+import Common
+import Enemies
+import Ruins
+import Player
+
+import Util.ResourceQ
+import Util.JSON
+import Util.Bag
 
 import           Data.Maybe ( fromMaybe )
 import           Data.List ( delete, sortBy, groupBy, nub )
@@ -174,7 +174,7 @@ hexHasPlayers HexContent { .. } = not (Set.null hexPlayers)
 -- | Make a new hex, with some ruins on it.
 hexWithRuins :: Time -> ResourceQ Ruins -> (HexContent, ResourceQ Ruins)
 hexWithRuins time q =
-  case RQ.take q of
+  case rqTake q of
     Just (r,q1) -> let v = case time of
                              Day   -> Revealed
                              Night -> Hidden
@@ -191,7 +191,7 @@ hexAddEnemyFromPool :: Visibility -> EnemyType -> (HexContent, EnemyPool) ->
                                                   (HexContent, EnemyPool)
 hexAddEnemyFromPool v et (hex,pool) =
   fromMaybe (hex,pool) $ do q      <- Map.lookup et pool
-                            (e,q1) <- RQ.take q
+                            (e,q1) <- rqTake q
                             return (hexAddEnemy v e hex, Map.insert et q1 pool)
 
 -- | Make a new hex with a city on it.

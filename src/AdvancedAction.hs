@@ -1,11 +1,11 @@
 {-# LANGUAGE Safe, OverloadedStrings #-}
-module MageKnight.AdvancedAction (deeds) where
+module AdvancedAction (deeds) where
 
-import MageKnight.Common
-import MageKnight.Deed
-import MageKnight.Rule
+import Common
+import Deed
+import Rule
 
-import {-# SOURCE #-} MageKnight.DeedDecks (actions)
+import {-# SOURCE #-} DeedDecks (actions)
 
 
 deeds :: [Deed]

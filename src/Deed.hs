@@ -1,5 +1,5 @@
 {-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
-module MageKnight.Deed
+module Deed
   ( Deed (..)
   , DeedType(..)
   , deedColor
@@ -13,9 +13,9 @@ module MageKnight.Deed
   , deedRules
   ) where
 
-import MageKnight.Common
-import MageKnight.Rule
-import MageKnight.JSON
+import Common
+import Rule
+import Util.JSON
 
 import           Data.Text ( Text )
 import qualified Data.Text as Text

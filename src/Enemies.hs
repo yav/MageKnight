@@ -1,9 +1,9 @@
 {-# LANGUAGE Safe, OverloadedStrings #-}
-module MageKnight.Enemies where
+module Enemies where
 
-import MageKnight.Common(Element(..))
-import MageKnight.ResourceQ(ResourceQ)
-import MageKnight.JSON
+import Common(Element(..))
+import Util.ResourceQ(ResourceQ)
+import Util.JSON
 
 import           Data.Set (Set)
 import qualified Data.Set as Set

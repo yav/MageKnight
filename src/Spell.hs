@@ -1,8 +1,8 @@
 {-# LANGUAGE Safe, OverloadedStrings #-}
-module MageKnight.Spell (deeds, interactiveSpell) where
+module Spell (deeds, interactiveSpell) where
 
-import MageKnight.Common
-import MageKnight.Deed
+import Common
+import Deed
 
 -- XXX
 deeds :: [Deed]

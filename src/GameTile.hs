@@ -1,6 +1,6 @@
 {-# LANGUAGE Safe, OverloadedStrings, RecordWildCards #-}
 -- | An active game tile.
-module MageKnight.GameTile
+module GameTile
   ( GameTile
   , gameTilePlaceHolder
   , emptyGameTile
@@ -11,10 +11,10 @@ module MageKnight.GameTile
   , gameTileIsSafe
   ) where
 
-import MageKnight.Terrain
-import MageKnight.HexContent
-import MageKnight.Player (PlayerName)
-import MageKnight.JSON
+import Terrain
+import HexContent
+import Player (PlayerName)
+import Util.JSON
 
 import           Data.Map ( Map )
 import qualified Data.Map as Map

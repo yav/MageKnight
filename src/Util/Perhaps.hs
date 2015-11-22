@@ -1,5 +1,5 @@
-{-# LANGUAGE Safe, OverloadedStrings #-}
-module MageKnight.Perhaps where
+{-# LANGUAGE Safe #-}
+module Util.Perhaps where
 
 import           Data.Text (Text)
 import qualified Data.Text as Text

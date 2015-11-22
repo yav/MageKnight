@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
-module MageKnight.Terrain
+module Terrain
   ( -- * Addressing
     Addr(..), TileAddr,
 
@@ -28,9 +28,9 @@ module MageKnight.Terrain
     validPlacement
   ) where
 
-import MageKnight.Common
-import MageKnight.Enemies(EnemyType(Orc,Draconum))
-import MageKnight.JSON
+import Common
+import Enemies(EnemyType(Orc,Draconum))
+import Util.JSON
 
 import           Data.Array (array, (!))
 import           Data.Text (Text)

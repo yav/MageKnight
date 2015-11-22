@@ -1,4 +1,5 @@
-module MageKnight.Bag
+{-# LANGUAGE Safe #-}
+module Util.Bag
   ( Bag
   , bagEmpty, bagSingleton, bagAdd, bagUnion, bagMap
 

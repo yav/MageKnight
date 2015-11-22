@@ -1,5 +1,5 @@
 {-# LANGUAGE Safe, RecordWildCards, FlexibleInstances, OverloadedStrings #-}
-module MageKnight.Rule
+module Rule
   ( Rule
   , ruleOutput
   , ruleInput
@@ -20,8 +20,8 @@ module MageKnight.Rule
   , ppResources
   ) where
 
-import MageKnight.Common
-import MageKnight.Bag
+import Common
+import Util.Bag
 
 import           Data.Text (Text)
 import qualified Data.Text as Text

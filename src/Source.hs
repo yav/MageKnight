@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module MageKnight.Source
+module Source
   ( Source
   , newSource
   , refillSource
@@ -11,12 +11,12 @@ module MageKnight.Source
   , advancedManaDraw
   ) where
 
-import MageKnight.Common
-import MageKnight.Bag
-import MageKnight.Random
-import MageKnight.JSON
+import Common
+import Util.Bag
+import Util.Random
+import Util.JSON
 
-import Control.Monad (guard)
+import Control.Monad (guard, replicateM)
 
 data Source = Source
   { sourceMana    :: Bag Mana
@@ -24,6 +24,10 @@ data Source = Source
   , sourceSize    :: Int
   , sourceFixed   :: Bag Mana
   }
+
+
+rollDice :: Int -> StdGen -> ([Mana], StdGen)
+rollDice n g = genRand g $ replicateM n $ oneOf anyMana
 
 -- | Make a new source, with the given number of dice.
 newSource :: StdGen -> Int -> Source

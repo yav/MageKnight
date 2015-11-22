@@ -1,5 +1,5 @@
-{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
-module MageKnight.Offers
+{-# LANGUAGE Safe, RecordWildCards, NamedFieldPuns, OverloadedStrings #-}
+module Offers
   ( -- * Setup
     Offers
   , OfferSetup (..)
@@ -28,15 +28,14 @@ module MageKnight.Offers
   , disbandUnit
   ) where
 
-import           MageKnight.ResourceQ (ResourceQ)
-import qualified MageKnight.ResourceQ as RQ
-import           MageKnight.Random
-import           MageKnight.Units
-import           MageKnight.Skill
-import           MageKnight.Perhaps
-import           MageKnight.DeedDecks
-                   ( Deed,advancedActions, spells, interactiveSpell, artifacts)
-import           MageKnight.JSON
+import Units
+import Skill
+import DeedDecks ( Deed,advancedActions, spells, interactiveSpell, artifacts)
+
+import Util.JSON
+import Util.Perhaps
+import Util.Random
+import Util.ResourceQ
 
 import Control.Monad(guard)
 
@@ -46,13 +45,15 @@ data Offer a = Offer
   }
 
 -- | A blank offer that will serve the given items.
-offerNothing :: StdGen -> [a] -> Offer a
-offerNothing r is = Offer { offerDeck = RQ.fromListRandom r is, offering  = [] }
+offerNothing :: [a] -> Gen (Offer a)
+offerNothing is =
+  do offerDeck <- rqFromListRandom is
+     return Offer { offering  = [], offerDeck }
 
 -- | Draw an item from the deck, and add it to the offerings.
 offerNewItem :: Offer a -> Offer a
 offerNewItem Offer { .. } =
-  case RQ.take offerDeck of
+  case rqTake offerDeck of
     Just (c,d) -> Offer { offerDeck = d, offering = c : offering }
     Nothing    -> Offer { .. }
 
@@ -64,7 +65,7 @@ offerNewItems n o = iterate offerNewItem o !! n
 offerClear :: Offer a -> Offer a
 offerClear Offer { .. } = Offer
   { offering = []
-  , offerDeck = foldr RQ.discard offerDeck offering
+  , offerDeck = foldr rqDiscard offerDeck offering
   }
 
 -- | Take one of the offered items, identified positionally in the offerings.
@@ -82,7 +83,7 @@ offerTakeItem n0 Offer { .. }
 -- | Add an item back to the offer's deck.
 offerReturnItem :: a -> Offer a -> Offer a
 offerReturnItem a Offer { .. } =
-  Offer { offerDeck = RQ.discard a offerDeck, .. }
+  Offer { offerDeck = rqDiscard a offerDeck, .. }
 
 -- | How many items are on offer.
 offeringLength :: Offer a -> Int
@@ -92,11 +93,10 @@ offeringLength Offer { .. } = length offering
 --------------------------------------------------------------------------------
 
 -- | Setup a new card offer.
-newDeedOffer :: StdGen {-^ Some randomness -}             ->
-                Int    {-^ How many cards are on offer -} ->
+newDeedOffer :: Int    {-^ How many cards are on offer -} ->
                 [Deed] {-^ The deck for this offer -}     ->
-                Offer Deed
-newDeedOffer r n cs = offerNewItems n (offerNothing r cs)
+                Gen (Offer Deed)
+newDeedOffer n cs = offerNewItems n <$> offerNothing cs
 
 -- | Recycle the oldest offering and pick a fresh one, if possible.
 refreshDeedOffer :: Offer Deed -> Offer Deed
@@ -135,13 +135,11 @@ unitsOnOffer :: UnitOffer -> [Unit]
 unitsOnOffer UnitOffer { .. } = offering regularUnitOffer ++
                                 offering eliteUnitOffer
 
-emptyUnitOffer :: StdGen -> [Unit] -> [Unit] -> UnitOffer
-emptyUnitOffer g regular elite =
-  UnitOffer { regularUnitOffer = offerNothing g1 regular
-            , eliteUnitOffer   = offerNothing g2 elite
-            }
-  where
-  (g1,g2) = split g
+emptyUnitOffer :: [Unit] -> [Unit] -> Gen UnitOffer
+emptyUnitOffer regular elite =
+  do regularUnitOffer <- offerNothing regular
+     eliteUnitOffer   <- offerNothing elite
+     return UnitOffer { .. }
 
 clearUnitOffer :: UnitOffer -> UnitOffer
 clearUnitOffer UnitOffer { .. } =
@@ -249,27 +247,23 @@ defaultOfferSetup playerNum coop = OfferSetup
 
 
 
-setupOffers :: StdGen -> OfferSetup -> Offers
-setupOffers r0 OfferSetup { .. } = Offers
-  { advancedActionOffer = newDeedOffer randAct useAdvancedActionNum
-                                               useAdvancedActions
-  , spellOffer          = newDeedOffer randSpell useSpellNum useSpells
+setupOffers :: OfferSetup -> Gen Offers
+setupOffers OfferSetup { .. } =
+  do advancedActionOffer <- newDeedOffer useAdvancedActionNum useAdvancedActions
+     spellOffer          <- newDeedOffer useSpellNum useSpells
+     emptyUnit           <- emptyUnitOffer useRegularUnits useEliteUnits
+     artifactDeck        <- rqFromListRandom useArtifacts
+     return Offers
+      { unitNumber          = useUnitNum
+      , unitOffer           = stockUpRegulars useUnitNum emptyUnit
 
-  , unitNumber          = useUnitNum
-  , unitOffer           = stockUpRegulars useUnitNum
-                        $ emptyUnitOffer randUnit useRegularUnits useEliteUnits
+      , monasteryTech       = []
+      , activeMonasteries   = 0
 
-  , monasteryTech       = []
-  , activeMonasteries   = 0
+      , commonSkillOffer    = []
 
-  , artifactDeck        = RQ.fromListRandom randArt useArtifacts
-
-  , commonSkillOffer    = []
-  }
-  where
-  (randAct,r1)        = split r0
-  (randSpell,r2)      = split r1
-  (randUnit,randArt)  = split r2
+      , ..
+      }
 
 offeringAdvancedActions :: Offers -> [Deed]
 offeringAdvancedActions = offering . advancedActionOffer
@@ -307,7 +301,7 @@ takeMonasteryTech n Offers { .. } =
 
 newMonastery :: Offers -> Offers
 newMonastery Offers { .. } =
-  case RQ.take (offerDeck advancedActionOffer) of
+  case rqTake (offerDeck advancedActionOffer) of
     Nothing -> Offers { activeMonasteries = 1 + activeMonasteries, .. }
     Just (c,a) -> Offers { activeMonasteries = 1 + activeMonasteries
                          , advancedActionOffer =

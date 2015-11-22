@@ -1,7 +1,7 @@
 {-# LANGUAGE Safe, OverloadedStrings #-}
-module MageKnight.Common where
+module Common where
 
-import MageKnight.JSON
+import Util.JSON
 
 import           Data.Text ( Text )
 import qualified Data.Text as Text

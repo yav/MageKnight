@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
-module MageKnight.Land
+module Land
   ( -- * Setting up the land
     Land
   , LandSetup(..), defaultLandSetup, setupLand
@@ -26,19 +26,19 @@ module MageKnight.Land
 
   ) where
 
-import           MageKnight.Terrain
-import           MageKnight.HexContent
-import           MageKnight.GameTile
-import           MageKnight.Enemies( Enemy(..), EnemyType(..)
-                                   , allEnemies, allEnemyTypes )
-import           MageKnight.Player
-import           MageKnight.Ruins(Ruins, ruins)
-import           MageKnight.Common(Time(..), Visibility(..))
-import           MageKnight.Random(shuffle, split, StdGen)
-import           MageKnight.ResourceQ(ResourceQ)
-import qualified MageKnight.ResourceQ as RQ
-import           MageKnight.JSON
-import           MageKnight.Perhaps
+import  Terrain
+import  HexContent
+import  GameTile
+import  Enemies( Enemy(..), EnemyType(..)
+               , allEnemies, allEnemyTypes )
+import  Player
+import  Ruins(Ruins, ruins)
+import  Common(Time(..), Visibility(..))
+
+import  Util.Random
+import  Util.ResourceQ
+import  Util.JSON
+import  Util.Perhaps
 
 import           Data.Maybe ( mapMaybe, fromMaybe, maybeToList )
 import           Data.Map ( Map )
@@ -79,49 +79,55 @@ defaultLandSetup shape countryNum coreNum cities = LandSetup
 
 -- | Setup an initial land.
 -- Returns the land and the number of moansteries in the original setup.
-setupLand :: StdGen -> LandSetup -> Perhaps (Land, Int)
-setupLand g0 LandSetup { .. } = foldM reveal (land0,0) revealPos
+setupLand :: LandSetup -> Gen (Perhaps (Land, Int))
+setupLand LandSetup { .. } =
+  do shuffledCountry <- shuffle useCountryTiles
+     shuffledCore    <- shuffle coreNonCityTiles
+     shuffledCities  <- shuffle cityTiles
+
+     let (questCountry,backupCountry)  = splitAt useCountryNum shuffledCountry
+         (questCoreNonCity,backupCore) = splitAt useCoreNum    shuffledCore
+
+     questCore <- shuffle (take cityNum shuffledCities ++ questCoreNonCity)
+
+     ruinsPool <- rqFromListRandom useRuins
+     enemyPool <- initialEnemyPool useEnemies
+
+     let land0 = Land { mapShape        = useShape
+                      , theMap          = Map.empty
+                      , unexploredTiles = startTile : questCountry ++ questCore
+                      , backupTiles     = backupCountry ++ backupCore
+                      , cityLevels      = useCityLevels
+                      , timeOfDay       = useStartTime
+                      , ..
+                      }
+     return (foldM reveal (land0,0) revealPos)
   where
-  land0 = Land
-            { mapShape        = useShape
-            , theMap          = Map.empty
-            , unexploredTiles = startTile : questCountry ++ questCore
-            , backupTiles     = backupCountry ++ backupCore
-            , cityLevels      = useCityLevels
-            , ruinsPool       = RQ.fromListRandom randRuins useRuins
-            , enemyPool       = initialEnemyPool randEnemy useEnemies
-            , timeOfDay       = useStartTime
-            }
   (startTile,revealPos)         = case useShape of
                                     Wedge -> (tileA, init startPositions)
                                     _     -> (tileB, startPositions)
+
   startPositions                = [(0,0), (0,1), (1,0), (1,-1)]
+
   reveal (l,ms) addr            = do (l1,ms1) <- initialTile True addr l
                                      return (l1, ms + ms1)
 
-  (shuffledCountry,g1)            = shuffle g0 useCountryTiles
-  (shuffledCore, g2)            = shuffle g1 coreNonCityTiles
-  (shuffledCities,g3)           = shuffle g2 cityTiles
-
-  (questCountry,backupCountry)      = splitAt useCountryNum shuffledCountry
-  (questCoreNonCity,backupCore) = splitAt useCoreNum  shuffledCore
   cityNum                       = length useCityLevels
-  (questCore,g4)                = shuffle g3 (take cityNum shuffledCities ++
-                                              questCoreNonCity)
-  (randEnemy,randRuins)         = split g4
 
 
 
-blankEmenyPool :: StdGen -> Map EnemyType (ResourceQ Enemy)
-blankEmenyPool g0 = snd $ foldr add (g0,Map.empty) allEnemyTypes
+blankEnemyPool :: Gen (Map EnemyType (ResourceQ Enemy))
+blankEnemyPool = foldM add Map.empty allEnemyTypes
   where
-  add e (g,m) = let (g1,g2) = split g
-                in (g2, Map.insert e (RQ.empty g1) m)
+  add m e = do q <- rqEmpty
+               return (Map.insert e q m)
 
-initialEnemyPool :: StdGen -> [Enemy] -> Map EnemyType (ResourceQ Enemy)
-initialEnemyPool g0 enemies = foldr add (blankEmenyPool g0) enemies
+
+initialEnemyPool :: [Enemy] -> Gen (Map EnemyType (ResourceQ Enemy))
+initialEnemyPool enemies = do blank <- blankEnemyPool
+                              return (foldr add blank enemies)
   where
-  add e qs = Map.adjust (RQ.discard e) (enemyType e) qs
+  add e qs = Map.adjust (rqDiscard e) (enemyType e) qs
 
 
 

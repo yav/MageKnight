@@ -1,14 +1,15 @@
 {-# LANGUAGE OverloadedStrings, Safe #-}
-module MageKnight.Ruins
+module Ruins
   ( Objectve(..)
   , Reward(..)
   , Ruins(..)
   , ruins
   ) where
 
-import MageKnight.Bag
-import MageKnight.Common
-import MageKnight.Enemies
+import Common
+import Enemies
+
+import Util.Bag
 
 import Data.Text(Text)
 

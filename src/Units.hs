@@ -1,10 +1,11 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
-module MageKnight.Units where
+module Units where
 
-import MageKnight.JSON
-import MageKnight.Rule
-import MageKnight.Common
-import MageKnight.Perhaps
+import Rule
+import Common
+
+import Util.JSON
+import Util.Perhaps
 
 import           Data.Text (Text)
 import           Data.Set  (Set)

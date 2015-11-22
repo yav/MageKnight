@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
-module MageKnight.Tactic where
+module Tactic where
 
-import MageKnight.Common
+import Common
 
 import Data.Text
 

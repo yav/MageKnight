@@ -1,30 +1,29 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings, Trustworthy #-}
-module MageKnight.Game where
+module Game where
 
 import Debug.Trace
 
 
-import           MageKnight.Common
-import           MageKnight.Deed
-import           MageKnight.Offers
-import           MageKnight.Source
-import           MageKnight.Land
-import           MageKnight.Units
-import           MageKnight.Random
-import           MageKnight.Terrain
-import           MageKnight.JSON
-import           MageKnight.Player
-import           MageKnight.DeedDecks(makeCustomDeck, arytheaDeck)
-import           MageKnight.Perhaps
-import           MageKnight.Bag
-import           MageKnight.Attr
+import Common
+import Deed
+import Offers
+import Source
+import Land
+import Units
+import Terrain
+import Player
+import DeedDecks(makeCustomDeck, arytheaDeck)
+
+import Util.JSON
+import Util.Perhaps
+import Util.Bag
 
 import           Data.Text (Text)
 import           Data.Maybe(fromMaybe)
 import qualified Data.Set as Set
 
 
-
+{-
 testGame :: StdGen -> Game
 testGame g =
   Game { manaSource = newSource sourceRNG 3
@@ -60,20 +59,6 @@ data Game = Game
   , atWar       :: [Addr]
   }
 
-thePlayer :: Attr (Mono Game Player)
-thePlayer = attr player (\g a -> g { player = a })
-
-theSource :: Attr (Mono Game Source)
-theSource = attr manaSource (\g a -> g { manaSource = a })
-
-theOffers :: Attr (Mono Game Offers)
-theOffers = attr offers (\g a -> g { offers = a })
-
-theLand :: Attr (Mono Game Land)
-theLand = attr land (\g a -> g { land = a })
-
-thePlayArea :: Attr (Mono Game PlayArea)
-thePlayArea = attr playArea (\g a -> g { playArea = a })
 
 --------------------------------------------------------------------------------
 
@@ -312,7 +297,7 @@ instance Export ActionType where
                       Attack    -> "attack"
 
 
-
+-}
 
 
 

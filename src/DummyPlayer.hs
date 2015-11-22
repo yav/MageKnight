@@ -1,10 +1,10 @@
 {-# LANGUAGE RecordWildCards #-}
-module MageKnight.DummyPlayer where
+module DummyPlayer where
 
+import Common
 
-import MageKnight.Random
-import MageKnight.Common
-import MageKnight.Bag
+import Util.Bag
+import Util.Random
 
 data DummyPlayer = DummyPlayer
   { dummyPlayerCrystals :: Bag BasicMana

@@ -1,5 +1,5 @@
 {-# LANGUAGE Safe, OverloadedStrings #-}
-module MageKnight.DeedDecks
+module DeedDecks
   ( Deed
   , advancedActions
   , spells
@@ -18,12 +18,12 @@ module MageKnight.DeedDecks
   , findDeed
   ) where
 
-import           MageKnight.Deed
-import qualified MageKnight.Action         as BasicAction
-import qualified MageKnight.AdvancedAction as AdvancedAction
-import qualified MageKnight.Spell          as Spell
-import qualified MageKnight.Artifact       as Artifact
-import           MageKnight.Player (PlayerName)
+import           Deed
+import qualified Action         as BasicAction
+import qualified AdvancedAction as AdvancedAction
+import qualified Spell          as Spell
+import qualified Artifact       as Artifact
+import           Player (PlayerName)
 
 import           Data.Maybe (mapMaybe)
 import           Data.List (find)

@@ -1,9 +1,9 @@
 {-# LANGUAGE Safe, RecordWildCards #-}
-module MageKnight.Combat where
+module Combat where
 
-import MageKnight.Common
-import MageKnight.Enemies
-import MageKnight.Bag
+import Common
+import Enemies
+import Util.Bag
 
 import           Data.Map (Map)
 import qualified Data.Map as Map

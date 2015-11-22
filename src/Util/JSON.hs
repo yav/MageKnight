@@ -1,5 +1,5 @@
-{-# LANGUAGE Trustworthy, OverloadedStrings #-}
-module MageKnight.JSON
+{-# LANGUAGE Trustworthy #-}
+module Util.JSON
   ( Export(..)
   , jsonBytes
   , (.=)
