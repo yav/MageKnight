@@ -23,7 +23,7 @@ module MageKnight.Player
   , playerFame
   , playerLevel
   , playerArmor
-  , playerCardLimit
+  , playerCardLimitByFame
   , playerAddFame
 
   -- * Crystals
@@ -245,8 +245,8 @@ playerArmor p
     where l = playerLevel p
 
 -- | What's the player's default card limit, based on their fame.
-playerCardLimit :: Player -> Int
-playerCardLimit p
+playerCardLimitByFame :: Player -> Int
+playerCardLimitByFame p
   | l <= 4    = 5
   | l <= 8    = 6
   | otherwise = 7
