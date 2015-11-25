@@ -1,9 +1,9 @@
-module MageKnight.Game1 where
+module Game1 where
 
-import MageKnight.Player
-import MageKnight.Land
-import MageKnight.Offers
-import MageKnight.Source
+import Player
+import Land
+import Offers
+import Source
 
 data Game = Game
   { gamePlayers :: [Player] -- ^ In round order

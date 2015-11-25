@@ -1,5 +1,10 @@
 {-# LANGUAGE RecordWildCards #-}
-module DummyPlayer where
+module DummyPlayer
+  ( DummyPlayer
+  , dummyPlayerNew
+  , dummyPlayerTurn
+  , dummyPlayerNewRound
+  ) where
 
 import Common
 
@@ -14,15 +19,16 @@ data DummyPlayer = DummyPlayer
   }
 
 
-dummyPlayeNew :: StdGen -> [BasicMana] -> DummyPlayer
-dummyPlayeNew r cs =
-  DummyPlayer { dummyPlayerCrystals = bagFromList cs
-              , dummyPlayerDeck     = deck
-              , dummyPlayerDiscards = []
-              , dummyPlayerRand     = r1
-              }
+dummyPlayerNew :: [BasicMana] -> Gen DummyPlayer
+dummyPlayerNew cs =
+  do deck <- shuffle initalDeck
+     r1   <- randStdGen
+     return DummyPlayer { dummyPlayerCrystals = bagFromList cs
+                        , dummyPlayerDeck     = deck
+                        , dummyPlayerDiscards = []
+                        , dummyPlayerRand     = r1
+                        }
   where
-  (deck, r1) = shuffle r initalDeck
   initalDeck = concatMap (replicate 4) anyBasicMana
 
 dummyPlayerTurn :: DummyPlayer -> Maybe DummyPlayer
@@ -39,13 +45,13 @@ dummyPlayerTurn DummyPlayer { .. } =
 
 dummyPlayerNewRound :: DummyPlayer -> BasicMana -> BasicMana -> DummyPlayer
 dummyPlayerNewRound DummyPlayer { .. } newCrystal newCard =
-  DummyPlayer { dummyPlayerCrystals = bagAdd 1 newCrystal dummyPlayerCrystals
-              , dummyPlayerDeck = newDeck
-              , dummyPlayerDiscards = []
-              , dummyPlayerRand = newR
-              }
-    where
-    (newDeck,newR) = shuffle dummyPlayerRand (newCard : dummyPlayerDeck ++
-                                                        dummyPlayerDiscards)
-
+  genRandFun dummyPlayerRand $
+    do newDeck <- shuffle (newCard : dummyPlayerDeck ++ dummyPlayerDiscards)
+       return $ \newR ->
+          DummyPlayer
+            { dummyPlayerCrystals = bagAdd 1 newCrystal dummyPlayerCrystals
+            , dummyPlayerDeck     = newDeck
+            , dummyPlayerDiscards = []
+            , dummyPlayerRand     = newR
+            }
 
