@@ -47,6 +47,7 @@ library
     Util.JSON,
     Util.Random,
     Util.ResourceQ,
+    Util.Q,
     Util.Bag,
     Util.Perhaps
 
