@@ -12,43 +12,43 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
+  hs-source-dirs: src
   exposed-modules:
-    MageKnight.Rule,
-    MageKnight.Deed,
-    MageKnight.Action,
-    MageKnight.AdvancedAction,
-    MageKnight.Spell,
-    MageKnight.Artifact,
-    MageKnight.DeedDecks,
+    Rule,
+    Deed,
+    Action,
+    AdvancedAction,
+    Spell,
+    Artifact,
+    DeedDecks,
 
-    MageKnight.Units,
+    Units,
 
-    MageKnight.Enemies,
-    MageKnight.Ruins,
+    Enemies,
+    Ruins,
 
-    MageKnight.Land,
-    MageKnight.GameTile,
-    MageKnight.HexContent,
-    MageKnight.Terrain,
+    Land,
+    GameTile,
+    HexContent,
+    Terrain,
 
-    MageKnight.Player,
-    MageKnight.Tactic,
-    MageKnight.Skill,
-    MageKnight.DummyPlayer,
-    MageKnight.Combat,
+    Player,
+    Tactic,
+    Skill,
+    DummyPlayer,
+    Combat,
 
-    MageKnight.Game,
-    MageKnight.Game1,
-    MageKnight.Common,
-    MageKnight.Offers,
-    MageKnight.Source,
+    Game,
+    Game1,
+    Common,
+    Offers,
+    Source,
 
-    MageKnight.JSON,
-    MageKnight.Random,
-    MageKnight.ResourceQ,
-    MageKnight.Bag,
-    MageKnight.Perhaps
-    MageKnight.Attr
+    Util.JSON,
+    Util.Random,
+    Util.ResourceQ,
+    Util.Bag,
+    Util.Perhaps
 
   build-depends:
     base,
@@ -63,21 +63,20 @@ library
   default-language:    Haskell2010
   GHC-options: -Wall
 
-executable MageKnight
-  hs-source-dirs: exes
-  main-is: Main.hs
-  GHC-options: -Wall
-  default-language:    Haskell2010
-  build-depends:
-    MageKnight == 0.1.0.0,
-    base,
-    text,
-    filepath,
-    bytestring,
-    containers,
-    snap-core,
-    snap-server,
-    transformers,
-    random
-
+-- executable MageKnight
+--   hs-source-dirs: exes
+--   main-is: Main.hs
+--   GHC-options: -Wall
+--   default-language:    Haskell2010
+--   build-depends:
+--     MageKnight == 0.1.0.0,
+--     base,
+--     text,
+--     filepath,
+--     bytestring,
+--     containers,
+--     snap-core,
+--     snap-server,
+--     transformers,
+--     random
 
