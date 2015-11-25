@@ -48,6 +48,7 @@ library
     Util.Random,
     Util.ResourceQ,
     Util.Q,
+    Util.Misc,
     Util.Bag,
     Util.Perhaps
 

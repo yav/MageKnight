@@ -80,6 +80,7 @@ import Util.Bag
 import Util.Perhaps
 import Util.JSON
 import Util.Random
+import Util.Misc(repeatN)
 
 import Data.Maybe (isNothing,fromMaybe)
 import Data.Text (Text)
@@ -472,9 +473,6 @@ tacticRethink xs0 p0 =
             return $ shuffleDeeds
                    $ p3 { deedDeck    = discardPile p3 ++ deedDeck p3
                         , discardPile = [] }
-
-repeatN :: Monad m => Int -> (a -> m a) -> (a -> m a)
-repeatN n step s = if n > 0 then step s >>= repeatN (n-1) step else return s
 
 
 -- | Draw 2 extra cards.
