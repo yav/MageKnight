@@ -21,6 +21,10 @@ module Offers
   , takeMonasteryTech
   , takeSkill
 
+    -- * Artifacts
+  , takeArtifacts
+  , returnArtifact
+
     -- * Others
   , newSkill
   , newMonastery
@@ -36,6 +40,7 @@ import Util.JSON
 import Util.Perhaps
 import Util.Random
 import Util.ResourceQ
+import Util.Q
 
 import Control.Monad(guard)
 
@@ -187,7 +192,7 @@ data Offers = Offers
   , spellOffer          :: Offer Deed
   , unitOffer           :: UnitOffer
   , monasteryTech       :: [Deed]   -- part of unit offer
-  , artifactDeck        :: ResourceQ Deed
+  , artifactDeck        :: Q Deed
   , activeMonasteries   :: Int
     -- ^ Revealed monasteries that have not been burnt.
 
@@ -252,7 +257,6 @@ setupOffers OfferSetup { .. } =
   do advancedActionOffer <- newDeedOffer useAdvancedActionNum useAdvancedActions
      spellOffer          <- newDeedOffer useSpellNum useSpells
      emptyUnit           <- emptyUnitOffer useRegularUnits useEliteUnits
-     artifactDeck        <- rqFromListRandom useArtifacts
      return Offers
       { unitNumber          = useUnitNum
       , unitOffer           = stockUpRegulars useUnitNum emptyUnit
@@ -261,6 +265,7 @@ setupOffers OfferSetup { .. } =
       , activeMonasteries   = 0
 
       , commonSkillOffer    = []
+      , artifactDeck        = qFromList useArtifacts
 
       , ..
       }
@@ -276,6 +281,20 @@ offeringUnits = unitsOnOffer . unitOffer
 
 offeringMonasteries :: Offers -> [Deed]
 offeringMonasteries = monasteryTech
+
+
+-- | Take the given number of artifacts.  If there aren't enough,
+-- then return whatever is available.
+takeArtifacts ::  Int -> Offers -> ([Deed], Offers)
+takeArtifacts n Offers { .. } =
+  case qTakeFrontN n artifactDeck of
+    Just (as,q) -> (as, Offers { artifactDeck = q, .. })
+    Nothing     -> (qToList artifactDeck, Offers { artifactDeck = qEmpty, .. })
+
+-- | Place this artifact at the bottom of the artifcat deck.
+returnArtifact :: Deed -> Offers -> Offers
+returnArtifact d Offers { .. } =
+  Offers { artifactDeck = qAddBack d artifactDeck, .. }
 
 
 takeAdvancedAction :: Int -> Offers -> Maybe (Deed, Offers)
