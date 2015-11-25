@@ -10,6 +10,7 @@ module Player
   -- * Deeds
   , drawCard
   , takeCard
+  , takeCards
   , newDeed
   , newDiscardedDeed
   , deedsEmpty
@@ -82,8 +83,9 @@ import Util.Random
 
 import Data.Maybe (isNothing,fromMaybe)
 import Data.Text (Text)
-import Data.List (partition)
-import Control.Monad(guard)
+import qualified Data.Text as Text
+import Data.List (partition, sort)
+import Control.Monad(guard, foldM)
 
 type PlayerName = Text
 
@@ -177,12 +179,37 @@ newDeed d Player { .. } = Player { deedDeck = d : deedDeck, .. }
 newDiscardedDeed :: Deed -> Player -> Player
 newDiscardedDeed d Player { .. } = Player { discardPile = d : discardPile, .. }
 
+-- | Shuffle the discard pile of a player.
+shuffleDiscard :: Player -> Player
+shuffleDiscard Player { .. } =
+  genRandFun rng $ do ds <- shuffle discardPile
+                      return $ \r -> Player { discardPile = ds, rng = r, .. }
+
+shuffleDeeds :: Player -> Player
+shuffleDeeds Player { .. } =
+  genRandFun rng $ do ds <- shuffle deedDeck
+                      return $ \r -> Player { deedDeck = ds, rng = r, .. }
+
 -- | Remove a card from the player's hand.
 takeCard :: Int -> Player -> Maybe (Deed, Player)
 takeCard n Player { .. } =
   case splitAt n hand of
     (as,b:bs) -> Just (b, Player { hand = as ++ bs, .. })
     _         -> Nothing
+
+-- | Remove the selected cards from the player's hand.
+takeCards :: [Int] -> Player -> Perhaps ([Deed], Player)
+takeCards ns p0 = foldM rm ([],p0)
+                   -- when we remove a card all following indexes
+                   -- need to be decreased by one.
+                $ zipWith subtract [ 0 .. ]
+                $ sort ns
+  where
+  rm (ds,p) n = perhaps (Text.append "Invalid index " (Text.pack (show n)))
+              $ do (d,p1) <- takeCard n p
+                   return (d:ds,p1)
+
+
 
 -- | Is the player's deed deck empty?
 deedsEmpty :: Player -> Bool
@@ -433,27 +460,22 @@ gainSkill s p = p { skills = (s,Unused) : skills p }
 setTactic :: Tactic -> Player -> Player
 setTactic t p = p { tactic = Just t }
 
--- | Replace up to 3 cards.
+-- | Replace up to 3 cards. XXX: WRONG INDEXES
 tacticRethink :: [Int] -> Player -> Perhaps Player
-tacticRethink xs0 p0
-  | length xs0 > 3 = Failed "Cannot rethink more than 3 cards"
-  | otherwise      = go p0 xs0
-  where
-  go p [] = genRandFun (rng p) $
-              do cs <- shuffle (discardPile p ++ deedDeck p)
-                 return $ \g -> Ok p { discardPile = []
-                                     , deedDeck = cs
-                                     , rng = g
-                                     }
-  go p (x : xs) = do p1 <- rethink p x
-                     go p1 xs
-  rethink p i =
-    case takeCard i p of
-      Nothing -> Failed "No such card"
-      Just (c,p1) ->
-        case drawCard (newDiscardedDeed c p1) of
-          Nothing -> Failed "Insufficient cards in deed deck"
-          Just p2 -> Ok p2
+tacticRethink xs0 p0 =
+  case splitAt 3 xs0 of
+    (_,_:_) -> Failed "Cannot rethink more than 3 cards"
+    _ -> do (ds,p1) <- takeCards xs0 p0
+            let p2 = foldr newDiscardedDeed p1 ds
+            p3 <- perhaps "Insufficient cards in deed deck"
+                $ repeatN (length xs0) drawCard p2
+            return $ shuffleDeeds
+                   $ p3 { deedDeck    = discardPile p3 ++ deedDeck p3
+                        , discardPile = [] }
+
+repeatN :: Monad m => Int -> (a -> m a) -> (a -> m a)
+repeatN n step s = if n > 0 then step s >>= repeatN (n-1) step else return s
+
 
 -- | Draw 2 extra cards.
 tacticGreatStart :: Player -> Player
@@ -464,43 +486,32 @@ tacticGreatStart = tryDraw . tryDraw
 -- | If the deed deck is empty, put 3 random cards from the discard pile
 -- into the deed deck.
 tacticLongNight :: Player -> Perhaps Player
-tacticLongNight Player { .. } =
-  case deedDeck of
-    [] -> genRandFun rng $
-            do ds <- shuffle discardPile
-               let (as,bs) = splitAt 3 ds
-               return $ \g -> Ok Player { deedDeck = as
-                                        , discardPile = bs, rng = g, .. }
-
+tacticLongNight p =
+  case deedDeck p of
+    [] -> do let p1      = shuffleDiscard p
+                 (as,bs) = splitAt 3 (discardPile p1)
+             return p1 { deedDeck = as, discardPile = bs }
     _  -> Failed "Long night requires an empty deed deck"
+
 
 -- | Move up to 5 cards from hand to deed deck, shuffle it, then
 -- draw as many cards.
 tacticMidnightMeditation :: [Int] -> Player -> Perhaps Player
-tacticMidnightMeditation xs = go 0 xs
-    where
-    go n [] p = genRandFun (rng p) $
-                    do ds <- shuffle (deedDeck p)
-                       return $ \g ->
-                         Ok $ iterate (\q -> fromMaybe q (drawCard q))
-                                      p { deedDeck = ds, rng = g }
-                              !! n
-    go n (a : as) p
-      | n >= 5 = Failed "Meditation is limited to 5"
-      | otherwise =
-        case takeCard a p of
-          Just (d,p1) -> go (n+1) as p1 { deedDeck = d : deedDeck p1 }
-          Nothing     -> Failed "Invalid card"
+tacticMidnightMeditation xs p0 =
+  case splitAt 5 xs of
+    (_,_ : _) -> Failed "Midnight meditation is limited to 5"
+    _ -> do (ds,p1) <- takeCards xs p0
+            let p2 = shuffleDeeds (foldr newDeed p1 ds)
+            return $ iterate tryDraw p2 !! length xs
+  where
+  tryDraw p = fromMaybe p (drawCard p)
 
-
+-- | Pick a card from the deed deck, then reshuffle it.
 tacticPreparation :: Int -> Player -> Maybe Player
 tacticPreparation n Player { .. } =
   case splitAt n deedDeck of
-    (as,b:bs) -> genRandFun rng $
-      do ds <- shuffle (as ++ bs)
-         return $ \g -> Just Player { hand = b : hand
-                                    , deedDeck = ds
-                                    , rng = g, .. }
+    (as,b:bs) -> return $ shuffleDeeds
+                          Player { hand = b : hand, deedDeck = as ++ bs, .. }
     _ -> Nothing
 
 --------------------------------------------------------------------------------
