@@ -26,37 +26,43 @@ data Source = Source
   }
 
 
-rollDice :: Int -> StdGen -> ([Mana], StdGen)
-rollDice n g = genRand g $ replicateM n $ oneOf anyMana
+rollDice :: Int -> Gen [Mana]
+rollDice n = replicateM n (oneOf anyMana)
 
 -- | Make a new source, with the given number of dice.
-newSource :: StdGen -> Int -> Source
-newSource r0 sourceSize =
-  let (sourceMana,sourceRNG) = mkSource r0
-  in Source { sourceFixed = bagEmpty, .. }
+newSource :: Int -> Gen Source
+newSource sourceSize =
+  do sourceMana <- mkSource
+     sourceRNG  <- randStdGen
+     return Source { sourceFixed = bagEmpty, .. }
   where
-  validBag x = (bagLookup Gold x + bagLookup Black x) <= div sourceSize 2
-  mkSource g = let (ds,g1) = rollDice sourceSize g
-                   b       = bagFromList ds
-               in if validBag b then (b,g1) else mkSource g1
+  mkSource = do ds <- rollDice sourceSize
+                let b = bagFromList ds
+                if validBag b then return b else mkSource
 
+  validBag x = (bagLookup Gold x + bagLookup Black x) <= div sourceSize 2
 
 -- | Replenish spent mana.  Used at end of turn.
 refillSource :: Source -> Source
 refillSource Source { .. } =
-  Source { sourceRNG = rng
-         , sourceMana = bagUnion (bagFromList ds) currentDice
-         , sourceFixed = bagEmpty
-         , ..
-         }
+  genRandFun sourceRNG $
+    do ds <- rollDice (sourceSize - bagSize currentDice)
+       return $ \rng ->
+         Source { sourceRNG   = rng
+                , sourceMana  = bagUnion (bagFromList ds) currentDice
+                , sourceFixed = bagEmpty
+                , ..
+                }
   where
   currentDice = bagUnion sourceFixed sourceMana
-  (ds, rng)   = rollDice (sourceSize - bagSize currentDice) sourceRNG
 
 -- | Setup a whole new source.  Used at the end of a round.
 -- Assumes that stolen mana has been returned.
 renewSource :: Source -> Source
-renewSource Source { .. } = newSource sourceRNG sourceSize
+renewSource Source { .. } =
+  genRandFun sourceRNG $
+     do s1 <- newSource sourceSize
+        return $ \_ -> s1
 
 
 
