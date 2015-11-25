@@ -63,7 +63,7 @@ module Player
 
   , tacticRethink
   , tacticGreatStart
-  , tacticLlongNight
+  , tacticLongNight
   , tacticMidnightMeditation
   , tacticPreparation
   ) where
@@ -78,7 +78,7 @@ import Tactic
 import Util.Bag
 import Util.Perhaps
 import Util.JSON
-import Util.Random(StdGen, shuffle, genRandFun)
+import Util.Random
 
 import Data.Maybe (isNothing,fromMaybe)
 import Data.Text (Text)
@@ -138,12 +138,12 @@ playerLocation = location
 
 
 -- | A new player with the given deck.
-newPlayer :: StdGen -> Text -> [Deed] -> [Skill] -> Player
-newPlayer g name deeds ski = genRandFun g $
+newPlayer :: Text -> [Deed] -> [Skill] -> Gen Player
+newPlayer name deeds ski =
   do shuffledDeeds   <- shuffle deeds
      potentialSkills <- shuffle ski
-     return $ \rng ->
-       Player
+     rng             <- randStdGen
+     return Player
        { name            = name
        , fame            = 0
        , reputation      = 0
@@ -184,22 +184,24 @@ takeCard n Player { .. } =
     (as,b:bs) -> Just (b, Player { hand = as ++ bs, .. })
     _         -> Nothing
 
-
+-- | Is the player's deed deck empty?
 deedsEmpty :: Player -> Bool
 deedsEmpty Player { .. } = null deedDeck
 
+-- | Is the player's hand empty?
 handEmpty :: Player -> Bool
 handEmpty Player { .. } = null hand
 
 
 -- | Add a crystal to the player's inventory.
--- Does nothign if the inventory already has 3 crystals of this color.
+-- Fails if the inventory already has 3 crystals of this color.
 addCrystal :: BasicMana -> Player -> Maybe Player
 addCrystal c Player { .. } =
   do guard (bagLookup c crystals < 3)
      return Player { crystals = bagAdd 1 c crystals, .. }
 
 -- | Use up one of the player's crystals.
+-- Fails if there is no such crystal.
 removeCrystal :: BasicMana -> Player -> Maybe Player
 removeCrystal c Player { .. } =
   do cs <- bagRemove 1 c crystals
@@ -215,6 +217,7 @@ playerFame = fame
 
 -- | Change the player's fame by this much.
 -- Negative numbers decrease fame.
+-- Fails if this results in too little or too much fame.
 playerAddFame :: Int -> Player -> Maybe Player
 playerAddFame n Player { .. } =
   do guard (val >= 0 && val <= 119)
@@ -258,6 +261,7 @@ playerCardLimitByFame p
 
 
 -- | If a player gets too many wounds in a combat, then they get knocked out.
+-- All cards except wounds are discarded.
 knockOut :: Player -> Player
 knockOut Player { .. } =
   let (wounds,others) = partition (== wound) hand
@@ -329,14 +333,13 @@ backToSafety Player { .. } =
     Just (a,w) -> Player { location = a, hand = replicate w wound ++ hand, .. }
 
 -- | Try to add a unit to the player.  Failes if there are no open slots.
--- XXX: Active unite
 hireUnit :: Unit -> Player -> Maybe Player
 hireUnit u Player { .. } =
   case break isNothing units of
     (as,_:bs) -> Just Player { units = as ++ Just (activeateUnit u) : bs, .. }
     _         -> Nothing
 
--- | Disband the given unit
+-- | Disband the given unit.
 disbandUnit :: Int -> Player -> Maybe (Unit, Player)
 disbandUnit u Player { .. } =
   case splitAt u units of
@@ -344,7 +347,7 @@ disbandUnit u Player { .. } =
                                                , .. })
     _              -> Nothing
 
-
+-- | Modify a hired unit in some way.
 updateUnit :: (ActiveUnit -> ActiveUnit) -> Int -> Player -> Maybe Player
 updateUnit f u Player { .. } =
   case splitAt u units of
@@ -377,7 +380,8 @@ unitToggleReady = updateUnit $ \ActiveUnit { .. } ->
 addUnitSlot :: Player -> Player
 addUnitSlot Player { .. } = Player { units = units ++ [Nothing], .. }
 
-
+-- | If a player has only wounds in their hand, then they may discard
+-- one wound to their discard pile.
 slowRecovery :: Player -> Perhaps Player
 slowRecovery Player { .. } =
   case hand of
@@ -386,6 +390,7 @@ slowRecovery Player { .. } =
       | any (/= wound) hand -> Failed "Requires only wounds in hand"
       | otherwise -> Ok Player { hand = cs, discardPile = c : discardPile, .. }
 
+-- | Discard a non-wound card and all would cards.
 standardRest :: Int {-^ Discard this (non-wound) card -} ->
                 Int {-^ Discards this many wounds -} ->
                 Player -> Perhaps Player
@@ -410,7 +415,7 @@ standardRest i woundNum Player { .. } =
 
 --------------------------------------------------------------------------------
 
--- | Take 2 skills for level-up options.  In the unlikely case that there
+-- | Take 2 skills to choose for level-up.  In the unlikely case that there
 -- are not enough skills left, we return whatever is available.
 nextSkillSet :: Player -> ([Skill],Player)
 nextSkillSet p = (xs, p { potentialSkills = rest })
@@ -424,9 +429,11 @@ gainSkill s p = p { skills = (s,Unused) : skills p }
 
 --------------------------------------------------------------------------------
 
+-- | Set the player's tactic.
 setTactic :: Tactic -> Player -> Player
 setTactic t p = p { tactic = Just t }
 
+-- | Replace up to 3 cards.
 tacticRethink :: [Int] -> Player -> Perhaps Player
 tacticRethink xs0 p0
   | length xs0 > 3 = Failed "Cannot rethink more than 3 cards"
@@ -448,12 +455,16 @@ tacticRethink xs0 p0
           Nothing -> Failed "Insufficient cards in deed deck"
           Just p2 -> Ok p2
 
+-- | Draw 2 extra cards.
 tacticGreatStart :: Player -> Player
 tacticGreatStart = tryDraw . tryDraw
   where tryDraw p = fromMaybe p (drawCard p)
 
-tacticLlongNight :: Player -> Perhaps Player
-tacticLlongNight Player { .. } =
+
+-- | If the deed deck is empty, put 3 random cards from the discard pile
+-- into the deed deck.
+tacticLongNight :: Player -> Perhaps Player
+tacticLongNight Player { .. } =
   case deedDeck of
     [] -> genRandFun rng $
             do ds <- shuffle discardPile
@@ -463,6 +474,8 @@ tacticLlongNight Player { .. } =
 
     _  -> Failed "Long night requires an empty deed deck"
 
+-- | Move up to 5 cards from hand to deed deck, shuffle it, then
+-- draw as many cards.
 tacticMidnightMeditation :: [Int] -> Player -> Perhaps Player
 tacticMidnightMeditation xs = go 0 xs
     where
