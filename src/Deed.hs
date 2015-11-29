@@ -10,6 +10,10 @@ module Deed
   , spellDeed
   , artifactDeed
 
+  , ActivedDeed(..)
+  , ActiveWay(..)
+  , SimpleDeed(..)
+
   , deedRules
   ) where
 
@@ -20,6 +24,18 @@ import Util.JSON
 import           Data.Text ( Text )
 import qualified Data.Text as Text
 
+
+-- | A deed that has been played to get its benefits
+data ActivedDeed = ActiveDeed
+  { baseDeed  :: Deed       -- ^ The card that was played
+  , activeWay :: ActiveWay  -- ^ How it was played
+  }
+
+data ActiveWay  = ActiveBase          -- ^ Basic ability, or day spell.
+                | ActivePower         -- ^ Powered up card, or night spell.
+                | ActiveAs SimpleDeed -- ^ Play "sideways"
+
+data SimpleDeed = Move1 | Attack1 | Block1 | Influence1
 
 
 data Deed     = Deed { deedName      :: DeedName

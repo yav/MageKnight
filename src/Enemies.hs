@@ -25,6 +25,7 @@ data EnemyAbility =
 
 data EnemyAttack = AttacksWith Element Int
                  | Summoner
+                 -- XXX: Double attack
                    deriving (Eq,Show)
 
 data EnemyType  = Orc | Guardian | Mage | Underworld | Citizen | Draconum
@@ -35,11 +36,11 @@ allEnemyTypes = [ minBound .. maxBound ]
 
 data Enemy = Enemy
   { enemyName       :: Text
-  , enemyType       :: EnemyType
-  , enemyArmor      :: Int
+  , enemyType       :: EnemyType          -- ^ The color of the token
+  , enemyArmor      :: Int                -- ^ How much armor
   , enemyAttack     :: EnemyAttack
-  , enemyFameGain   :: Int
-  , enemyAbilities  :: Set EnemyAbility
+  , enemyFameGain   :: Int                -- ^ Fame gain for win
+  , enemyAbilities  :: Set EnemyAbility   -- ^ special abilities
   } deriving Show
 
 instance Eq Enemy where
