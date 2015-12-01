@@ -64,6 +64,7 @@ instance Export EnemyType where
 
 
 
+
 --------------------------------------------------------------------------------
 
 allEnemies :: [Enemy]

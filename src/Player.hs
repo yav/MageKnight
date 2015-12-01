@@ -42,6 +42,7 @@ module Player
 
   -- * Damage
   , assignDamage
+  , assignDamageToUnit
   , WoundLocation(..)
   , healWound
   , knockOut
@@ -295,22 +296,42 @@ knockOut Player { .. } =
   let (wounds,others) = partition (== wound) hand
   in Player { hand = wounds, discardPile = others ++ discardPile, .. }
 
+
 -- | Assign combat damage to a player.
-assignDamage :: Int    {- ^ Damage to assign -} ->
-                Bool   {- ^ Poison? -} ->
-                Player {- ^ Player to assign the damage to -} ->
-                (Int, Player)
+assignDamage :: Int        {- ^ Damage to assign -} ->
+                DamageInfo {- ^ What sort of damage -} ->
+                Player     {- ^ Player to assign the damage to -} ->
+                Player
                 -- ^ How many wounds we assigned and updated player
-assignDamage d poison p =
-  ( woundNum
-  , p { hand        = replicate woundNum wound ++ hand p
-      , discardPile = replicate poisonDamage wound ++ discardPile p
-      }
-  )
+assignDamage d i p =
+  p { hand        = keep
+    , discardPile = discard ++ replicate poisonDamage wound ++ discardPile p
+    }
   where
   armor         = playerArmor p
   woundNum      = div (max 0 d + armor - 1) armor
-  poisonDamage  = if poison then woundNum else 0
+  poisonDamage  = if damagePoisons i then woundNum else 0
+  handCards     = replicate woundNum wound ++ hand p
+
+  (keep,discard)
+    | damageParalyzes i = partition (wound ==) handCards
+    | otherwise         = (handCards, [])
+
+assignDamageToUnit :: Int {- ^ Unit id -} ->
+                      Int {- ^ Damage amount -} ->
+                      DamageInfo ->
+                      Player -> Perhaps (Int, Player)
+                        -- ^ Remaining damage, and updated player
+assignDamageToUnit uid amt d Player { .. } =
+  case splitAt uid units of
+    (as, Just b : bs) ->
+      do (moreDmg, mb) <- unitAssignDamage amt d b
+         return (moreDmg, Player { units = as ++ mb : bs, .. })
+
+
+    _ -> Failed "No such unit"
+
+
 
 
 data WoundLocation = WoundInHand | WoundInDiscardPile

@@ -35,13 +35,13 @@ endOfCombat :: ActiveUnit -> ActiveUnit
 endOfCombat u = u { unitAssignedDamageThisCombat = False }
 
 -- | Assign some type of damage to a unit.
-unitAssignDamage :: Bool        {- ^ Is this poison damage? -} ->
-                    Element     {- ^ Type of damage -} ->
-                    Int         {- ^ Amount of damage -} ->
+unitAssignDamage :: Int {-^ Amount -} ->
+                    DamageInfo ->
                     ActiveUnit  {-^ Unit to be damaged -} ->
-                    Perhaps (Int, ActiveUnit)
+                    Perhaps (Int, Maybe ActiveUnit)
                     -- ^ Remaining damage and updated unit.
-unitAssignDamage poison el damage ActiveUnit { .. }
+                    -- If the unit is paralized, we return 'Nothing'.
+unitAssignDamage damage DamageInfo { .. } ActiveUnit { .. }
 
   | damage < 1 =
     Failed "Units may be assigned only positive amount of damage."
@@ -53,16 +53,16 @@ unitAssignDamage poison el damage ActiveUnit { .. }
     Failed "The unit was already assigned damage this combat."
 
   | otherwise =
-    let resistant = el `Set.member` unitResists baseUnit
+    let resistant = damageElement `Set.member` unitResists baseUnit
         armor     = unitArmor baseUnit
         absorbed  = if resistant then 2 * armor else armor
-        wounds    = if poison then 2 else 1
+        wounds    = if damagePoisons then 2 else 1
+        actualWounds = if resistant && damage <= armor then 0 else wounds
     in Ok ( max 0 (damage - absorbed)
-          , ActiveUnit { unitAssignedDamageThisCombat = True
-                       , unitWounds = if resistant && damage <= armor
-                                         then 0
-                                         else wounds
-                       , .. }
+          , if actualWounds > 0 && damageParalyzes
+              then Nothing
+              else Just ActiveUnit { unitAssignedDamageThisCombat = True
+                                   , unitWounds = actualWounds, .. }
           )
 
 data UnitType = RegularUnit | EliteUnit

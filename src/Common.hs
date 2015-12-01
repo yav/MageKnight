@@ -44,6 +44,14 @@ data Time       = Day | Night
                   deriving (Eq,Ord,Show)
 
 
+-- | Information about what sort of damage are we assigning.
+data DamageInfo = DamageInfo { damageElement    :: Element
+                             , damagePoisons    :: Bool
+                             , damageParalyzes  :: Bool
+                             }
+
+
+
 anyBasicMana :: [ BasicMana ]
 anyBasicMana = [ Red, Green, Blue, White ]
 

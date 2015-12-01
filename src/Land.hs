@@ -23,6 +23,10 @@ module Land
   , getRevealedEnemiesAt
   , locationCardBonus
 
+    -- * Combat
+  , doRevealHidden
+  , summonCreature
+  , discardEnemy
 
   ) where
 
@@ -253,6 +257,24 @@ revealHidden a l = updateAddr a (\h -> upd h (hexContent h)) l
              Just MageTower    -> during Day hexReveal
              Just Keep         -> during Day hexReveal
              _                 -> id
+
+-- | Reveal all hidden enemies.  Used at the start of combat.
+doRevealHidden :: Addr -> Land -> Land
+doRevealHidden a = updateAddr a (\HexInfo { .. } -> hexReveal hexContent)
+
+-- | Summon a creature to be used by enemies with sommoner powers.
+summonCreature :: Land -> Maybe (Enemy, Land)
+summonCreature Land { .. } =
+  do rq      <- Map.lookup summonTy enemyPool
+     (e,rq1) <- rqTake rq
+     return (e, Land { enemyPool = Map.insert summonTy rq1 enemyPool, .. })
+  where
+  summonTy = Underworld
+
+discardEnemy :: Enemy -> Land -> Land
+discardEnemy e Land { .. } =
+  Land { enemyPool = Map.adjust (rqDiscard e) (enemyType e) enemyPool, .. }
+
 
 -- | Try to explore the given address.
 -- If successful, returns an updated land, and the number of

@@ -6,6 +6,9 @@ import Enemies
 import Util.Perhaps
 import Util.Bag
 import Deed
+import Player
+import Land
+import Terrain
 
 import           Data.Map (Map)
 import qualified Data.Map as Map
@@ -13,8 +16,11 @@ import           Data.Set ( Set )
 import qualified Data.Set as Set
 import           Data.Foldable (any, foldr)
 import           Data.Either(partitionEithers)
+import           Data.Maybe(isNothing)
+import           Data.List(partition)
 import           Prelude hiding (any, foldr)
 import           qualified Data.Text as Text
+import           Control.Monad(when)
 
 
 --------------------------------------------------------------------------------
@@ -44,7 +50,9 @@ mayAddRampagingNeighbours reason =
 data ActiveEnemy = ActiveEnemy
   { enemyId         :: Int    -- ^ Used to distinguish enemies during a combat
   , enemyFortLoc    :: Bool   -- ^ In a fortified location
-  , enemyWillAttack :: Bool   -- ^ Usually yes, but it might be disabled.
+
+  , enemyInCity     :: Maybe BasicMana
+    -- ^ Is this enemy in a city.  Used when we active summoned enemies.
 
   , enemyOrigStats  :: Enemy
     -- ^ Original stats of the enemy.
@@ -55,7 +63,36 @@ data ActiveEnemy = ActiveEnemy
     -- ^ Current enemy stats, which may include various bonuses
     -- (e.g., due to city bonuses), or be updated by casting spells
     -- on the enemy.
+
+  , isSummoned      :: Bool
   }
+
+
+-- | Compute the active stats for an enemy, depending on the city they are in
+activeStats :: Maybe BasicMana -> Enemy -> Enemy
+activeStats mb e =
+  case mb of
+    Nothing -> e
+    Just city ->
+      case city of
+        White -> e { enemyArmor = enemyArmor e + 1 }
+        Blue  -> case enemyAttack e of
+                   Summoner -> e
+                   AttacksWith el n ->
+                     case el of
+                        Physycal -> e
+                        Fire     -> e { enemyAttack = AttacksWith el (n+2) }
+                        Ice      -> e { enemyAttack = AttacksWith el (n+2) }
+                        ColdFire -> e { enemyAttack = AttacksWith el (n+1) }
+        Red   -> case enemyAttack e of
+                   AttacksWith Physycal _ ->
+                     e { enemyAbilities = Set.insert Brutal (enemyAbilities e) }
+                   _ -> e
+        Green ->
+          case enemyAttack e of
+            AttacksWith Physycal _ ->
+              e { enemyAbilities = Set.insert Poisons (enemyAbilities e) }
+            _ -> e
 
 enemyHasAbility :: EnemyAbility -> ActiveEnemy -> Bool
 enemyHasAbility x = Set.member x . enemyAbilities . enemyStats
@@ -64,6 +101,18 @@ enemyResists :: Element -> ActiveEnemy -> Bool
 enemyResists ColdFire e = enemyHasAbility (Resists Ice) e &&
                           enemyHasAbility (Resists Fire) e
 enemyResists x e        = enemyHasAbility (Resists x) e
+
+isSummoner :: ActiveEnemy -> Bool
+isSummoner e =
+  case enemyAttack (enemyStats e) of
+    Summoner -> True
+    _        -> False
+
+isBlockPhase :: CombatPhaseType -> Bool
+isBlockPhase ph =
+  case ph of
+    BlockPhase _ -> True
+    _            -> False
 
 
 instance Eq ActiveEnemy where
@@ -88,26 +137,72 @@ instance Ord ActiveEnemy where
 -- | Used for ranged attack, blockinga, and melee attacks.
 data CombatPhase = CombatPhase
   { currentSkirmish   :: Maybe Skirmish
-    -- ^ What we are doinf currently
+    -- ^ What we are attcaking/blocking currently
+
+  , combatPhase       :: CombatPhaseType
+    -- ^ What phase are we working on
 
   , remainingEnemies  :: Map Int ActiveEnemy
     -- ^ Enemies available for attack
 
-  , deadEnemies       :: [Skirmish]
+  , deadEnemies       :: [Enemy]
     -- ^ Enemies that were killed
 
-  , blockedEnemies    :: [Skirmish]
-    -- ^ Enemies that were blocked
+  , usedDeeds         :: [Deed]
+    -- ^ Deeds that were used during combat, but are not active any more.
+    -- These should be returned to the player at the end of combat.
 
-  , combatPhase       :: CombatPhaseType
-    -- ^ What phase are we working on
+  , nextActiveId      :: !Int
+    -- ^ Used when we active enemies
+
+  , combatPlayer      :: Player
+    -- ^ The player conducting the combat
+
+  , combatLand        :: Land
+    -- ^ The state of the land
   }
 
 -- | Combat phases that require playing cards
 data CombatPhaseType = RangedAttackPhase
-                     | BlockPhase
-                     | AssignDamage Int -- ^ Amount left to assign
+                     | BlockPhase [ActiveEnemy] -- ^ These have been blocked
+                     | AssignDamage Damage
                      | MeleeAttackPhase
+
+data Damage = Damage
+  { damageTodo    :: [ActiveEnemy]  -- ^ More enemies that hurt us
+  , damageCurrent :: Maybe (ActiveEnemy,Int,DamageInfo)
+    -- ^ Current enemy that is hurting us, and remaing amount
+  , damageDone    :: [ActiveEnemy]
+  }
+
+-- | We've assigned all damage that we needed to
+noMoreDamage :: Damage -> Bool
+noMoreDamage Damage { .. } = null damageTodo && isNothing damageCurrent
+
+-- | Decrease some of the damage dealt by the current enemy.
+-- If we go down to 0, or less, then there is no current enemy.
+decreaseDamage :: Int -> Damage -> Perhaps Damage
+decreaseDamage n Damage { .. } =
+  do (a,m,i) <- perhaps "No enemy is currently attacking" damageCurrent
+     return $
+       if n >= m
+         then Damage { damageDone = a : damageDone
+                     , damageCurrent = Nothing, .. }
+         else Damage { damageCurrent = Just (a,m-n,i), .. }
+
+-- | Choose another enemy to assign damage from.
+pickAttacker :: Int -> Damage -> Perhaps Damage
+pickAttacker n Damage { .. }
+  | Nothing <- damageCurrent =
+    case break ((n ==) . enemyId) damageTodo of
+      (as,b:bs) ->
+        let (amt,info) = computeDamage b
+        in return Damage { damageTodo = as ++ bs
+                         , damageCurrent = Just (b, amt, info)
+                         , .. }
+      _ -> Failed "No such attacker."
+  | otherwise = Failed "Current enemy attack is not resolved yet."
+
 
 -- | An atcakk of some enemies, or a block of a single enmy.
 data Skirmish = Skirmish
@@ -119,16 +214,6 @@ data Skirmish = Skirmish
     -- ^ Deeds to resolve the attack.  Most revcently played at the front.
   }
 
--- | Start a ranged attack against some enemies.
-startCombat :: [ActiveEnemy] -> CombatPhase
-startCombat es = CombatPhase { currentSkirmish  = Nothing
-                             , remainingEnemies = Map.fromList (map prep es)
-                             , deadEnemies      = []
-                             , blockedEnemies   = []
-                             , combatPhase      = RangedAttackPhase
-                             }
-  where prep e = (enemyId e, e)
-
 -- | A skirmish with the given enemies.
 newSkirmish :: [ActiveEnemy] -> Skirmish
 newSkirmish es = Skirmish { skirmishEnemies = Map.fromList (map prep es)
@@ -136,31 +221,94 @@ newSkirmish es = Skirmish { skirmishEnemies = Map.fromList (map prep es)
                           }
   where prep e = (enemyId e, e)
 
+
+-- | Start a ranged attack against some enemies.
+startCombat :: Player -> Land -> [(Addr,Enemy)] -> CombatPhase
+startCombat p l es =
+  CombatPhase { currentSkirmish  = Nothing
+              , remainingEnemies = Map.fromList (zipWith prep [0..] es)
+              , deadEnemies      = []
+              , usedDeeds        = []
+              , combatPhase      = RangedAttackPhase
+              , combatPlayer     = p
+              , combatLand       = l
+              , nextActiveId     = length es
+              }
+  where
+  prep n (a,e) =
+    let (inCity, inFort) =
+          case getFeatureAt a l of
+            Nothing     -> (Nothing, False)
+            Just (t,mb) ->
+              case t of
+                City c -> (Just c, True)
+                _      -> (Nothing, case mb of
+                                      Nothing -> False
+                                      Just f ->
+                                        case f of
+                                          Keep              -> True
+                                          MageTower         -> True
+                                          Dungeon           -> False
+                                          Tomb              -> False
+                                          MonsterDen        -> False
+                                          SpawningGrounds   -> False
+                                          AncientRuins      -> False
+                                          RampagingEnemy _  -> False
+                                          MagicalGlade      -> False
+                                          Mine _            -> False
+                                          Village           -> False
+                                          Monastery         -> False)
+    in (n, ActiveEnemy { enemyId        = n
+                       , enemyFortLoc   = inFort
+                       , enemyInCity    = inCity
+                       , enemyOrigStats = e
+                       , enemyStats     = activeStats inCity e
+                       , isSummoned     = False
+                       })
+
 -- | Finish current skirmish.
 winSkirmish :: CombatPhase -> Perhaps CombatPhase
 winSkirmish CombatPhase { .. } =
   perhaps "Not skirmishing." $
   do s <- currentSkirmish
+     let deeds   = map baseDeed (playerActions s)
+         enemies = Map.elems (skirmishEnemies s)
+         (summoned,normal) = partition isSummoned enemies
      case combatPhase of
-       BlockPhase -> return CombatPhase { currentSkirmish = Nothing
-                                        , blockedEnemies  = s : blockedEnemies
-                                        , .. }
+       BlockPhase bs ->
+        return CombatPhase
+                { combatPhase     = BlockPhase (normal ++ bs)
+                , currentSkirmish = Nothing
+                , usedDeeds       = deeds ++ usedDeeds
+                , combatLand      = foldr discardEnemy combatLand
+                                  $ map enemyOrigStats summoned
+                , .. }
        AssignDamage _ -> error "[Bug] Skirmish while assigning damage."
-       _  -> return CombatPhase { currentSkirmish = Nothing
-                                , deadEnemies     = s : deadEnemies
-                                , .. }
+       _  -> return CombatPhase
+                     { currentSkirmish = Nothing
+                     , deadEnemies = map enemyOrigStats normal ++ deadEnemies
+                     , usedDeeds   = deeds ++ usedDeeds
+                     , combatLand  = foldr discardEnemy combatLand
+                                   $ map enemyOrigStats enemies
+                     , .. }
 
 -- | Attack or block a new group of enemies.
 startSkirmish :: [Int] -> CombatPhase -> Perhaps CombatPhase
 startSkirmish xs CombatPhase { .. }
-  | [] <- xs =
-    Failed "Cannot start an empty skirmish."
-  | _ : _ : _ <- xs, BlockPhase <- combatPhase =
-    Failed "Enemies need to be blocked one at a time."
+
   | Just _ <- currentSkirmish =
     Failed "Already in a skirmish."
+
+  | [] <- xs =
+    Failed "Cannot start an empty skirmish."
+
+  | BlockPhase _ <- combatPhase, _ : _ : _ <- xs =
+    Failed "Enemies need to be blocked one at a time."
+
   | otherwise =
     do es <- mapM lkp xs
+       when (isBlockPhase combatPhase && isSummoner (head es))
+         $ Failed "Summoners do not attack directly and need not be blocked."
        return CombatPhase
           { currentSkirmish  = Just (newSkirmish es)
           , remainingEnemies = foldr Map.delete remainingEnemies xs
@@ -186,29 +334,82 @@ nextPhase CombatPhase { .. }
     case combatPhase of
 
       RangedAttackPhase ->
-        return CombatPhase { combatPhase = BlockPhase, .. }
+        let (summoned, newLand, newId) =
+                foldr summonBy ([], combatLand, nextActiveId) $
+                filter isSummoner (Map.elems remainingEnemies)
+        in return CombatPhase { combatPhase   = BlockPhase []
+                              , combatLand    = newLand
+                              , nextActiveId  = newId
+                              , remainingEnemies =
+                                  foldr addActive remainingEnemies summoned
+                              , .. }
 
-      BlockPhase ->
-        return CombatPhase { combatPhase = AssignDamage 0 -- XXX
-                           , .. }
+      BlockPhase bs ->
+        return CombatPhase
+                 { combatPhase =
+                     AssignDamage
+                       Damage { damageTodo = rest
+                              , damageDone = sus ++ bs
+                              , damageCurrent = Nothing
+                              }
+                 , .. }
+        where (sus,rest) = partition isSummoner $ Map.elems remainingEnemies
 
-      AssignDamage n
-        | n < 0     -> error "[Bug] Negative damage to assign"
-        | n > 0     -> Failed "More damage needs to be assigned"
-        | otherwise -> return CombatPhase { combatPhase = MeleeAttackPhase, .. }
+      AssignDamage d | noMoreDamage d ->
+        let (su,rest) = Map.partition isSummoned remainingEnemies
+            es        = map enemyOrigStats (Map.elems su)
+        in return CombatPhase
+             { combatPhase      = MeleeAttackPhase
+             , remainingEnemies = foldr addActive rest (damageDone d)
+             , combatLand       = foldr discardEnemy combatLand es
+             , .. }
+
+      AssignDamage _ -> Failed "More damage needs to be assigned"
 
       MeleeAttackPhase ->
         Failed "Mellee attack is the last combat phase."
 
+  where
+  addActive a mp = Map.insert (enemyId a) a mp
 
+  summonBy s (es,l,n) =
+    case summonCreature l of
+      Nothing     -> (es,l,n) -- We run out of tokens, unlikely.
+      Just (e,l1) ->
+        let a = ActiveEnemy
+                  { enemyId         = n
+                  , enemyFortLoc    = enemyFortLoc s
+                  , enemyInCity     = enemyInCity s
+                  , enemyOrigStats  = e
+                  , enemyStats      = activeStats (enemyInCity s) e
+                  , isSummoned      = True
+                  }
+            n1 = n + 1
+        in n1 `seq` (a:es, l1, n1)
+
+{-
 resolveDamage :: Int -> CombatPhase -> Perhaps CombatPhase
 resolveDamage n CombatPhase { .. }
   | AssignDamage d <- combatPhase =
     if d >= n then return CombatPhase { combatPhase = AssignDamage (d - n), .. }
               else Failed "Tried to resolve too much damage."
   | otherwise = Failed "Not assigning damage."
-
+-}
 --------------------------------------------------------------------------------
+
+
+computeDamage :: ActiveEnemy -> (Int, DamageInfo)
+computeDamage e =
+  case enemyAttack (enemyStats e) of
+    Summoner -> error "[bug] computing damage of a summoner"
+    AttacksWith el baseAmt ->
+      ( if enemyHasAbility Brutal e then baseAmt * 2 else baseAmt
+      , DamageInfo { damageElement   = el
+                   , damagePoisons   = enemyHasAbility Poisons e
+                   , damageParalyzes = enemyHasAbility Paralyzes e
+                   }
+      )
+
 
 
 
