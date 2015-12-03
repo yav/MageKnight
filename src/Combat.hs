@@ -162,25 +162,53 @@ data CombatPhase = CombatPhase
     -- enemies.
   }
 
+
+-- | An attack of some enemies, or a block of a single enmy.
+data Skirmish = Skirmish
+  { skirmishEnemies   :: Map Int ActiveEnemy
+    -- ^ Who is being attacked or blocked, indexed by id.
+    -- Never empty.  Always singleton during the blocking phase.
+
+  , playerActions     :: [ActivedDeed]
+    -- ^ Deeds to resolve the attack.  Most recently played at the front.
+  }
+
+
+
 -- | Combat phases that require playing cards
 data CombatPhaseType = RangedAttackPhase
                      | BlockPhase [ActiveEnemy] -- ^ These have been blocked
                      | AssignDamage Damage
                      | MeleeAttackPhase
 
+-- | Current state of damage assignment.
 data Damage = Damage
   { damageTodo    :: [ActiveEnemy]  -- ^ More enemies that hurt us
   , damageCurrent :: Maybe (ActiveEnemy,Int,DamageInfo)
-    -- ^ Current enemy that is hurting us, and remaing amount
+    -- ^ Current enemy that is hurting us and remaing amount and damage type.
   , damageDone    :: [ActiveEnemy]
   }
 
--- | We've assigned all damage that we needed to
+
+-- | Determine the amount and type of damage done by an enemy.
+computeDamage :: ActiveEnemy -> (Int, DamageInfo)
+computeDamage e =
+  case enemyAttack (enemyStats e) of
+    Summoner -> error "[bug] computing damage of a summoner"
+    AttacksWith el baseAmt ->
+      ( if enemyHasAbility Brutal e then baseAmt * 2 else baseAmt
+      , DamageInfo { damageElement   = el
+                   , damagePoisons   = enemyHasAbility Poisons e
+                   , damageParalyzes = enemyHasAbility Paralyzes e
+                   }
+      )
+
+-- | We've assigned all damage that we needed to.
 noMoreDamage :: Damage -> Bool
 noMoreDamage Damage { .. } = null damageTodo && isNothing damageCurrent
 
 -- | Decrease some of the damage dealt by the current enemy.
--- If we go down to 0, or less, then there is no current enemy.
+-- If we go down to 0 or less, then there is no current enemy.
 decreaseDamage :: Int -> Damage -> Perhaps Damage
 decreaseDamage n Damage { .. } =
   do (a,m,i) <- perhaps "No enemy is currently attacking" damageCurrent
@@ -204,16 +232,6 @@ pickAttacker n Damage { .. }
   | otherwise = Failed "Current enemy attack is not resolved yet."
 
 
--- | An atcakk of some enemies, or a block of a single enmy.
-data Skirmish = Skirmish
-  { skirmishEnemies   :: Map Int ActiveEnemy
-    -- ^ Whos is being attacked or blocked, indexed by id.
-    -- Never empty.  Always singleton during blocking phase.
-
-  , playerActions     :: [ActivedDeed]
-    -- ^ Deeds to resolve the attack.  Most revcently played at the front.
-  }
-
 -- | A skirmish with the given enemies.
 newSkirmish :: [ActiveEnemy] -> Skirmish
 newSkirmish es = Skirmish { skirmishEnemies = Map.fromList (map prep es)
@@ -222,7 +240,7 @@ newSkirmish es = Skirmish { skirmishEnemies = Map.fromList (map prep es)
   where prep e = (enemyId e, e)
 
 
--- | Start a ranged attack against some enemies.
+-- | Start a combat, entering the ranged attack phase.
 startCombat :: Player -> Land -> [(Addr,Enemy)] -> CombatPhase
 startCombat p l es =
   CombatPhase { currentSkirmish  = Nothing
@@ -266,15 +284,18 @@ startCombat p l es =
                        , isSummoned     = False
                        })
 
--- | Finish current skirmish.
+-- | Finish the current skirmish.
 winSkirmish :: CombatPhase -> Perhaps CombatPhase
 winSkirmish CombatPhase { .. } =
   perhaps "Not skirmishing." $
   do s <- currentSkirmish
+
      let deeds   = map baseDeed (playerActions s)
          enemies = Map.elems (skirmishEnemies s)
          (summoned,normal) = partition isSummoned enemies
+
      case combatPhase of
+
        BlockPhase bs ->
         return CombatPhase
                 { combatPhase     = BlockPhase (normal ++ bs)
@@ -283,7 +304,9 @@ winSkirmish CombatPhase { .. } =
                 , combatLand      = foldr discardEnemy combatLand
                                   $ map enemyOrigStats summoned
                 , .. }
+
        AssignDamage _ -> error "[Bug] Skirmish while assigning damage."
+
        _  -> return CombatPhase
                      { currentSkirmish = Nothing
                      , deadEnemies = map enemyOrigStats normal ++ deadEnemies
@@ -327,8 +350,9 @@ makeAttack d CombatPhase { .. } =
 -- | Proceed to the next phase of combat.
 nextPhase :: CombatPhase -> Perhaps CombatPhase
 nextPhase CombatPhase { .. }
+
   | Just _ <- currentSkirmish =
-    Failed "There is skirmish currently in progress."
+    Failed "A skirmish is currently in progress."
 
   | otherwise =
     case combatPhase of
@@ -386,29 +410,6 @@ nextPhase CombatPhase { .. }
                   }
             n1 = n + 1
         in n1 `seq` (a:es, l1, n1)
-
-{-
-resolveDamage :: Int -> CombatPhase -> Perhaps CombatPhase
-resolveDamage n CombatPhase { .. }
-  | AssignDamage d <- combatPhase =
-    if d >= n then return CombatPhase { combatPhase = AssignDamage (d - n), .. }
-              else Failed "Tried to resolve too much damage."
-  | otherwise = Failed "Not assigning damage."
--}
---------------------------------------------------------------------------------
-
-
-computeDamage :: ActiveEnemy -> (Int, DamageInfo)
-computeDamage e =
-  case enemyAttack (enemyStats e) of
-    Summoner -> error "[bug] computing damage of a summoner"
-    AttacksWith el baseAmt ->
-      ( if enemyHasAbility Brutal e then baseAmt * 2 else baseAmt
-      , DamageInfo { damageElement   = el
-                   , damagePoisons   = enemyHasAbility Poisons e
-                   , damageParalyzes = enemyHasAbility Paralyzes e
-                   }
-      )
 
 
 
