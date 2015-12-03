@@ -128,38 +128,38 @@ instance Ord ActiveEnemy where
 
 
 
---------------------------------------------------------------------------------
-
-
 
 --------------------------------------------------------------------------------
 
 -- | Used for ranged attack, blockinga, and melee attacks.
 data CombatPhase = CombatPhase
   { currentSkirmish   :: Maybe Skirmish
-    -- ^ What we are attcaking/blocking currently
+    -- ^ What we are attacking/blocking currently.
 
   , combatPhase       :: CombatPhaseType
-    -- ^ What phase are we working on
+    -- ^ What phase are we working on.
 
   , remainingEnemies  :: Map Int ActiveEnemy
-    -- ^ Enemies available for attack
+    -- ^ Enemies available for attack/block.
 
   , deadEnemies       :: [Enemy]
-    -- ^ Enemies that were killed
+    -- ^ Enemies that were killed.  These have been returned to the land.
+    -- We keep them here so that we can score them at the end.
+    -- Does not contain summoned enemies.
 
   , usedDeeds         :: [Deed]
     -- ^ Deeds that were used during combat, but are not active any more.
     -- These should be returned to the player at the end of combat.
 
   , nextActiveId      :: !Int
-    -- ^ Used when we active enemies
+    -- ^ Used when we active enemies, to generate identities.
 
   , combatPlayer      :: Player
-    -- ^ The player conducting the combat
+    -- ^ The player conducting the combat.
 
   , combatLand        :: Land
-    -- ^ The state of the land
+    -- ^ The state of the land.  Mostly used for generating/discarding
+    -- enemies.
   }
 
 -- | Combat phases that require playing cards
