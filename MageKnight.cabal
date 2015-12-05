@@ -14,6 +14,9 @@ cabal-version:       >=1.10
 library
   hs-source-dirs: src
   exposed-modules:
+    Server,
+    Paths,
+
     Rule,
     Deed,
     Action,
@@ -39,7 +42,6 @@ library
     Combat,
 
     Game,
-    Game1,
     Common,
     Offers,
     Source,
@@ -50,7 +52,8 @@ library
     Util.Q,
     Util.Misc,
     Util.Bag,
-    Util.Perhaps
+    Util.Perhaps,
+    Util.Snap
 
   build-depends:
     base,
@@ -61,7 +64,9 @@ library
     vector,
     random,
     array,
-    pretty
+    pretty,
+    snap-core,
+    filepath
   default-language:    Haskell2010
   GHC-options: -Wall
 

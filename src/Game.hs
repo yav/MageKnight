@@ -6,7 +6,7 @@ import Offers
 import Source
 
 data Game = Game
-  { gamePlayers :: [Player] -- ^ In round order
+  { gamePlayer  :: Player
   , gameLand    :: Land
   , gameOffers  :: Offers
   , gameSource  :: Source
