@@ -7,6 +7,7 @@ module Util.History
   , historyRedo
   , historyUpdate
   , historyUpdateF
+  , historyForget
   ) where
 
 -- | Keep track of how a value changes.
