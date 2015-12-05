@@ -169,7 +169,7 @@ data Skirmish = Skirmish
     -- ^ Who is being attacked or blocked, indexed by id.
     -- Never empty.  Always singleton during the blocking phase.
 
-  , playerActions     :: [ActivedDeed]
+  , playerActions     :: [ActiveDeed]
     -- ^ Deeds to resolve the attack.  Most recently played at the front.
   }
 
@@ -340,7 +340,7 @@ startSkirmish xs CombatPhase { .. }
               $ Map.lookup x remainingEnemies
 
 -- | Play a card towards the current skirmish.
-makeAttack :: ActivedDeed -> CombatPhase -> Perhaps CombatPhase
+makeAttack :: ActiveDeed -> CombatPhase -> Perhaps CombatPhase
 makeAttack d CombatPhase { .. } =
   do s <- perhaps "Not skirmishing." currentSkirmish
      return CombatPhase
@@ -412,7 +412,7 @@ nextPhase CombatPhase { .. }
         in n1 `seq` (a:es, l1, n1)
 
 
-
+--------------------------------------------------------------------------------
 
 
 -- | Check if the attacks are sufficient to defeat the set of enemies.

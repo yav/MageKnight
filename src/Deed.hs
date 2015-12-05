@@ -10,7 +10,7 @@ module Deed
   , spellDeed
   , artifactDeed
 
-  , ActivedDeed(..)
+  , ActiveDeed(..)
   , ActiveWay(..)
   , SimpleDeed(..)
 
@@ -26,7 +26,7 @@ import qualified Data.Text as Text
 
 
 -- | A deed that has been played to get its benefits
-data ActivedDeed = ActiveDeed
+data ActiveDeed = ActiveDeed
   { baseDeed  :: Deed       -- ^ The card that was played
   , activeWay :: ActiveWay  -- ^ How it was played
   }
