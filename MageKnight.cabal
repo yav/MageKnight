@@ -54,6 +54,7 @@ library
     Util.Bag,
     Util.Perhaps,
     Util.Snap
+    Util.History
 
   build-depends:
     base,
