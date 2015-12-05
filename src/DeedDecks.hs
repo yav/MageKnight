@@ -74,7 +74,7 @@ makeDeckFor name =
 
 -- | A started deck with no special cards.
 basicDeck :: [ DeedName ]
-basicDeck = [ "Stamina", "Stamina", "Determination", "Crystalize"
+basicDeck = [ "Stamina", "Stamina", "Determination", "Crystallize"
             , "March", "March", "Concentration", "Tranquility"
             , "Rage", "Rage", "Improvisation", "Threaten"
             , "Swiftness", "Swiftness", "Promise", "Mana Draw"
