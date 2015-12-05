@@ -67,6 +67,7 @@ library
     array,
     pretty,
     snap-core,
+    snap-server,
     filepath
   default-language:    Haskell2010
   GHC-options: -Wall
