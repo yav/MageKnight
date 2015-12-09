@@ -17,7 +17,7 @@ import qualified Data.Set as Set
 import           Data.Foldable (any, foldr)
 import           Data.Either(partitionEithers)
 import           Data.Maybe(isNothing)
-import           Data.List(partition)
+import           Data.List(partition,nub)
 import           Prelude hiding (any, foldr)
 import           qualified Data.Text as Text
 import           Control.Monad(when)
@@ -27,11 +27,17 @@ import           Control.Monad(when)
 
 -- | Why are we fighting?
 data CombatReason =
-    AttackFortified  -- ^ We are attacking a fortified site (e.g., keep)
+    AttackFortified FortifiedType
+                     -- ^ We are attacking a fortified site (e.g., keep)
   | AttackAdventure  -- ^ We are attacking an adventure site (e.g. dungeon)
   | BurnMonastery    -- ^ Oh no!
   | AttackRampaging  -- ^ We are attacking a rampaging enemy (e.g. orcs)
   | ProvokeRampaging -- ^ We are being attacked by provoked rampaging enemy.
+
+data FortifiedType = AttackConqueredKeep
+                     -- ^ Fame is worth only half;
+                     -- enemy disappears ef not defeated.
+                   | AttackUnconquered
 
 -- | For some fights, we are also allowed to challenge rampaging enemies
 -- adjecent to the combat site.
@@ -39,10 +45,22 @@ data CombatReason =
 mayAddRampagingNeighbours :: CombatReason -> Bool
 mayAddRampagingNeighbours reason =
   case reason of
-    AttackFortified  -> True
-    ProvokeRampaging -> True
-    _                -> False
+    AttackFortified _ -> True
+    ProvokeRampaging  -> True
+    _                 -> False
 
+{-
+determineCombatReason :: Player -> Land -> Perhaps CombatReason
+determineCombatReason p l =
+  case getFeatureAt addr l of
+    Nothing -> Failed "You may not start combat at this location."
+    Just (terra, maybeFeat) ->
+      case terra of
+        City col ->
+
+  where
+  addr = playerLocation p
+-}
 
 
 
@@ -52,7 +70,7 @@ data ActiveEnemy = ActiveEnemy
   , enemyFortLoc    :: Bool   -- ^ In a fortified location
 
   , enemyInCity     :: Maybe BasicMana
-    -- ^ Is this enemy in a city.  Used when we active summoned enemies.
+    -- ^ Is this enemy in a city.  Used when we activate summoned enemies.
 
   , enemyOrigStats  :: Enemy
     -- ^ Original stats of the enemy.
@@ -65,7 +83,21 @@ data ActiveEnemy = ActiveEnemy
     -- on the enemy.
 
   , isSummoned      :: Bool
+
+  , enemyLoc        :: Addr -- ^Location on the board
+  , isRampaging     :: Bool
   }
+
+
+{- Combat outcome:
+  undefeated enemies disappear:
+    - dungeion, tomb, monastery, conquered keep protector(?)
+
+  undefeated stay:
+    - city, unconquered keep, unconquered mage tower,
+      monster den, spawning grounds, ruins
+
+-}
 
 
 -- | Compute the active stats for an enemy, depending on the city they are in
@@ -160,6 +192,16 @@ data CombatPhase = CombatPhase
   , combatLand        :: Land
     -- ^ The state of the land.  Mostly used for generating/discarding
     -- enemies.
+
+  , combatReason      :: CombatReason
+    -- ^ We are we fighting.  Used to figure out what happens at the
+    -- end of comabt.
+
+  , rampagingSites    :: [Addr]
+    -- ^ The combat started with participants from these rampaging sites.
+    -- The location of the player may be used to determine what, if any,
+    -- are the enemies for an fortified or advanture site.
+
   }
 
 
@@ -240,48 +282,59 @@ newSkirmish es = Skirmish { skirmishEnemies = Map.fromList (map prep es)
   where prep e = (enemyId e, e)
 
 
+
 -- | Start a combat, entering the ranged attack phase.
-startCombat :: Player -> Land -> [(Addr,Enemy)] -> CombatPhase
-startCombat p l es =
+startCombat :: Player -> Land -> CombatReason -> [(Addr,Enemy)] -> CombatPhase
+startCombat p l reason es =
   CombatPhase { currentSkirmish  = Nothing
-              , remainingEnemies = Map.fromList (zipWith prep [0..] es)
+              , remainingEnemies = Map.fromList activated
               , deadEnemies      = []
               , usedDeeds        = []
               , combatPhase      = RangedAttackPhase
               , combatPlayer     = p
               , combatLand       = l
               , nextActiveId     = length es
+              , combatReason     = reason
+              , rampagingSites   = nub
+                                 $ map enemyLoc
+                                 $ filter isRampaging
+                                 $ map snd activated
               }
   where
+  activated = zipWith prep [0..] es
+
+
   prep n (a,e) =
-    let (inCity, inFort) =
+    let (inCity, (inFort, rampTribe)) =
           case getFeatureAt a l of
-            Nothing     -> (Nothing, False)
+            Nothing     -> (Nothing, (False, False))
             Just (t,mb) ->
               case t of
-                City c -> (Just c, True)
+                City c -> (Just c, (True,False))
                 _      -> (Nothing, case mb of
-                                      Nothing -> False
+                                      Nothing -> (False, False)
                                       Just f ->
                                         case f of
-                                          Keep              -> True
-                                          MageTower         -> True
-                                          Dungeon           -> False
-                                          Tomb              -> False
-                                          MonsterDen        -> False
-                                          SpawningGrounds   -> False
-                                          AncientRuins      -> False
-                                          RampagingEnemy _  -> False
-                                          MagicalGlade      -> False
-                                          Mine _            -> False
-                                          Village           -> False
-                                          Monastery         -> False)
+                                          Keep              -> (True, False)
+                                          MageTower         -> (True, False)
+                                          Dungeon           -> (False, False)
+                                          Tomb              -> (False, False)
+                                          MonsterDen        -> (False, False)
+                                          SpawningGrounds   -> (False, False)
+                                          AncientRuins      -> (False, False)
+                                          RampagingEnemy _  -> (False, True)
+                                          MagicalGlade      -> (False, False)
+                                          Mine _            -> (False, False)
+                                          Village           -> (False, False)
+                                          Monastery         -> (False, False))
     in (n, ActiveEnemy { enemyId        = n
                        , enemyFortLoc   = inFort
                        , enemyInCity    = inCity
                        , enemyOrigStats = e
                        , enemyStats     = activeStats inCity e
                        , isSummoned     = False
+                       , isRampaging    = rampTribe
+                       , enemyLoc       = a
                        })
 
 -- | Finish the current skirmish.
@@ -407,6 +460,8 @@ nextPhase CombatPhase { .. }
                   , enemyOrigStats  = e
                   , enemyStats      = activeStats (enemyInCity s) e
                   , isSummoned      = True
+                  , isRampaging     = False
+                  , enemyLoc        = enemyLoc s
                   }
             n1 = n + 1
         in n1 `seq` (a:es, l1, n1)
