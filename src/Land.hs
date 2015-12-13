@@ -274,17 +274,19 @@ data CombatInfo = CombatInfo
 -- | Reveal all hidden enemies, remove them from map etc.
 startCombatAt :: PlayerName -> Addr -> Land -> Maybe (CombatInfo, Land)
 startCombatAt pn a l =
-  do ((i,es1),l1) <- updateAddr' a  upd l
-     (es2,l2)     <- spawnCombatEnemies pn i l1
-     return (CombatInfo { combatTerrain  = hexTerrain i
-                        , combatFeature  = hexFeature i
+  do i <- getHexInfo a l
+     (es1,l1) <- spawnCombatEnemies pn i l
+     -- we spawn first, that way we'll spawn the right number:
+     -- we don't want respawning locations to look empty.
+     ((t,f,es2),l2) <- updateAddr' a  upd l1
+     return (CombatInfo { combatTerrain  = t
+                        , combatFeature  = f
                         , combatEnemeies = es1 ++ es2
                         } , l2)
   where
-  upd i = let c  = hexReveal (hexContent i)
-              es = zip (hexActiveEnemies c) (repeat EnemyMultiCombat)
-              in ((i,es), c)
-
+  upd HexInfo { .. } =
+    let (es,c) = hexTakeEnemies hexContent
+    in ((hexTerrain, hexFeature, zip es (repeat EnemyMultiCombat)), c)
 
 
 spawnCombatEnemies :: PlayerName -> HexInfo -> Land ->
@@ -380,11 +382,17 @@ exploreAt loc newTilePos l =
   do (l1,m) <- initialTile False newTilePos l
      return (revealHiddenNeighbours loc l1, m)
 
+
+-- | Get the features and the conetnt of a tile.
+getHexInfo :: Addr -> Land -> Maybe HexInfo
+getHexInfo Addr { .. } Land { .. } =
+  do gt <- Map.lookup addrGlobal theMap
+     return (gameTileInfo addrLocal gt)
+
 -- | Get the feature of a tile at the given address.
 getFeatureAt :: Addr -> Land -> Maybe (Terrain, Maybe Feature)
-getFeatureAt Addr { .. } Land { .. } =
-  do gt <- Map.lookup addrGlobal theMap
-     let HexInfo { .. } = gameTileInfo addrLocal gt
+getFeatureAt a l =
+  do HexInfo { .. } <- getHexInfo a l
      return (hexTerrain, hexFeature)
 
 -- | Get the revealed enemies at the given locaiton.

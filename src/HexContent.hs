@@ -8,7 +8,7 @@ module HexContent
   , hexWithEnemy
   , hexAddEnemyFromPool
   , hexReveal
-  , hexRemoveEnemy
+  , hexTakeEnemies
   , hexHasEnemies
   , hexActiveEnemies
 
@@ -127,11 +127,10 @@ hexAddEnemy :: Visibility -> Enemy -> HexContent -> HexContent
 hexAddEnemy v e HexContent { .. } =
   HexContent { hexEnemies = bagAdd 1 (v,e) hexEnemies, .. }
 
--- | Remove an enemy from a hex cell.
-hexRemoveEnemy :: Enemy -> HexContent -> HexContent
-hexRemoveEnemy e HexContent { .. } =
-  HexContent { hexEnemies = fromMaybe hexEnemies
-                               (bagRemove 1 (Revealed,e) hexEnemies), .. }
+-- | Remove all enemies from a hex cell.
+hexTakeEnemies :: HexContent -> ([Enemy], HexContent)
+hexTakeEnemies HexContent { .. } =
+  ( map snd (bagToList hexEnemies), HexContent { hexEnemies = bagEmpty, .. })
 
 -- | Are there any enemies on the hex?
 hexHasEnemies :: HexContent -> Bool
