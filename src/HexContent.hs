@@ -26,6 +26,7 @@ module HexContent
     -- * Ruins
   , hexWithRuins
   , hexRemoveRuins
+  , hexRuinsObjective
 
     -- * Cities
   , hexWithCity
@@ -152,6 +153,13 @@ hexSetRuins v r HexContent { .. } = HexContent { hexRuins = Just (v,r), .. }
 -- | Remove ruins from the cell.
 hexRemoveRuins :: HexContent -> HexContent
 hexRemoveRuins HexContent { .. } = HexContent { hexRuins = Nothing, .. }
+
+-- | What needs to be completed to get a reward for the ruins.
+hexRuinsObjective :: HexContent -> [ Objectve ]
+hexRuinsObjective HexContent { .. } =
+  case hexRuins of
+    Nothing    -> []
+    Just (_, Ruins { .. } ) -> bagToList ruinsIn
 
 --------------------------------------------------------------------------------
 

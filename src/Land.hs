@@ -24,7 +24,9 @@ module Land
   , locationCardBonus
 
     -- * Combat
-  , doRevealHidden
+  , EnemyLifeSpan(..)
+  , CombatInfo(..)
+  , startCombatAt
   , summonCreature
   , discardEnemy
 
@@ -36,7 +38,7 @@ import  GameTile
 import  Enemies( Enemy(..), EnemyType(..)
                , allEnemies, allEnemyTypes )
 import  Player
-import  Ruins(Ruins, ruins)
+import  Ruins(Ruins, ruins, Objectve(..))
 import  Common(Time(..), Visibility(..))
 
 import  Util.Random
@@ -45,6 +47,7 @@ import  Util.JSON
 import  Util.Perhaps
 
 import           Data.Maybe ( mapMaybe, fromMaybe, maybeToList )
+import           Data.List ( delete )
 import           Data.Map ( Map )
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -258,18 +261,110 @@ revealHidden a l = updateAddr a (\h -> upd h (hexContent h)) l
              Just Keep         -> during Day hexReveal
              _                 -> id
 
--- | Reveal all hidden enemies.  Used at the start of combat.
-doRevealHidden :: Addr -> Land -> Land
-doRevealHidden a = updateAddr a (\HexInfo { .. } -> hexReveal hexContent)
+
+data EnemyLifeSpan = EnemySummoned | EnemySingleCombat | EnemyMultiCombat
+
+data CombatInfo = CombatInfo
+  { combatTerrain  :: Terrain
+  , combatFeature  :: Maybe Feature
+  , combatEnemeies :: [ (Enemy, EnemyLifeSpan) ]
+  }
+
+
+-- | Reveal all hidden enemies, remove them from map etc.
+startCombatAt :: PlayerName -> Addr -> Land -> Maybe (CombatInfo, Land)
+startCombatAt pn a l =
+  do ((i,es1),l1) <- updateAddr' a  upd l
+     (es2,l2)     <- spawnCombatEnemies pn i l1
+     return (CombatInfo { combatTerrain  = hexTerrain i
+                        , combatFeature  = hexFeature i
+                        , combatEnemeies = es1 ++ es2
+                        } , l2)
+  where
+  upd i = let c  = hexReveal (hexContent i)
+              es = zip (hexActiveEnemies c) (repeat EnemyMultiCombat)
+              in ((i,es), c)
+
+
+
+spawnCombatEnemies :: PlayerName -> HexInfo -> Land ->
+                                      Maybe ([(Enemy,EnemyLifeSpan)],Land)
+spawnCombatEnemies pn HexInfo { .. } l =
+  case hexTerrain of
+    City _ -> none
+    _ -> case hexFeature of
+           Nothing -> none
+           Just f ->
+             case f of
+
+               MagicalGlade        -> none
+               Mine _              -> none
+               Village             -> none
+
+               Monastery
+                 | isOwned         -> none
+                 | otherwise       -> spawn EnemySingleCombat [Mage]
+
+               Keep | ownedByOther -> spawn EnemySingleCombat [Guardian]
+                    | otherwise    -> none
+
+               MageTower           -> none
+
+               -- Dungeons and tombs always bring a new creature,
+               -- even when conquered.
+               Dungeon             -> spawn EnemySingleCombat [Underworld]
+               Tomb                -> spawn EnemySingleCombat [Draconum]
+
+               MonsterDen
+                | not (isOwned || hasEnemies) ->
+                   spawn EnemyMultiCombat [Underworld]
+                | otherwise -> none
+
+               SpawningGrounds
+                | not isOwned ->
+                  let enemyNum = length (hexActiveEnemies hexContent)
+                      new      = 2 - enemyNum
+                  in spawn EnemyMultiCombat (replicate new Underworld)
+                | otherwise -> none
+
+               AncientRuins
+                 | not isOwned && not hasEnemies ->
+                    spawn EnemyMultiCombat
+                              [ e | Fight e <- hexRuinsObjective hexContent ]
+                 | otherwise -> none
+
+               RampagingEnemy _ -> none
+  where
+  none         = return ([], l)
+  owners       = hexOwners hexContent
+  isOwned      = not (null owners)
+  ownedByOther = not (null (delete pn owners))
+  hasEnemies   = hexHasEnemies hexContent
+
+  spawn v ts   = do (es,l1) <- spawnCreatures ts l
+                    return (zip es (repeat v), l1)
+
+
+-- | Spawn enemies of the required types.
+spawnCreatures :: [EnemyType] -> Land -> Maybe ([Enemy], Land)
+spawnCreatures tys l =
+  case tys of
+    []     -> return ([], l)
+    t : ts -> do (e, l1) <- spawnCreature t l
+                 (es,l2) <- spawnCreatures ts l1
+                 return (e : es, l2)
+
+-- | Spawn a creature of the given type.
+spawnCreature :: EnemyType -> Land -> Maybe (Enemy, Land)
+spawnCreature ty Land { .. } =
+  do rq      <- Map.lookup ty enemyPool
+     (e,rq1) <- rqTake rq
+     return (e, Land { enemyPool = Map.insert ty rq1 enemyPool, .. })
+
 
 -- | Summon a creature to be used by enemies with sommoner powers.
 summonCreature :: Land -> Maybe (Enemy, Land)
-summonCreature Land { .. } =
-  do rq      <- Map.lookup summonTy enemyPool
-     (e,rq1) <- rqTake rq
-     return (e, Land { enemyPool = Map.insert summonTy rq1 enemyPool, .. })
-  where
-  summonTy = Underworld
+summonCreature = spawnCreature Underworld
 
 discardEnemy :: Enemy -> Land -> Land
 discardEnemy e Land { .. } =
@@ -293,6 +388,7 @@ getFeatureAt Addr { .. } Land { .. } =
      return (hexTerrain, hexFeature)
 
 -- | Get the revealed enemies at the given locaiton.
+-- The enemmies also remain on the map.
 getRevealedEnemiesAt :: Addr -> Land -> [Enemy]
 getRevealedEnemiesAt Addr { .. } Land { .. } =
   fromMaybe [] $
@@ -314,6 +410,14 @@ updateAddr :: Addr -> (HexInfo -> HexContent) -> Land -> Land
 updateAddr Addr { .. } f Land { .. } =
   Land { theMap = Map.adjust (gameTileUpdateAt addrLocal f) addrGlobal theMap
        , .. }
+
+-- | Update a location on the map, returning a result.
+updateAddr' :: Addr -> (HexInfo -> (a, HexContent)) -> Land -> Maybe (a, Land)
+updateAddr' Addr { .. } f Land { .. } =
+  do gt <- Map.lookup addrGlobal theMap
+     let (res, gt1) = gameTileUpdateAt' addrLocal f gt
+     return (res, Land { theMap = Map.insert addrGlobal gt1 theMap, .. })
+
 
 -- | Place a player on the map.  If during the day, reveal *adjecent*
 -- relevant locations.  It does not reveal enemies *on* the location.

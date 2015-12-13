@@ -7,6 +7,7 @@ module GameTile
   , HexInfo(..)
   , gameTileInfo
   , gameTileUpdateAt
+  , gameTileUpdateAt'
   , gameTileSearch
   , gameTileIsSafe
   ) where
@@ -56,6 +57,15 @@ gameTileUpdateAt :: HexAddr -> (HexInfo -> HexContent) -> GameTile -> GameTile
 gameTileUpdateAt a f gt =
   gt { gameTileContent = Map.insert a (f (gameTileInfo a gt))
                                       (gameTileContent gt) }
+
+-- | Update the content of a hex.
+gameTileUpdateAt' :: HexAddr -> (HexInfo -> (a,HexContent))
+                             -> GameTile -> (a, GameTile)
+gameTileUpdateAt' a f gt =
+  (res, gt { gameTileContent = Map.insert a content (gameTileContent gt) })
+  where (res,content) = f (gameTileInfo a gt)
+
+
 
 -- | Find addresses on the tile satisfying a predicate.
 gameTileSearch :: (HexInfo -> Bool) -> GameTile -> [ HexAddr ]

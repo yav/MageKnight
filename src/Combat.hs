@@ -82,10 +82,12 @@ data ActiveEnemy = ActiveEnemy
     -- (e.g., due to city bonuses), or be updated by casting spells
     -- on the enemy.
 
-  , isSummoned      :: Bool
+  , isRampaging     :: Bool -- ^ Is this a rampaging enemy?
 
-  , enemyLoc        :: Addr -- ^Location on the board
-  , isRampaging     :: Bool
+  , enemyLoc        :: Addr -- ^ Location on the board.
+
+  , enemyLifeSpan   :: LifeSpan
+
   }
 
 
@@ -140,6 +142,12 @@ isSummoner e =
     Summoner -> True
     _        -> False
 
+isSummoned :: ActiveEnemy -> Bool
+isSummoned e =
+  case enemyLifeSpan e of
+    SummonedLifeSpan -> True
+    _                -> False
+
 isBlockPhase :: CombatPhaseType -> Bool
 isBlockPhase ph =
   case ph of
@@ -173,6 +181,7 @@ data CombatPhase = CombatPhase
 
   , remainingEnemies  :: Map Int ActiveEnemy
     -- ^ Enemies available for attack/block.
+    -- Those have been removed from the land and reside here.
 
   , deadEnemies       :: [Enemy]
     -- ^ Enemies that were killed.  These have been returned to the land.
@@ -283,6 +292,7 @@ newSkirmish es = Skirmish { skirmishEnemies = Map.fromList (map prep es)
 
 
 
+
 -- | Start a combat, entering the ranged attack phase.
 startCombat :: Player -> Land -> CombatReason -> [(Addr,Enemy)] -> CombatPhase
 startCombat p l reason es =
@@ -303,38 +313,39 @@ startCombat p l reason es =
   where
   activated = zipWith prep [0..] es
 
-
+  -- Activate an enemy
   prep n (a,e) =
-    let (inCity, (inFort, rampTribe)) =
+    let unexpected = (False, (False, False, LivesPastCombat))
+        (inCity, (inFort, rampTribe, lifeSpan)) =
           case getFeatureAt a l of
-            Nothing     -> (Nothing, (False, False))
+            Nothing     -> unexpected
             Just (t,mb) ->
               case t of
-                City c -> (Just c, (True,False))
+                City c -> (Just c, (True,False, LivesPastCombat))
                 _      -> (Nothing, case mb of
                                       Nothing -> (False, False)
                                       Just f ->
                                         case f of
                                           Keep              -> (True, False)
-                                          MageTower         -> (True, False)
+                                          MageTower         -> (True, False, LifeSpan)
                                           Dungeon           -> (False, False)
                                           Tomb              -> (False, False)
-                                          MonsterDen        -> (False, False)
-                                          SpawningGrounds   -> (False, False)
-                                          AncientRuins      -> (False, False)
-                                          RampagingEnemy _  -> (False, True)
-                                          MagicalGlade      -> (False, False)
-                                          Mine _            -> (False, False)
-                                          Village           -> (False, False)
-                                          Monastery         -> (False, False))
+                                          MonsterDen        -> (False, False, )
+                                          SpawningGrounds   -> (False, False,LivesPastCombat)
+                                          AncientRuins      -> (False, False, LivesPastCombat)
+                                          RampagingEnemy _  -> (False, True, LivesPastCombat)
+                                          MagicalGlade      -> unexpected
+                                          Mine _            -> unexpected
+                                          Village           -> unexpected
+                                          Monastery         -> (False, False, LivesForCombatOnly))
     in (n, ActiveEnemy { enemyId        = n
                        , enemyFortLoc   = inFort
                        , enemyInCity    = inCity
                        , enemyOrigStats = e
                        , enemyStats     = activeStats inCity e
-                       , isSummoned     = False
                        , isRampaging    = rampTribe
                        , enemyLoc       = a
+                       , enemyLifeSpan  = lifeSpan
                        })
 
 -- | Finish the current skirmish.
@@ -459,7 +470,7 @@ nextPhase CombatPhase { .. }
                   , enemyInCity     = enemyInCity s
                   , enemyOrigStats  = e
                   , enemyStats      = activeStats (enemyInCity s) e
-                  , isSummoned      = True
+                  , enemyLifeSpan   = SummonedLifeSpan
                   , isRampaging     = False
                   , enemyLoc        = enemyLoc s
                   }
