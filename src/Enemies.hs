@@ -50,18 +50,18 @@ instance Ord Enemy where
   compare x y = compare (enemyName x) (enemyName y)
 
 
+enemyTypeText :: EnemyType -> Text
+enemyTypeText et =
+  case et of
+    Orc         -> "orc"
+    Guardian    -> "guardian"
+    Mage        -> "mage"
+    Underworld  -> "underworld"
+    Citizen     -> "citizen"
+    Draconum    -> "draconum"
 
 instance Export EnemyType where
-  toJS et = toJS (txt :: Text)
-    where
-    txt = case et of
-            Orc         -> "orc"
-            Guardian    -> "guardian"
-            Mage        -> "mage"
-            Underworld  -> "underworld"
-            Citizen     -> "citizen"
-            Draconum    -> "draconum"
-
+  toJS = toJS . enemyTypeText
 
 
 

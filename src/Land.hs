@@ -36,7 +36,7 @@ import  Terrain
 import  HexContent
 import  GameTile
 import  Enemies( Enemy(..), EnemyType(..)
-               , allEnemies, allEnemyTypes )
+               , allEnemies, allEnemyTypes, enemyTypeText )
 import  Player
 import  Ruins(Ruins, ruins, Objectve(..))
 import  Common(Time(..), Visibility(..))
@@ -51,6 +51,7 @@ import           Data.List ( delete )
 import           Data.Map ( Map )
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import qualified Data.Text as Text
 import           Control.Monad( foldM, guard )
 
 
@@ -272,13 +273,13 @@ data CombatInfo = CombatInfo
 
 
 -- | Reveal all hidden enemies, remove them from map etc.
-startCombatAt :: PlayerName -> Addr -> Land -> Maybe (CombatInfo, Land)
+startCombatAt :: PlayerName -> Addr -> Land -> Perhaps (CombatInfo, Land)
 startCombatAt pn a l =
-  do i <- getHexInfo a l
+  do i <- perhaps "Invalid address." $ getHexInfo a l
      (es1,l1) <- spawnCombatEnemies pn i l
      -- we spawn first, that way we'll spawn the right number:
      -- we don't want respawning locations to look empty.
-     ((t,f,es2),l2) <- updateAddr' a  upd l1
+     ((t,f,es2),l2) <- perhaps "Invalid address." $ updateAddr' a  upd l1
      return (CombatInfo { combatTerrain  = t
                         , combatFeature  = f
                         , combatEnemeies = es1 ++ es2
@@ -290,7 +291,7 @@ startCombatAt pn a l =
 
 
 spawnCombatEnemies :: PlayerName -> HexInfo -> Land ->
-                                      Maybe ([(Enemy,EnemyLifeSpan)],Land)
+                                      Perhaps ([(Enemy,EnemyLifeSpan)],Land)
 spawnCombatEnemies pn HexInfo { .. } l =
   case hexTerrain of
     City _ -> none
@@ -348,7 +349,7 @@ spawnCombatEnemies pn HexInfo { .. } l =
 
 
 -- | Spawn enemies of the required types.
-spawnCreatures :: [EnemyType] -> Land -> Maybe ([Enemy], Land)
+spawnCreatures :: [EnemyType] -> Land -> Perhaps ([Enemy], Land)
 spawnCreatures tys l =
   case tys of
     []     -> return ([], l)
@@ -357,15 +358,17 @@ spawnCreatures tys l =
                  return (e : es, l2)
 
 -- | Spawn a creature of the given type.
-spawnCreature :: EnemyType -> Land -> Maybe (Enemy, Land)
+-- Fails if there are no more enemies available of the required type.
+spawnCreature :: EnemyType -> Land -> Perhaps (Enemy, Land)
 spawnCreature ty Land { .. } =
+  perhaps (Text.unwords [ "Insufficient", enemyTypeText ty, "enemies."]) $
   do rq      <- Map.lookup ty enemyPool
      (e,rq1) <- rqTake rq
      return (e, Land { enemyPool = Map.insert ty rq1 enemyPool, .. })
 
 
 -- | Summon a creature to be used by enemies with sommoner powers.
-summonCreature :: Land -> Maybe (Enemy, Land)
+summonCreature :: Land -> Perhaps (Enemy, Land)
 summonCreature = spawnCreature Underworld
 
 discardEnemy :: Enemy -> Land -> Land
