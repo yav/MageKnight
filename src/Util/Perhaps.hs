@@ -36,3 +36,12 @@ isOk a = case a of
            Ok a'    -> Just a'
            Failed _ -> Nothing
 
+-- | Apply a function to a lt of elements.  Errors, if any, are collected
+-- in the second part of the result.
+mapPerhaps :: (a -> Perhaps b) -> [a] -> ([b], [Text])
+mapPerhaps f = foldr cons ([],[])
+  where cons a (bs,errs) = case f a of
+                             Failed err -> (bs, err : errs)
+                             Ok b       -> (b : bs, errs)
+
+
