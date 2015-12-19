@@ -86,7 +86,7 @@ data ActiveEnemy = ActiveEnemy
 
   , enemyLoc        :: Addr -- ^ Location on the board.
 
-  , enemyLifeSpan   :: LifeSpan
+  , enemyLifeSpan   :: EnemyLifeSpan
 
   }
 
@@ -145,8 +145,8 @@ isSummoner e =
 isSummoned :: ActiveEnemy -> Bool
 isSummoned e =
   case enemyLifeSpan e of
-    SummonedLifeSpan -> True
-    _                -> False
+    EnemySummoned -> True
+    _             -> False
 
 isBlockPhase :: CombatPhaseType -> Bool
 isBlockPhase ph =
@@ -312,7 +312,10 @@ startCombat p l reason es =
               }
   where
   activated = zipWith prep [0..] es
+  prep = undefined
 
+
+{-
   -- Activate an enemy
   prep n (a,e) =
     let unexpected = (False, (False, False, LivesPastCombat))
@@ -346,7 +349,7 @@ startCombat p l reason es =
                        , isRampaging    = rampTribe
                        , enemyLoc       = a
                        , enemyLifeSpan  = lifeSpan
-                       })
+                       }) -}
 
 -- | Finish the current skirmish.
 winSkirmish :: CombatPhase -> Perhaps CombatPhase
@@ -462,15 +465,15 @@ nextPhase CombatPhase { .. }
 
   summonBy s (es,l,n) =
     case summonCreature l of
-      Nothing     -> (es,l,n) -- We run out of tokens, unlikely.
-      Just (e,l1) ->
+      Failed _ -> (es,l,n) -- We run out of tokens, unlikely.
+      Ok (e,l1) ->
         let a = ActiveEnemy
                   { enemyId         = n
                   , enemyFortLoc    = enemyFortLoc s
                   , enemyInCity     = enemyInCity s
                   , enemyOrigStats  = e
                   , enemyStats      = activeStats (enemyInCity s) e
-                  , enemyLifeSpan   = SummonedLifeSpan
+                  , enemyLifeSpan   = EnemySummoned
                   , isRampaging     = False
                   , enemyLoc        = enemyLoc s
                   }
