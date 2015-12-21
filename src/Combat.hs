@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
+{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings, NamedFieldPuns #-}
 module Combat where
 
 import Common
@@ -294,7 +294,7 @@ newSkirmish es = Skirmish { skirmishEnemies = Map.fromList (map prep es)
 
 
 -- | Start a combat, entering the ranged attack phase.
-startCombat :: Player -> Land -> CombatReason -> [(Addr,Enemy)] -> CombatPhase
+startCombat :: Player -> Land -> CombatReason -> [Addr] -> CombatPhase
 startCombat p l reason es =
   CombatPhase { currentSkirmish  = Nothing
               , remainingEnemies = Map.fromList activated
@@ -312,9 +312,44 @@ startCombat p l reason es =
               }
   where
   activated = zipWith prep [0..] es
-  prep = undefined
+  prep = undefined {-
+    case as of
+      a : more -> do (info,l1) <- startCombatAt (playerName p) a l
+                     let es = zipWith (newEnemy a info) [ n .. ] (combatEnemeies info)
 
 
+                     prep ( -}
+
+  newEnemy a i n (e,l) = ActiveEnemy { enemyId = n
+                                     -- XXX: Maybe just keep the info?
+                                     , enemyFortLoc   = inFort i
+                                     , enemyInCity    = inCity i
+                                     , isRampaging    = isRamp i
+                                     , enemyOrigStats = e
+                                     , enemyStats     = activeStats (inCity i) e
+                                     , enemyLoc       = a
+                                     , enemyLifeSpan  = l
+                                     }
+
+
+
+  isRamp CombatInfo { combatTerrain = HexLandInfo { hexFeature } } =
+    case hexFeature of
+      Just (RampagingEnemy _) -> True
+      _                       -> False
+
+  inCity CombatInfo { combatTerrain = HexLandInfo { hexTerrain } } =
+    case hexTerrain of
+      City c -> Just c
+      _      -> Nothing
+
+  inFort CombatInfo { combatTerrain = HexLandInfo { .. } } =
+    case hexTerrain of
+      City _ -> True
+      _      -> case hexFeature of
+                  Just MageTower -> True
+                  Just Keep      -> True
+                  _              -> False
 {-
   -- Activate an enemy
   prep n (a,e) =

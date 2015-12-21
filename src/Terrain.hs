@@ -16,6 +16,7 @@ module Terrain
     Terrain(..),
     Feature(..),
     TileType(..),
+    HexLandInfo(..),
     terrainCostsDuring,
 
     -- * Tiles
@@ -64,15 +65,19 @@ data Feature        = MagicalGlade | Mine BasicMana
 
 data TileType       = BasicTile | CoreTile
 
-data Tile           = Tile { tileName    :: Text
-                           , tileType    :: TileType
-                           , tileTerrain :: HexAddr -> (Terrain, Maybe Feature)
+data HexLandInfo        = HexLandInfo { hexTerrain :: Terrain
+                                      , hexFeature :: Maybe Feature
+                                      }
+
+data Tile           = Tile { tileName     :: Text
+                           , tileType     :: TileType
+                           , tileTerrain  :: HexAddr -> HexLandInfo
                            }
 
 placeHolderTile :: TileType -> Tile
 placeHolderTile ty = Tile { tileName = "placeholder"
                           , tileType = ty
-                          , tileTerrain = \_ -> (Ocean, Nothing)
+                          , tileTerrain = \_ -> hexContent Ocean
                           }
 
 allDirections :: [Dir]
@@ -283,20 +288,22 @@ instance IsHexAddr HexAddr where
 
 
 class IsHexContent a where
-  hexContent :: a -> (Terrain, Maybe Feature)
+  hexContent :: a -> HexLandInfo
 
 instance IsHexContent Terrain where
-  hexContent a = (a, Nothing)
+  hexContent a = HexLandInfo { hexTerrain = a, hexFeature = Nothing }
 
 instance IsHexContent (Terrain,Feature) where
-  hexContent (a,b) = (a,Just b)
+  hexContent (a,b) = HexLandInfo { hexTerrain = a, hexFeature = Just b }
 
 instance IsHexContent (Terrain,EnemyType) where
-  hexContent (a,b) = (a,Just (RampagingEnemy b))
+  hexContent (a,b) = HexLandInfo { hexTerrain = a
+                             , hexFeature = Just (RampagingEnemy b)
+                             }
 
-type Hex = (HexAddr, (Terrain, Maybe Feature))
+type Hex = (HexAddr, HexLandInfo)
 
-listTileFun :: [Hex] -> HexAddr -> (Terrain, Maybe Feature)
+listTileFun :: [Hex] -> HexAddr -> HexLandInfo
 listTileFun xs = \d -> arr ! cvt d
   where
   arr   = array (0,1 + fromEnum (maxBound :: Dir)) [ (cvt c,a) | (c,a) <- xs ]

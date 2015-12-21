@@ -40,17 +40,16 @@ emptyGameTile gameTile = GameTile { gameTileContent = Map.empty, .. }
 
 -- | Information about a single hex on an active tile.
 data HexInfo = HexInfo
-  { hexTerrain  :: Terrain        -- ^ Terrain of the tile
-  , hexFeature  :: Maybe Feature  -- ^ An optional static "feature" (e.g., keep)
+  { hexLandInfo :: HexLandInfo
   , hexContent  :: HexContent     -- ^ Dynamic information
   }
 
 -- | Information about the content of a specific tile.
 gameTileInfo :: HexAddr -> GameTile -> HexInfo
 gameTileInfo a GameTile { .. } =
-  HexInfo { hexContent = Map.findWithDefault hexEmpty a gameTileContent, .. }
-  where
-  (hexTerrain, hexFeature) = tileTerrain gameTile a
+  HexInfo { hexContent  = Map.findWithDefault hexEmpty a gameTileContent
+          , hexLandInfo = tileTerrain gameTile a
+          }
 
 -- | Update the content of a hex.
 gameTileUpdateAt :: HexAddr -> (HexInfo -> HexContent) -> GameTile -> GameTile
@@ -71,8 +70,7 @@ gameTileUpdateAt' a f gt =
 gameTileSearch :: (HexInfo -> Bool) -> GameTile -> [ HexAddr ]
 gameTileSearch p GameTile { .. } =
   [ a | (a, hexContent) <- Map.toList gameTileContent
-      , let (hexTerrain, hexFeature) = tileTerrain gameTile a
-      , p HexInfo { .. }
+      , p HexInfo { hexLandInfo = tileTerrain gameTile a, .. }
       ]
 
 
@@ -93,7 +91,7 @@ gameTileIsSafe gt loc p =
                 RampagingEnemy _ -> noEnemies
                 _                -> True)
   where
-  HexInfo { .. } = gameTileInfo loc gt
+  HexInfo { hexLandInfo = HexLandInfo { .. },  .. } = gameTileInfo loc gt
   noEnemies      = not (hexHasEnemies hexContent)
 
 -- | Would (normal) moving on this tile end the movement phase?
@@ -108,7 +106,7 @@ gameTileEndsMovement gt loc p =
            Just (RampagingEnemy _) -> enemies
            _                       -> False
 
-  where HexInfo { .. } = gameTileInfo loc gt
+  where HexInfo { hexLandInfo = HexLandInfo { .. }, .. } = gameTileInfo loc gt
         enemies        = hexHasEnemies hexContent
 
 -- | Can we walk onto this hex at all?
@@ -123,7 +121,7 @@ gameTileIsWalkable gt loc =
            Just (RampagingEnemy _) -> not (hexHasEnemies hexContent)
            _                       -> True
 
-  where HexInfo { .. } = gameTileInfo loc gt
+  where HexInfo { hexLandInfo = HexLandInfo { .. }, .. } = gameTileInfo loc gt
 
 
 

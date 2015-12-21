@@ -204,12 +204,12 @@ populateTile tile g = (gt, mons, g1)
 
     in case tileTerrain tile a of
 
-         (City color, _) | l : ls <- cityLevels ->
+         HexLandInfo { hexTerrain = City color } | l : ls <- cityLevels ->
            case hexWithCity color l enemyPool of
              (h, p) -> (addHex h, ms,
                                   Land { enemyPool = p, cityLevels = ls, .. })
 
-         (_, Just feature) ->
+         HexLandInfo { hexFeature = Just feature } ->
            case feature of
              MagicalGlade      -> nothing
              Mine _            -> nothing
@@ -237,7 +237,7 @@ revealHiddenNeighbours a Land { .. } =
   checkAt Addr { .. } mp = Map.adjust (gameTileUpdateAt addrLocal check)
                                       addrGlobal mp
 
-  check HexInfo { .. }
+  check HexInfo { hexLandInfo = HexLandInfo { .. }, .. }
     | shouldReveal hexTerrain hexFeature = hexReveal hexContent
     | otherwise                          = hexContent
 
@@ -253,7 +253,7 @@ revealHidden a l = updateAddr a (\h -> upd h (hexContent h)) l
   where
   during d f = if timeOfDay l == d then f else id
 
-  upd HexInfo { .. } =
+  upd HexInfo { hexLandInfo = HexLandInfo { .. } } =
     case hexTerrain of
       City _                    -> hexReveal
       _ -> case hexFeature of
@@ -266,8 +266,7 @@ revealHidden a l = updateAddr a (\h -> upd h (hexContent h)) l
 data EnemyLifeSpan = EnemySummoned | EnemySingleCombat | EnemyMultiCombat
 
 data CombatInfo = CombatInfo
-  { combatTerrain  :: Terrain
-  , combatFeature  :: Maybe Feature
+  { combatTerrain  :: HexLandInfo
   , combatEnemeies :: [ (Enemy, EnemyLifeSpan) ]
   }
 
@@ -279,20 +278,19 @@ startCombatAt pn a l =
      (es1,l1) <- spawnCombatEnemies pn i l
      -- we spawn first, that way we'll spawn the right number:
      -- we don't want respawning locations to look empty.
-     ((t,f,es2),l2) <- perhaps "Invalid address." $ updateAddr' a  upd l1
+     ((t,es2),l2) <- perhaps "Invalid address." $ updateAddr' a  upd l1
      return (CombatInfo { combatTerrain  = t
-                        , combatFeature  = f
                         , combatEnemeies = es1 ++ es2
                         } , l2)
   where
   upd HexInfo { .. } =
     let (es,c) = hexTakeEnemies hexContent
-    in ((hexTerrain, hexFeature, zip es (repeat EnemyMultiCombat)), c)
+    in ((hexLandInfo, zip es (repeat EnemyMultiCombat)), c)
 
 
 spawnCombatEnemies :: PlayerName -> HexInfo -> Land ->
                                       Perhaps ([(Enemy,EnemyLifeSpan)],Land)
-spawnCombatEnemies pn HexInfo { .. } l =
+spawnCombatEnemies pn HexInfo { hexLandInfo = HexLandInfo { .. }, .. } l =
   case hexTerrain of
     City _ -> none
     _ -> case hexFeature of
@@ -393,10 +391,8 @@ getHexInfo Addr { .. } Land { .. } =
      return (gameTileInfo addrLocal gt)
 
 -- | Get the feature of a tile at the given address.
-getFeatureAt :: Addr -> Land -> Maybe (Terrain, Maybe Feature)
-getFeatureAt a l =
-  do HexInfo { .. } <- getHexInfo a l
-     return (hexTerrain, hexFeature)
+getFeatureAt :: Addr -> Land -> Maybe HexLandInfo
+getFeatureAt a l = fmap hexLandInfo (getHexInfo a l)
 
 -- | Get the revealed enemies at the given locaiton.
 -- The enemmies also remain on the map.
@@ -476,12 +472,15 @@ provoked Land { .. } from to =
        guard (not (null es))
        return (a,es)
 
-  isRampaging HexInfo { hexFeature = Just (RampagingEnemy _) } = True
+  isRampaging HexInfo
+               { hexLandInfo =
+                   HexLandInfo { hexFeature = Just (RampagingEnemy _) }
+               } = True
   isRampaging _ = False
 
   -- XXX: Not dealing with other players
 
-  isDangerous HexInfo { .. } =
+  isDangerous HexInfo { hexLandInfo = HexLandInfo { .. } } =
     case hexTerrain of
       City _ -> True
       _ -> case hexFeature of
@@ -522,7 +521,7 @@ numberOfOwnedKeeps :: PlayerName -> Land -> Int
 numberOfOwnedKeeps p = length . searchLand hasKeep
   where
   hasKeep h =
-    case hexFeature h of
+    case hexFeature (hexLandInfo h) of
       Just Keep -> hexHasShield p (hexContent h)
       _         -> False
 
@@ -538,7 +537,8 @@ locationCardBonus p l = maximum $ map bounus
   bounus Addr { .. } =
     fromMaybe 0 $
     do gt <- Map.lookup addrGlobal (theMap l)
-       let HexInfo { .. } = gameTileInfo addrLocal gt
+       let HexInfo { hexLandInfo = HexLandInfo { .. }, .. } =
+                                                    gameTileInfo addrLocal gt
            pn             = playerName p
        case hexTerrain of
          City _ -> case hexOwners hexContent of
