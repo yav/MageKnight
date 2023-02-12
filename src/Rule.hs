@@ -20,6 +20,7 @@ module Rule
   , ppResources
   ) where
 
+import Prelude hiding ((<>))
 import Common
 import Util.Bag
 
