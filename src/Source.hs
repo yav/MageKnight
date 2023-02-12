@@ -5,11 +5,14 @@ module Source
   , refillSource
   , renewSource
 
+  , availableMana
   , takeMana
   , stealMana
   , returnStolenMana
-  , advancedManaDraw
+  , takeAndConvertMana
   ) where
+
+import Data.Set(Set)
 
 import Common
 import Util.Bag
@@ -18,14 +21,19 @@ import Util.JSON
 
 import Control.Monad (guard, replicateM)
 
+-- | The source of pure mana
 data Source = Source
-  { sourceMana    :: Bag Mana
+  { sourceMana    :: Bag Mana     -- Available
+  , sourceFixed   :: Bag Mana     -- Unavalable, not re-reroled
   , sourceRNG     :: StdGen
-  , sourceSize    :: Int
-  , sourceFixed   :: Bag Mana
+  , sourceSize    :: Int          -- Size when full
   }
 
+-- | Mana present in the source.
+availableMana :: Source -> Set Mana
+availableMana = bagToSet . sourceMana
 
+-- | Roll this many mana dice.
 rollDice :: Int -> Gen [Mana]
 rollDice n = replicateM n (oneOf anyMana)
 
@@ -55,6 +63,7 @@ refillSource Source { .. } =
                 }
   where
   currentDice = bagUnion sourceFixed sourceMana
+  -- unused, or used but fixed
 
 -- | Setup a whole new source.  Used at the end of a round.
 -- Assumes that stolen mana has been returned.
@@ -85,15 +94,15 @@ returnStolenMana :: Source -> Source
 returnStolenMana Source { .. } = Source { sourceSize = 1 + sourceSize, .. }
 
 -- | Set a unit of the first mana to the second.  The new mana is not
--- available until the next turn.  See "Mana Draw".
-advancedManaDraw :: Mana -> Mana -> Source -> Maybe Source
-advancedManaDraw mFrom mTo s =
-  do guard (mTo /= Gold)
-     Source { .. } <- takeMana mFrom s
+-- available until the next turn.
+takeAndConvertMana :: Mana -> Mana -> Source -> Maybe Source
+takeAndConvertMana mFrom mTo s =
+  do Source { .. } <- takeMana mFrom s
      return Source { sourceFixed = bagAdd 1 mTo sourceFixed, .. }
 
 
 --------------------------------------------------------------------------------
+-- XXX: Should export fixed mana also
 instance Export Source where
   toJS Source { .. } = toJS (bagToList sourceMana)
 
