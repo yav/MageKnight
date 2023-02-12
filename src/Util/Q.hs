@@ -41,6 +41,7 @@ qTakeFront Q { .. } =
                 a : as -> Just (a, Q { front = as, back = [] })
                 []     -> Nothing
 
+-- | Take the given number of elements from the front
 qTakeFrontN :: Int -> Q a -> Maybe ([a], Q a)
 qTakeFrontN n q = if n > 0 then do (a,q1) <- qTakeFront q
                                    (as,q2) <- qTakeFrontN (n-1) q1
