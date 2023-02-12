@@ -1,4 +1,4 @@
-{-# LANGUAGE Safe, RecordWildCards, NamedFieldPuns, OverloadedStrings #-}
+{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
 module Offers
   ( -- * Setup
     Offers
@@ -32,91 +32,38 @@ module Offers
   , disbandUnit
   ) where
 
+import Util.JSON
+import Util.Perhaps
+import Util.Random
+import Util.Q
+
+import Offer
+
 import Units
 import Skill
 import DeedDecks ( Deed,advancedActions, spells, interactiveSpell, artifacts)
 
-import Util.JSON
-import Util.Perhaps
-import Util.Random
-import Util.ResourceQ
-import Util.Q
 
-import Control.Monad(guard)
-
-data Offer a = Offer
-  { offerDeck :: ResourceQ a  -- ^ New offers come from here
-  , offering  :: [a]          -- ^ Latest offers at the front
-  }
-
--- | A blank offer that will serve the given items.
-offerNothing :: [a] -> Gen (Offer a)
-offerNothing is =
-  do offerDeck <- rqFromListRandom is
-     return Offer { offering  = [], offerDeck }
-
--- | Draw an item from the deck, and add it to the offerings.
-offerNewItem :: Offer a -> Offer a
-offerNewItem Offer { .. } =
-  case rqTake offerDeck of
-    Just (c,d) -> Offer { offerDeck = d, offering = c : offering }
-    Nothing    -> Offer { .. }
-
--- | Draw multiple items to add to the offer.
-offerNewItems :: Int -> Offer a -> Offer a
-offerNewItems n o = iterate offerNewItem o !! n
-
--- | Remove everything that's on offer, and return it to the deck.
-offerClear :: Offer a -> Offer a
-offerClear Offer { .. } = Offer
-  { offering = []
-  , offerDeck = foldr rqDiscard offerDeck offering
-  }
-
--- | Take one of the offered items, identified positionally in the offerings.
-offerTakeItem :: Int -> Offer a -> Maybe (a, Offer a)
-offerTakeItem n0 Offer { .. }
-  | n0 >= 0    = do (c,os) <- go n0 offering
-                    return (c, Offer { offering = os, .. })
-  | otherwise = Nothing
-  where
-  go _ []       = Nothing
-  go 0 (c : cs) = Just (c, cs)
-  go n (c : cs) = do (a,as) <- go (n-1) cs
-                     return (a, c : as)
-
--- | Add an item back to the offer's deck.
-offerReturnItem :: a -> Offer a -> Offer a
-offerReturnItem a Offer { .. } =
-  Offer { offerDeck = rqDiscard a offerDeck, .. }
-
--- | How many items are on offer.
-offeringLength :: Offer a -> Int
-offeringLength Offer { .. } = length offering
-
-
---------------------------------------------------------------------------------
 
 -- | Setup a new card offer.
 newDeedOffer :: Int    {-^ How many cards are on offer -} ->
                 [Deed] {-^ The deck for this offer -}     ->
                 Gen (Offer Deed)
-newDeedOffer n cs = offerNewItems n <$> offerNothing cs
+newDeedOffer n cs = offerNewItems n <$> offerNew cs
 
 -- | Recycle the oldest offering and pick a fresh one, if possible.
 refreshDeedOffer :: Offer Deed -> Offer Deed
-refreshDeedOffer Offer { .. } =
-  case reverse offering of
-    []     -> Offer { .. }
-    x : xs -> offerNewItem
-            $ offerReturnItem x Offer { offering  = reverse xs, .. }
+refreshDeedOffer offer =
+  case offerTakeLastItem offer of
+    Just (x,xs) -> offerNewItem (offerReturnItem x xs)
+    Nothing     -> offer
 
 -- | Take the oldest offering, and pick a fresh one.
 refreshDeedOfferDummy :: Offer Deed -> (Maybe Deed, Offer Deed)
-refreshDeedOfferDummy Offer { .. } =
-  case reverse offering of
-    [] -> (Nothing, Offer { .. })
-    x : xs -> (Just x, offerNewItem Offer { offering = reverse xs, .. })
+refreshDeedOfferDummy offer =
+  case offerTakeLastItem offer of
+    Just (x,xs) -> (Just x, offerNewItem xs)
+    Nothing     -> (Nothing, offer)
 
 -- | Take one of the cards on offer.
 offerTakeDeed :: Int -> Offer Deed -> Maybe (Deed, Offer Deed)
@@ -124,9 +71,6 @@ offerTakeDeed n o =
   do (c,o1) <- offerTakeItem n o
      return (c, offerNewItem o1)
 
--- | Recycle the given cards.
-offerReturnDeeds :: [Deed] -> Offer Deed -> Offer Deed
-offerReturnDeeds cs o = foldr offerReturnItem o cs
 
 --------------------------------------------------------------------------------
 
@@ -137,13 +81,13 @@ data UnitOffer = UnitOffer
   }
 
 unitsOnOffer :: UnitOffer -> [Unit]
-unitsOnOffer UnitOffer { .. } = offering regularUnitOffer ++
-                                offering eliteUnitOffer
+unitsOnOffer UnitOffer { .. } = offerItems regularUnitOffer ++
+                                offerItems eliteUnitOffer
 
 emptyUnitOffer :: [Unit] -> [Unit] -> Gen UnitOffer
 emptyUnitOffer regular elite =
-  do regularUnitOffer <- offerNothing regular
-     eliteUnitOffer   <- offerNothing elite
+  do regularUnitOffer <- offerNew regular
+     eliteUnitOffer   <- offerNew elite
      return UnitOffer { .. }
 
 clearUnitOffer :: UnitOffer -> UnitOffer
@@ -172,7 +116,7 @@ offerTakeUnit n UnitOffer { .. }
   | Just (u,rs) <- offerTakeItem n regularUnitOffer =
                         Just (u, UnitOffer { regularUnitOffer = rs, .. })
   | otherwise =
-    do let eliteIx = n - offeringLength regularUnitOffer
+    do let eliteIx = n - offerLength regularUnitOffer
        (u,es) <- offerTakeItem eliteIx eliteUnitOffer
        return (u, UnitOffer { eliteUnitOffer = es, .. })
 
@@ -271,10 +215,10 @@ setupOffers OfferSetup { .. } =
       }
 
 offeringAdvancedActions :: Offers -> [Deed]
-offeringAdvancedActions = offering . advancedActionOffer
+offeringAdvancedActions = offerItems . advancedActionOffer
 
 offeringSpells :: Offers -> [Deed]
-offeringSpells = offering . spellOffer
+offeringSpells = offerItems . spellOffer
 
 offeringUnits :: Offers -> [Unit]
 offeringUnits = unitsOnOffer . unitOffer
@@ -314,20 +258,21 @@ takeUnit n Offers { .. } =
 
 takeMonasteryTech :: Int -> Offers -> Maybe (Deed, Offers)
 takeMonasteryTech n Offers { .. } =
-  do guard (n >= 0 && n < length monasteryTech)
-     let (as,b:bs) = splitAt n monasteryTech
-     return (b, Offers { monasteryTech = as ++ bs, .. })
+  case splitAt n monasteryTech of
+    (as,b:bs) -> pure (b, Offers { monasteryTech = as ++ bs, .. })
+    _         -> Nothing
 
 newMonastery :: Offers -> Offers
 newMonastery Offers { .. } =
-  case rqTake (offerDeck advancedActionOffer) of
+  case offerTakeFromDraw advancedActionOffer of
     Nothing -> Offers { activeMonasteries = 1 + activeMonasteries, .. }
-    Just (c,a) -> Offers { activeMonasteries = 1 + activeMonasteries
-                         , advancedActionOffer =
-                              advancedActionOffer { offerDeck = a }
-                         , monasteryTech = c : monasteryTech
-                         , ..
-                         }
+    Just (c,a) ->
+      Offers
+        { activeMonasteries = 1 + activeMonasteries
+        , advancedActionOffer = a
+        , monasteryTech = c : monasteryTech
+        , ..
+        }
 
 burnMonastery :: Offers -> Offers
 burnMonastery Offers { .. } =
@@ -341,17 +286,15 @@ disbandUnit u Offers { .. } =
 refreshUnitOffer :: Bool -> Offers -> Offers
 refreshUnitOffer useElite Offers { .. } =
   Offers { unitOffer     = stockUpUnits unitNumber $ clearUnitOffer unitOffer
-         , monasteryTech = offering newMons
-         , advancedActionOffer = newMons { offering = saved }
+         , monasteryTech = newMons
+         , advancedActionOffer = newAdv
          , ..
          }
   where
   stockUpUnits = if useElite then stockUpMixed else stockUpRegulars
+  (newMons, newAdv) = offerTakeManyFromDraw activeMonasteries
+                            (offerReturnMany monasteryTech advancedActionOffer)
 
-  returned = offerReturnDeeds monasteryTech advancedActionOffer
-  saved    = offering returned
-
-  newMons  = offerNewItems activeMonasteries returned { offering = [] }
 
 
 refreshOffers :: Bool {- ^ Should we use elite troops -} -> Offers -> Offers

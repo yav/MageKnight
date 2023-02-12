@@ -43,6 +43,7 @@ library
 
     Game,
     Common,
+    Offer,
     Offers,
     Source,
 
