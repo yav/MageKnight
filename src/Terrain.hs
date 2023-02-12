@@ -65,9 +65,9 @@ data Feature        = MagicalGlade | Mine BasicMana
 
 data TileType       = BasicTile | CoreTile
 
-data HexLandInfo        = HexLandInfo { hexTerrain :: Terrain
-                                      , hexFeature :: Maybe Feature
-                                      }
+data HexLandInfo    = HexLandInfo { hexTerrain :: Terrain
+                                  , hexFeature :: Maybe Feature
+                                  }
 
 data Tile           = Tile { tileName     :: Text
                            , tileType     :: TileType
