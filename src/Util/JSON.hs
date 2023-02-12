@@ -11,6 +11,8 @@ module Util.JSON
   ) where
 
 import           Data.Text(Text)
+import qualified Data.Text as Text
+import           Data.String(fromString)
 import qualified Data.Aeson as JS
 import qualified Data.Aeson.Types as JS
 import qualified Data.Vector as Vector
@@ -23,7 +25,7 @@ class ExportAsKey a where
   toKeyJS :: a -> Text
 
 (.=) :: Export a => Text -> a -> JS.Pair
-x .= y = x JS..= toJS y
+x .= y = fromString (Text.unpack x) JS..= toJS y
 
 object :: [ JS.Pair ] -> JS.Value
 object = JS.object
