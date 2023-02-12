@@ -18,10 +18,12 @@ instance A.Applicative Perhaps where
 
 instance Monad Perhaps where
   return  = Ok
-  fail    = Failed . Text.pack
   m >>= k = case m of
               Ok a     -> k a
               Failed t -> Failed t
+
+instance MonadFail Perhaps where
+  fail    = Failed . Text.pack
 
 checkThat :: Bool -> Text -> Perhaps ()
 checkThat b t = if b then Ok () else Failed t
