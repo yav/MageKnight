@@ -11,6 +11,7 @@ module Util.Bag
   , bagKeys
   , bagToListGrouped, flatGrouped
   , bagToMap
+  , bagToSet
   , bagToList
   , bagFromList
   ) where
@@ -65,6 +66,9 @@ bagToMap (Bag m) = m
 
 bagToList :: Bag a -> [a]
 bagToList = flatGrouped . bagToListGrouped
+
+bagToSet :: Bag a -> Set a
+bagToSet (Bag m) = Map.keysSet m
 
 bagFromList :: Ord a => [a] -> Bag a
 bagFromList = foldr (bagAdd 1) bagEmpty
