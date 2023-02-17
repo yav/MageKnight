@@ -96,15 +96,9 @@ featureHelpUrl f =
 -- | Help URLS to images relevant to a specific terrain.
 getBuildingHelpUrls :: (Terrain, Maybe Feature) -> [String]
 getBuildingHelpUrls (t,mb) =
-  case t of
-    City c -> [ img "city", img $ case c of
-                                    Red   -> "city_red"
-                                    Blue  -> "city_blue"
-                                    Green -> "city_green"
-                                    White -> "city_white" ]
-    _      -> case mb of
-                Nothing -> []
-                Just f  -> maybeToList (featureHelpUrl f)
+    case mb of
+      Nothing -> []
+      Just f  -> maybeToList (featureHelpUrl f)
   where
   img x = "img" </> "manual" </> "features" </> x <.> "png"
 

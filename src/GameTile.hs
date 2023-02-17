@@ -78,7 +78,6 @@ gameTileSearch p GameTile { .. } =
 gameTileIsSafe :: GameTile -> HexAddr -> PlayerName -> Bool
 gameTileIsSafe gt loc p =
   case hexTerrain of
-    City _    -> noEnemies
     Lake      -> False
     Mountain  -> False
     Ocean     -> False
@@ -89,6 +88,7 @@ gameTileIsSafe gt loc p =
                 Keep             -> hexHasShield p hexContent
                 MageTower        -> noEnemies
                 RampagingEnemy _ -> noEnemies
+                City _    -> noEnemies
                 _                -> True)
   where
   HexInfo { hexLandInfo = HexLandInfo { .. },  .. } = gameTileInfo loc gt
@@ -99,11 +99,11 @@ gameTileIsSafe gt loc p =
 gameTileEndsMovement :: GameTile -> HexAddr -> PlayerName -> Bool
 gameTileEndsMovement gt loc p =
   case hexTerrain of
-    City _ -> enemies
     _ -> case hexFeature of
            Just MageTower          -> enemies
            Just Keep               -> enemies || not (hexHasShield p hexContent)
            Just (RampagingEnemy _) -> enemies
+           Just (City _)           -> enemies
            _                       -> False
 
   where HexInfo { hexLandInfo = HexLandInfo { .. }, .. } = gameTileInfo loc gt

@@ -148,12 +148,6 @@ isSummoned e =
     EnemySummoned -> True
     _             -> False
 
-isBlockPhase :: CombatPhaseType -> Bool
-isBlockPhase ph =
-  case ph of
-    BlockPhase _ -> True
-    _            -> False
-
 
 instance Eq ActiveEnemy where
   x == y = enemyId x == enemyId y
@@ -203,18 +197,18 @@ data CombatPhase = CombatPhase
     -- enemies.
 
   , combatReason      :: CombatReason
-    -- ^ We are we fighting.  Used to figure out what happens at the
+    -- ^ Why are we fighting.  Used to figure out what happens at the
     -- end of comabt.
 
   , rampagingSites    :: [Addr]
     -- ^ The combat started with participants from these rampaging sites.
     -- The location of the player may be used to determine what, if any,
-    -- are the enemies for an fortified or advanture site.
+    -- are the enemies for a fortified or advanture site.
 
   }
 
 
--- | An attack of some enemies, or a block of a single enmy.
+-- | An attack of some enemies, or a block of a single eenmy.
 data Skirmish = Skirmish
   { skirmishEnemies   :: Map Int ActiveEnemy
     -- ^ Who is being attacked or blocked, indexed by id.
@@ -239,6 +233,13 @@ data Damage = Damage
     -- ^ Current enemy that is hurting us and remaing amount and damage type.
   , damageDone    :: [ActiveEnemy]
   }
+
+isBlockPhase :: CombatPhaseType -> Bool
+isBlockPhase ph =
+  case ph of
+    BlockPhase _ -> True
+    _            -> False
+
 
 
 -- | Determine the amount and type of damage done by an enemy.
@@ -338,18 +339,17 @@ startCombat p l reason es =
       Just (RampagingEnemy _) -> True
       _                       -> False
 
-  inCity CombatInfo { combatTerrain = HexLandInfo { hexTerrain } } =
-    case hexTerrain of
-      City c -> Just c
+  inCity CombatInfo { combatTerrain = HexLandInfo { hexFeature } } =
+    case hexFeature of
+      Just (City c) -> Just c
       _      -> Nothing
 
   inFort CombatInfo { combatTerrain = HexLandInfo { .. } } =
-    case hexTerrain of
-      City _ -> True
-      _      -> case hexFeature of
-                  Just MageTower -> True
-                  Just Keep      -> True
-                  _              -> False
+    case hexFeature of
+      Just (City _)  -> True
+      Just MageTower -> True
+      Just Keep      -> True
+      _              -> False
 {-
   -- Activate an enemy
   prep n (a,e) =

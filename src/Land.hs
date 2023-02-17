@@ -190,7 +190,7 @@ selectTile noCheck pt Land { .. }
 
 -- | Setup a newly reveal tile.
 -- The 'Int' in the result is the number of monasteries on the tile.
--- This is returned so that we can add the appropriate monaetry tech to
+-- This is returned so that we can add the appropriate monasetry tech to
 -- the offers.
 populateTile :: Tile -> Land -> (GameTile, Int, Land)
 populateTile tile g = (gt, mons, g1)
@@ -204,11 +204,6 @@ populateTile tile g = (gt, mons, g1)
 
     in case tileTerrain tile a of
 
-         HexLandInfo { hexTerrain = City color } | l : ls <- cityLevels ->
-           case hexWithCity color l enemyPool of
-             (h, p) -> (addHex h, ms,
-                                  Land { enemyPool = p, cityLevels = ls, .. })
-
          HexLandInfo { hexFeature = Just feature } ->
            case feature of
              MagicalGlade      -> nothing
@@ -217,6 +212,14 @@ populateTile tile g = (gt, mons, g1)
              Monastery         -> (c, 1 + ms, Land { .. })
              Keep              -> enemy Hidden Guardian
              MageTower         -> enemy Hidden Mage
+             City color ->
+               case cityLevels of
+                 l : ls ->
+                   case hexWithCity color l enemyPool of
+                     (h, p) -> (addHex h, ms,
+                                Land { enemyPool = p, cityLevels = ls, .. })
+                 [] -> nothing
+
              Dungeon           -> nothing
              Tomb              -> nothing
              MonsterDen        -> nothing
@@ -241,7 +244,7 @@ revealHiddenNeighbours a Land { .. } =
     | shouldReveal hexTerrain hexFeature = hexReveal hexContent
     | otherwise                          = hexContent
 
-  shouldReveal (City _) _         = True
+  shouldReveal _ (Just (City _))  = True
   shouldReveal _ (Just Keep)      = timeOfDay == Day
   shouldReveal _ (Just MageTower) = timeOfDay == Day
   shouldReveal _ _                = False
@@ -255,11 +258,11 @@ revealHidden a l = updateAddr a (\h -> upd h (hexContent h)) l
 
   upd HexInfo { hexLandInfo = HexLandInfo { .. } } =
     case hexTerrain of
-      City _                    -> hexReveal
       _ -> case hexFeature of
              Just AncientRuins -> hexReveal
              Just MageTower    -> during Day hexReveal
              Just Keep         -> during Day hexReveal
+             Just (City _)     -> hexReveal
              _                 -> id
 
 
@@ -291,9 +294,7 @@ startCombatAt pn a l =
 spawnCombatEnemies :: PlayerName -> HexInfo -> Land ->
                                       Perhaps ([(Enemy,EnemyLifeSpan)],Land)
 spawnCombatEnemies pn HexInfo { hexLandInfo = HexLandInfo { .. }, .. } l =
-  case hexTerrain of
-    City _ -> none
-    _ -> case hexFeature of
+    case hexFeature of
            Nothing -> none
            Just f ->
              case f of
@@ -301,6 +302,7 @@ spawnCombatEnemies pn HexInfo { hexLandInfo = HexLandInfo { .. }, .. } l =
                MagicalGlade        -> none
                Mine _              -> none
                Village             -> none
+               City _              -> none
 
                Monastery
                  | isOwned         -> none
@@ -481,12 +483,11 @@ provoked Land { .. } from to =
   -- XXX: Not dealing with other players
 
   isDangerous HexInfo { hexLandInfo = HexLandInfo { .. } } =
-    case hexTerrain of
-      City _ -> True
-      _ -> case hexFeature of
-             Just Keep      -> True
-             Just MageTower -> True
-             _              -> False
+      case hexFeature of
+        Just (City _)  -> True
+        Just Keep      -> True
+        Just MageTower -> True
+        _              -> False
 
 
 -- | Is this address revealed?
@@ -540,16 +541,16 @@ locationCardBonus p l = maximum $ map bounus
        let HexInfo { hexLandInfo = HexLandInfo { .. }, .. } =
                                                     gameTileInfo addrLocal gt
            pn             = playerName p
-       case hexTerrain of
-         City _ -> case hexOwners hexContent of
-                     q : qs | pn == q       -> Just 2
-                            | pn `elem` qs  -> Just 1
-                     _                      -> Nothing
+       case hexFeature of
+          Just (City _) ->
+            case hexOwners hexContent of
+               q : qs | pn == q       -> Just 2
+                      | pn `elem` qs  -> Just 1
+               _                      -> Nothing
 
-         _ -> case hexFeature of
-                Just Keep
-                  | hexHasShield pn hexContent -> Just (numberOfOwnedKeeps pn l)
-                _ -> Nothing
+          Just Keep
+            | hexHasShield pn hexContent -> Just (numberOfOwnedKeeps pn l)
+          _ -> Nothing
 
 
 

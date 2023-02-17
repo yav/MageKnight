@@ -56,7 +56,7 @@ data Addr           = Addr { addrGlobal :: TileAddr, addrLocal :: HexAddr }
 
 data Feature        = MagicalGlade | Mine BasicMana
                     | Village | Monastery
-                    | Keep | MageTower
+                    | Keep | MageTower | City BasicMana
                     | Dungeon | Tomb
                     | MonsterDen | SpawningGrounds
                     | AncientRuins
@@ -95,8 +95,7 @@ terrainCostsDuring time = Map.fromList $
   , (Wasteland, 4)
   , (Desert, if time == Day then 5 else 3)
   , (Swamp, 5)
-  ] ++
-  [ (City m, 2) | m <- anyBasicMana ]
+  ]
 
 
 
@@ -491,7 +490,7 @@ cityTiles = map core
   [ ("5", [ NW     |-> (Forest, MagicalGlade)
           , NE     |-> (Swamp, Village)
           , W      |-> Lake
-          , Center |-> City Green
+          , Center |-> Swamp
           , E      |-> (Swamp, Orc)
           , SW     |-> (Forest, Orc)
           , SE     |-> Swamp
@@ -500,7 +499,7 @@ cityTiles = map core
   , ("6", [ NW     |-> Forest
           , NE     |-> (Plains, Monastery)
           , W      |-> (Mountain, Draconum)
-          , Center |-> City Blue
+          , Center |-> Plains
           , E      |-> Lake
           , SW     |-> Hills
           , SE     |-> Lake
@@ -509,7 +508,7 @@ cityTiles = map core
   , ("7", [ NW     |-> (Wasteland, SpawningGrounds)
           , NE     |-> Plains
           , W      |-> (Wasteland, Keep)
-          , Center |-> City White
+          , Center |-> Plains
           , E      |-> Forest
           , SW     |-> Lake
           , SE     |-> (Lake, Draconum)
@@ -518,7 +517,7 @@ cityTiles = map core
   , ("8", [ NW     |-> (Desert, AncientRuins)
           , NE     |-> (Hills, Mine Red)
           , W      |-> (Wasteland, Draconum)
-          , Center |-> City Red
+          , Center |-> Desert
           , E      |-> Desert
           , SW     |-> Wasteland
           , SE     |-> (Desert, Draconum)

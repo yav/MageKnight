@@ -24,7 +24,6 @@ data Element    = Physycal | Fire | Ice | ColdFire
                   deriving (Eq,Ord,Show)
 
 data Terrain    = Plains | Hills | Forest | Wasteland | Desert | Swamp
-                | City BasicMana
                 | Lake | Mountain
                 | Ocean {- for tile A and B -}
                   deriving (Eq,Ord,Show)
@@ -145,7 +144,6 @@ instance ExportAsKey Terrain where
       Wasteland -> "wasteland"
       Desert    -> "desert"
       Swamp     -> "swamp"
-      City m    -> Text.append "city_" (toKeyJS m)
       Lake      -> "lake"
       Mountain  -> "mountain"
       Ocean     -> "ocean"
