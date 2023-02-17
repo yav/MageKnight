@@ -490,7 +490,7 @@ cityTiles = map core
   [ ("5", [ NW     |-> (Forest, MagicalGlade)
           , NE     |-> (Swamp, Village)
           , W      |-> Lake
-          , Center |-> Swamp
+          , Center |-> (Swamp, City Green)
           , E      |-> (Swamp, Orc)
           , SW     |-> (Forest, Orc)
           , SE     |-> Swamp
@@ -499,7 +499,7 @@ cityTiles = map core
   , ("6", [ NW     |-> Forest
           , NE     |-> (Plains, Monastery)
           , W      |-> (Mountain, Draconum)
-          , Center |-> Plains
+          , Center |-> (Plains, City Blue)
           , E      |-> Lake
           , SW     |-> Hills
           , SE     |-> Lake
@@ -508,7 +508,7 @@ cityTiles = map core
   , ("7", [ NW     |-> (Wasteland, SpawningGrounds)
           , NE     |-> Plains
           , W      |-> (Wasteland, Keep)
-          , Center |-> Plains
+          , Center |-> (Plains, City White)
           , E      |-> Forest
           , SW     |-> Lake
           , SE     |-> (Lake, Draconum)
@@ -517,7 +517,7 @@ cityTiles = map core
   , ("8", [ NW     |-> (Desert, AncientRuins)
           , NE     |-> (Hills, Mine Red)
           , W      |-> (Wasteland, Draconum)
-          , Center |-> Desert
+          , Center |-> (Desert, City Red)
           , E      |-> Desert
           , SW     |-> Wasteland
           , SE     |-> (Desert, Draconum)
