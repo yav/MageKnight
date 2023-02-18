@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe, RecordWildCards, FlexibleInstances, OverloadedStrings #-}
 module Rule
   ( Rule
   , ruleOutput

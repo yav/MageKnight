@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe, RecordWildCards #-}
 module Util.Q
   ( Q
   , qEmpty

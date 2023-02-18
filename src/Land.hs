@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
 module Land
   ( -- * Setting up the land
     Land

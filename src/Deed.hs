@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
 module Deed
   ( Deed (..)
   , DeedType(..)

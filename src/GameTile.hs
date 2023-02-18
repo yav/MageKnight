@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe, OverloadedStrings, RecordWildCards #-}
 -- | An active game tile.
 module GameTile
   ( GameTile

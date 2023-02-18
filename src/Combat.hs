@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings, NamedFieldPuns #-}
 module Combat where
 
 import Common

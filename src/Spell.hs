@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe, OverloadedStrings #-}
 module Spell (deeds, interactiveSpell) where
 
 import Common

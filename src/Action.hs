@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe, RecordWildCards, OverloadedStrings #-}
 module Action
   ( blueSpecial
   , redSpecial

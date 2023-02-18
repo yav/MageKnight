@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module DummyPlayer
   ( DummyPlayer
   , dummyPlayerNew

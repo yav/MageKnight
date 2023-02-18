@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings, Safe #-}
 module Ruins
   ( Objectve(..)
   , Reward(..)

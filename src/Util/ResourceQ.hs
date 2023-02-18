@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe, RecordWildCards #-}
 module Util.ResourceQ
   ( ResourceQ
   , rqEmpty

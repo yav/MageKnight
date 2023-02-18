@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe #-}
 module Util.Random
   ( Gen
   , genRand, genRandFun

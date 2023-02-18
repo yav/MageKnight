@@ -1,17 +1,24 @@
+cabal-version:       3.0
 name:                MageKnight
 version:             0.1.0.0
--- synopsis:
--- description:
--- license:
--- license-file:        LICENSE
 author:              Iavor S. Diatchki
 maintainer:          iavor.diatchki@gmail.com
 category:            Game
 build-type:          Simple
--- extra-source-files:
-cabal-version:       >=1.10
+
+common Common
+  GHC-options: -Wall
+  default-language:    Haskell2010
+  default-extensions:
+    BlockArguments, ImportQualifiedPost,
+    RecordWildCards, NamedFieldPuns,
+    DeriveGeneric, DeriveAnyClass,
+    OverloadedStrings,
+    FlexibleInstances,
+    TemplateHaskell
 
 library
+  import: Common
   hs-source-dirs: src
   exposed-modules:
     Server,
@@ -54,39 +61,38 @@ library
     Util.Misc,
     Util.Bag,
     Util.Perhaps,
-    Util.Snap
-    Util.History
+    Util.Snap,
+    Util.History,
+
+    AppTypes
 
   build-depends:
     base,
     bytestring,
     text,
-    aeson,
     containers,
+    aeson,
     vector,
     random,
     array,
     pretty,
     snap-core,
     snap-server,
-    filepath
-  default-language:    Haskell2010
-  GHC-options: -Wall
+    filepath,
+    common-utils
 
--- executable MageKnight
---   hs-source-dirs: exes
---   main-is: Main.hs
---   GHC-options: -Wall
---   default-language:    Haskell2010
---   build-depends:
---     MageKnight == 0.1.0.0,
---     base,
---     text,
---     filepath,
---     bytestring,
---     containers,
---     snap-core,
---     snap-server,
---     transformers,
---     random
+executable MageKnight
+  import: Common
+  hs-source-dirs: app
+  main-is: Main.hs
+  build-depends:
+    base,
+    containers,
+    bytestring,
+    text,
+    common-utils,
+    common-interact,
+    MageKnight
+
+
 

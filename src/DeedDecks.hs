@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe, OverloadedStrings #-}
 module DeedDecks
   ( Deed
   , advancedActions

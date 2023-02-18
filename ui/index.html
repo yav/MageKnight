@@ -1,75 +1,10 @@
-<!DOCTYPE html
-><html>
+<html>
 <head>
-<meta name="mobile-web-app-capable" content="yes">
-<style>
-@font-face {
-  font-family: 'Almendra';
-  src: url('/fonts/Almendra-Bold.ttf');
-}
-
-html {
-  height: 100%;
-}
-
-body {
-  height: 100%;
-  background-color: #000;
-  margin: 0
-}
-
-.column {
-  width: 50%;
-  height: 100%;
-  overflow: auto;
-  position: relative;
-}
-
-</style>
-<script src="jquery.js"></script>
-<script src="map.js"></script>
-<script src="offers.js"></script>
-<script src="source.js"></script>
-<script src="player_stats.js"></script>
-<script src="player_cards.js"></script>
-<script src="player_units.js"></script>
-<script src="play_area.js"></script>
-<script src="interactions.js"></script>
-
-
-<script>
-
-
-var drawOffers = newOffers()
-
-
-function redrawGame(g) {
-  var l = drawLand(g.land, g.player.name, g.player.unsafe, g.atWar)
-
-  $('#header').empty()
-              .append(drawPlayerStats(g.player, g.source, g.land.time))
-  $('#left').empty()
-            .append(l.dom)
-            .append(drawOffers(g.offers))
-
-  $('#right').empty()
-             .append(drawPlayArea(g.playArea))
-             .append(drawPlayerCards(g.player))
-             .append(drawPlayerUnits(g.player))
-
-  l.focus(g.player.location.x, g.player.location.y)
-}
-
-$(document).ready(function() {
-  jQuery.get('/newGame', {}, redrawGame)
-});
-</script>
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="style.css">
+<script src="common-js/connect.js"></script>
+<script src="common-js/html.js"></script>
+<script src="dynamic.js"></script>
+<script src="main.js"></script>
 </head>
-<body
-><div id="header"  style="height: 0"></div
-><div id="left"    class="column" style="float: left"></div
-><div id="right"   class="column" style="float: right"></div
-></body
-></html>
-
-
+<body id="main" onload="main()"></body></html>

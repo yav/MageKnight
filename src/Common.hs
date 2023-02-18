@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe, OverloadedStrings #-}
 module Common where
 
 import Util.JSON

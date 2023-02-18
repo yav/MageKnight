@@ -1,5 +1,3 @@
-{-# LANGUAGE Safe, RecordWildCards #-}
-
 -- | A draw deck together with some items on display for sale.
 module Offer
   ( Offer

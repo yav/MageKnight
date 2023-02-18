@@ -1,4 +1,3 @@
-{-# LANGUAGE Safe #-}
 module Util.Perhaps where
 
 import           Data.Text (Text)

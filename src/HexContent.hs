@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards, OverloadedStrings, Safe #-}
 module HexContent
   ( -- * Basics
     HexContent
