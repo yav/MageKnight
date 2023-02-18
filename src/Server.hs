@@ -5,7 +5,7 @@ import Common(Mana(..), BasicMana(..))
 import Terrain(Addr(..),Dir(..),HexAddr(..),hexAddr)
 import DeedDecks(Deed,findDeed)
 import Units(Unit,findUnit)
-import Paths(deedPath,unitPath,resourceDir)
+import Paths(urlToPath,deedUrl,unitUrl,resourceDir)
 import Util.Snap
 -- import Util.History(history)
 -- import Util.JSON
@@ -36,14 +36,14 @@ startServer =
 getDeedImage :: Snap ()
 getDeedImage =
   do deed <- deedParam "deed"
-     serveFile (deedPath deed)
+     serveFile (urlToPath (deedUrl deed))
 
 
 -- | Get the image for a unit.
 getUnitImage :: Snap ()
 getUnitImage =
   do unit <- unitParam "unit"
-     serveFile (unitPath unit)
+     serveFile (urlToPath (unitUrl unit))
 
 
 {-

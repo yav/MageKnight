@@ -2,18 +2,17 @@
 -- | Locations of resources on the file system.
 module Paths where
 
-import Common( BasicMana(..), Element(..) )
-import Terrain(Terrain(..),Feature(..))
-import Deed(Deed(..),DeedType(..))
-import Units(Unit(..),UnitType(..))
-import Enemies
-
 import           Data.Char(toLower,isAscii,isAlphaNum)
-import           Data.Maybe(maybeToList)
 import           Data.Text(Text)
 import qualified Data.Text as Text
 import qualified Data.Set as Set
 import           System.FilePath((</>),(<.>))
+
+import Common( BasicMana(..), Element(..) )
+import Terrain(Feature(..))
+import Deed(Deed(..),DeedType(..))
+import Units(Unit(..),UnitType(..))
+import Enemies
 
 
 -- | Top-level directory for resources.
@@ -29,15 +28,11 @@ nameToPath = Text.unpack . Text.map cvt
 
 -- | Convert a URL to a path.  Removes the leading and trailing slashes.
 urlToPath :: String -> FilePath
-urlToPath = foldr (</>) "" . split
+urlToPath = (resourceDir </>) . foldr (</>) "" . split
   where
   split xs = case break (== '/') xs of
                (as, _ : bs) -> as : split bs
                (as,_)       -> [as]
-
--- | Path to image for the given deed.
-deedPath :: Deed -> FilePath
-deedPath d = resourceDir </> urlToPath (deedUrl d)
 
 -- | URL for image to a specific deed.
 deedUrl :: Deed -> FilePath
@@ -55,10 +50,6 @@ deedUrl Deed { .. } = dir </> nameToPath deedName <.> "png"
               Blue  -> "blue"
               Green -> "green"
               White -> "white"
-
--- | Path to image for a unit.
-unitPath :: Unit -> FilePath
-unitPath u = "ui" </> urlToPath (unitUrl u)
 
 -- | URL for image to a unit
 unitUrl :: Unit -> String
@@ -79,6 +70,11 @@ featureHelpUrl f =
     Monastery       -> img "monastery"
     Keep            -> img "keep"
     MageTower       -> img "mage_tower"
+    City color      -> img ("city_" ++ case color of
+                                         Red   -> "red"
+                                         Blue  -> "blue"
+                                         Green -> "green"
+                                         White -> "white")
     Dungeon         -> img "dungeon"
     Tomb            -> img "tomb"
     MonsterDen      -> img "monster_den"
@@ -92,15 +88,6 @@ featureHelpUrl f =
   where
   img x = Just ("img" </> "manual" </> "features" </> x <.> "png")
 
-
--- | Help URLS to images relevant to a specific terrain.
-getBuildingHelpUrls :: (Terrain, Maybe Feature) -> [String]
-getBuildingHelpUrls (t,mb) =
-    case mb of
-      Nothing -> []
-      Just f  -> maybeToList (featureHelpUrl f)
-  where
-  img x = "img" </> "manual" </> "features" </> x <.> "png"
 
 -- | Help URLS to images relevant to help about this enemy.
 enemyPowerHelpUrl :: Enemy -> [FilePath]
