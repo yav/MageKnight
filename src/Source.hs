@@ -12,22 +12,23 @@ module Source
   , takeAndConvertMana
   ) where
 
+import GHC.Generics
 import Data.Set(Set)
+import Control.Monad (replicateM)
+
+import Common.Bag
+import Common.RNGM
+import Data.Aeson(ToJSON)
 
 import Common
-import Common.Bag
-import Util.Random
-import Util.JSON
-
-import Control.Monad (replicateM)
 
 -- | The source of pure mana
 data Source = Source
   { sourceMana    :: Bag Mana     -- Available
   , sourceFixed   :: Bag Mana     -- Unavalable, not re-reroled
   , sourceUsed    :: Bag Mana     -- Unavalable, reroll
-  , sourceRNG     :: StdGen
-  }
+  , sourceRNG     :: RNG
+  } deriving (Generic,ToJSON)
 
 sourceSize :: Source -> Int
 sourceSize Source { .. } =
@@ -40,13 +41,13 @@ availableMana = bagToSet . sourceMana
 
 -- | Roll this many mana dice.
 rollDice :: Int -> Gen [Mana]
-rollDice n = replicateM n (oneOf anyMana)
+rollDice n = replicateM n (pickOne anyMana)
 
 -- | Make a new source, with the given number of dice.
 newSource :: Int -> Gen Source
 newSource size =
   do sourceMana <- mkSource
-     sourceRNG  <- randStdGen
+     sourceRNG  <- splitRNG
      return Source { sourceFixed = bagEmpty, sourceUsed = bagEmpty, .. }
   where
   mkSource = do ds <- rollDice size
@@ -58,9 +59,9 @@ newSource size =
 -- | Replenish spent mana.  Used at end of turn.
 refillSource :: Source -> Source
 refillSource Source { .. } =
-  genRandFun sourceRNG $
+  withRNG sourceRNG $
     do ds <- rollDice (bagSize sourceUsed)
-       return $ \rng ->
+       pure \rng ->
          Source { sourceRNG   = rng
                 , sourceMana  = bagUnion (bagFromList ds) currentDice
                 , sourceFixed = bagEmpty
@@ -75,9 +76,9 @@ refillSource Source { .. } =
 -- Assumes that stolen mana has been returned.
 renewSource :: Source -> Source
 renewSource src =
-  genRandFun (sourceRNG src) $
-     do s1 <- newSource (sourceSize src)
-        return $ \_ -> s1
+  withRNG (sourceRNG src)
+    do s1 <- newSource (sourceSize src)
+       pure \_ -> s1
 
 
 
@@ -105,11 +106,5 @@ takeAndConvertMana :: Mana -> Mana -> Source -> Maybe Source
 takeAndConvertMana mFrom mTo s =
   do Source { .. } <- takeMana mFrom s
      return Source { sourceFixed = bagChange 1 mTo sourceFixed, .. }
-
-
---------------------------------------------------------------------------------
--- XXX: Should export fixed mana also
-instance Export Source where
-  toJS Source { .. } = toJS (bagToList sourceMana)
 
 

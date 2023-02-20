@@ -4,21 +4,24 @@ import GHC.Generics(Generic)
 import Common.Basics(PlayerId)
 import Data.Aeson(ToJSON,FromJSON)
 
-data State = State
+import Source
+
+data State = State PlayerId Source
   deriving (Generic,ToJSON)
-
-data Update = Update
-  deriving (Generic,ToJSON)
-
-data Input = Input
-  deriving (Eq,Ord,Show,Read,Generic,ToJSON,FromJSON)
-
-doUpdate   :: Update -> State -> State
-doUpdate  _ = id
 
 finalState :: State -> Bool
 finalState = const False
 
+data Input = InputA () | InputB
+  deriving (Eq,Ord,Show,Read,Generic,ToJSON,FromJSON)
+
+--------------------------------------------------------------------------------
+-- No interesting updates or multiple players
+
+data Update = SetState State
+
+doUpdate   :: Update -> State -> State
+doUpdate (SetState s) _ = s
 
 type StateView = State
 
@@ -26,9 +29,9 @@ playerView :: PlayerId -> State -> StateView
 playerView _ = id
 
 
-type UpdateView = Update
+type UpdateView = StateView
 
 playerUpdateView :: PlayerId -> Update -> UpdateView
-playerUpdateView _ = id
+playerUpdateView p (SetState s) = playerView p s
 
 

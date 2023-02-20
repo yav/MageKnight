@@ -553,6 +553,7 @@ locationCardBonus p l = maximum $ map bounus
 
 
 
+{-
 instance Export Land where
   toJS Land { .. } =
     object [ "time"      .= timeOfDay
@@ -582,5 +583,5 @@ instance Export Land where
             | isValid x   = Map.insertWith (\_ old -> old) x pl m
             | otherwise   = m
 
-
+-}
 

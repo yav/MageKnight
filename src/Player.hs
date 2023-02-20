@@ -534,6 +534,7 @@ tacticPreparation n Player { .. } =
 
 --------------------------------------------------------------------------------
 
+{-
 instance Export Player where
   toJS Player { .. } =
     object
@@ -556,4 +557,4 @@ instance Export Player where
       , "unsafe"      .= fmap fst onUnsafe
       ]
     where (l,(start,end)) = playerLevel' Player { .. }
-
+-}

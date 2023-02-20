@@ -1,6 +1,10 @@
 module Common where
 
-import Util.JSON
+import GHC.Generics
+import Data.Aeson
+import Data.Aeson.Types
+
+import Common.Utils
 
 import           Data.Text ( Text )
 import qualified Data.Text as Text
@@ -33,10 +37,17 @@ data AttackType = Melee | Ranged | Siege
 
 
 data BasicMana  = Red | Green | Blue | White
-                  deriving (Eq,Ord,Show)
+                  deriving (Eq,Ord,Show,Generic,ToJSON)
 
 data Mana       = BasicMana BasicMana | Gold | Black
-                  deriving (Eq,Ord,Show)
+                  deriving (Eq,Ord,Show,Generic,ToJSON)
+
+instance ToJSONKey BasicMana where toJSONKey = jsDeriveKey
+instance ToJSONKey Mana where
+  toJSONKey = toJSONKeyText \m ->
+    case m of
+      BasicMana a -> showText a
+      _           -> showText m
 
 data Time       = Day | Night
                   deriving (Eq,Ord,Show)
@@ -84,67 +95,4 @@ ppTime t =
   case t of
     Day   -> text "day"
     Night -> text "night"
-
---------------------------------------------------------------------------------
-
-instance ExportAsKey Time where
-  toKeyJS t = case t of
-                Day   -> "day"
-                Night -> "night"
-
-instance Export Time where
-  toJS = jsKey
-
-instance ExportAsKey BasicMana where
-  toKeyJS m = case m of
-                White -> "white"
-                Red   -> "red"
-                Blue  -> "blue"
-                Green -> "green"
-
-instance Export BasicMana where
-  toJS = jsKey
-
-instance ExportAsKey Mana where
-  toKeyJS m = case m of
-                Gold        -> "gold"
-                Black       -> "black"
-                BasicMana b -> toKeyJS b
-
-instance Export Mana where
-  toJS = jsKey
-
-
-instance ExportAsKey Element where
-  toKeyJS m = case m of
-                Physycal    -> "physical"
-                Fire        -> "fire"
-                Ice         -> "ice"
-                ColdFire    -> "cold_fire"
-
-instance Export Element where
-  toJS = jsKey
-
-instance ExportAsKey AttackType where
-  toKeyJS m = case m of
-                Melee   -> "melee"
-                Ranged  -> "ranged"
-                Siege   -> "siege"
-
-instance Export AttackType where
-  toJS = jsKey
-
-instance ExportAsKey Terrain where
-  toKeyJS t =
-    case t of
-      Plains    -> "plains"
-      Hills     -> "hills"
-      Forest    -> "forest"
-      Wasteland -> "wasteland"
-      Desert    -> "desert"
-      Swamp     -> "swamp"
-      Lake      -> "lake"
-      Mountain  -> "mountain"
-      Ocean     -> "ocean"
-
 

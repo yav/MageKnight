@@ -3,7 +3,7 @@ let playerId = null
 let iconSize = 26
 let gui      = null
 
-const main = () => {
+function main() {
   const conn = srvConnect()
   playerId = conn.playerId
   sendJSON = conn.sendJSON
@@ -11,21 +11,29 @@ const main = () => {
 }
 
 // Redraw the whole state
-const uiRedraw = (state) => {
+function uiRedraw(state) {
+  html.getBody().innerHTML = ""
+  gui = {}
+  gui.source = newSource()
+  uiUpdate(state.game)
   uiQuestions(state.questions)
 }
 
 // Set the explanation for what we are asking.
-const uiSetQuestion = (q) => {
+function uiSetQuestion(q) {
+  console.log(q)
 }
 
 // Various things that can be used to answer the question.
-const uiQuestion = (q) => hsInput({
+function uiQuestion(q) {
+  console.log(q)
+  hsInput({
   })(q.chChoice)
+}
 
 
 // Perform a partial update
-const uiUpdate = hsUpdate({
-  })
+function uiUpdate(state) {
+}
 
 
