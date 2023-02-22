@@ -4,6 +4,7 @@ import GHC.Generics(Generic)
 import Common.Basics(PlayerId)
 import Data.Aeson(ToJSON,FromJSON)
 
+import Common
 import Source
 
 data State = State PlayerId Source
@@ -12,7 +13,8 @@ data State = State PlayerId Source
 finalState :: State -> Bool
 finalState = const False
 
-data Input = InputA () | InputB
+data Input = Source Mana
+           | Other
   deriving (Eq,Ord,Show,Read,Generic,ToJSON,FromJSON)
 
 --------------------------------------------------------------------------------

@@ -1,0 +1,18 @@
+
+.source {
+  border: 1px solid black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.source .group {
+  margin-left: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}
+
+.source .die {
+  box-sizing: border-box;
+}

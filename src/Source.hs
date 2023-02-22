@@ -28,7 +28,7 @@ data Source = Source
   , sourceFixed   :: Bag Mana     -- Unavalable, not re-reroled
   , sourceUsed    :: Bag Mana     -- Unavalable, reroll
   , sourceRNG     :: RNG
-  } deriving (Generic,ToJSON)
+  } deriving (Generic,ToJSON,Show)
 
 sourceSize :: Source -> Int
 sourceSize Source { .. } =

@@ -1,18 +1,19 @@
 module Common where
 
 import GHC.Generics
+import Data.Text ( Text )
+import Control.Applicative((<|>))
+import Control.Monad(guard)
+import Text.PrettyPrint
+import Data.Char(toLower)
+
+
 import Data.Aeson
 import Data.Aeson.Types
 
 import Common.Utils
 
-import           Data.Text ( Text )
-import qualified Data.Text as Text
-import           Text.PrettyPrint
-import           Data.Char(toLower)
 
-
-type PlayerId   = Int
 type DeedName   = Text
 type EnemyName  = Text
 
@@ -37,10 +38,10 @@ data AttackType = Melee | Ranged | Siege
 
 
 data BasicMana  = Red | Green | Blue | White
-                  deriving (Eq,Ord,Show,Generic,ToJSON)
+                  deriving (Eq,Ord,Show,Read,Generic,ToJSON,FromJSON)
 
 data Mana       = BasicMana BasicMana | Gold | Black
-                  deriving (Eq,Ord,Show,Generic,ToJSON)
+                  deriving (Eq,Ord,Show,Read,Generic)
 
 instance ToJSONKey BasicMana where toJSONKey = jsDeriveKey
 instance ToJSONKey Mana where
@@ -48,6 +49,20 @@ instance ToJSONKey Mana where
     case m of
       BasicMana a -> showText a
       _           -> showText m
+
+instance ToJSON Mana where
+  toJSON m =
+    case m of
+      BasicMana a -> toJSON a
+      _           -> toJSON (showText m)
+
+instance FromJSON Mana where
+  parseJSON v = (BasicMana <$> parseJSON v)
+             <|> check Gold
+             <|> check Black
+    where
+    check y =
+      withText "special mana" (\t -> guard (t == showText y) >> pure y) v
 
 data Time       = Day | Night
                   deriving (Eq,Ord,Show)
