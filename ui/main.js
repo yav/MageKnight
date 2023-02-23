@@ -24,6 +24,14 @@ function uiRedraw(state) {
   gui.container = html.getBody()
   gui.container.innerHTML = ""
   gui.question_cleanup = []
+
+  const ui_q = html.div("ui-question")
+  gui.question_text    = html.div("description")
+  gui.question_answers = html.div("answers")
+  ui_q.appendChild(gui.question_text)
+  ui_q.appendChild(gui.question_answers)
+  gui.container.appendChild(ui_q)
+
   gui.source = newSource()
   uiUpdate(state.game)
   uiQuestions(state.questions)
@@ -31,14 +39,33 @@ function uiRedraw(state) {
 
 // Set the explanation for what we are asking.
 function uiSetQuestion(q) {
-  console.log(q)
+  gui.question_text.textContent = q
 }
+
+function uiNewAnswer(dom,q) {
+  dom.addEventListener("click",() => {
+    sendJSON(q)
+    uiQuestionCleanup()
+  })
+  gui.question_answers.appendChild(dom)
+  uiAddQuestionCleanup(() => dom.remove())
+}
+
 
 // Various things that can be used to answer the question.
 function uiQuestion(q) {
   hsInput({
-    Source: (m) => gui.source.ask(m,q)
+    Source: (m) => gui.source.ask(m,q),
+    AskMana: (m) => gui.source.askMana(m,q),
+    TestReroll: () => uiButton("Reroll",q),
+    TestFixed: () => uiButton("Test fixed",q),
   })(q.chChoice)
+}
+
+function uiButton(lab,q) {
+  const dom = html.div("button question")
+  dom.textContent = lab
+  uiNewAnswer(dom,q)
 }
 
 

@@ -9,7 +9,7 @@ import Common.RNGM
 import AppTypes
 
 import Debug.Trace
-
+import Common
 import Source
 
 main :: IO ()
@@ -27,10 +27,23 @@ main = startApp App
 gameLoop :: Interact ()
 gameLoop =
   do State p s <- getState
-     inp <- choose p "Choose Mana"
+     inp <- choose p "Choose Action"
+          $ [ (TestReroll, "reroll") ] ++
+            [ (TestFixed, "reroll") ] ++
             [ (Source m, showText m) | m <- Set.toList (availableMana s) ]
-     traceM (show inp)
      case inp of
+       TestReroll -> update (SetState (State p (refillSource s)))
+       TestFixed ->
+          do inp1 <- choose p "Choose mana"
+                [ (Source m, showText m) | m <- Set.toList (availableMana s) ]
+             case inp1 of
+               Source from ->
+                 do to' <- choose p "Set to"
+                          [ (AskMana to, "Convert to this") | to <- anyMana ]
+                    case to' of
+                      AskMana to | Just s1 <- takeAndConvertMana from to s ->
+                          update (SetState (State p s1))
+
        Source m | Just s1 <- takeMana m s ->
           do update (SetState (State p s1))
              traceM (show s1)

@@ -105,6 +105,7 @@ returnStolenMana m Source { .. } =
 takeAndConvertMana :: Mana -> Mana -> Source -> Maybe Source
 takeAndConvertMana mFrom mTo s =
   do Source { .. } <- takeMana mFrom s
-     return Source { sourceFixed = bagChange 1 mTo sourceFixed, .. }
+     return Source { sourceUsed = bagChange (-1) mFrom sourceUsed
+                   , sourceFixed = bagChange 1 mTo sourceFixed, .. }
 
 

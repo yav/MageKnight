@@ -6,10 +6,16 @@ function newSource() {
 
   const mana = [ "Red", "Green", "White", "Blue", "Gold", "Black" ]
 
+  function mkGroup(x) {
+    const g = html.div("group")
+    g.setAttribute("title",x)
+    return g
+  }
+
   const groups = { sourceMana: {}, sourceFixed: {}, sourceUsed: {} }
-  const cont = { sourceMana: html.div("group")
-               , sourceFixed: html.div("group")
-               , sourceUsed: html.div("group")
+  const cont = { sourceMana:  mkGroup("Available mana")
+               , sourceFixed: mkGroup("Used mana, not rerolled")
+               , sourceUsed:  mkGroup("Used mana, rerolled")
                }
   dom.appendChild(cont.sourceMana)
   dom.appendChild(cont.sourceFixed)
@@ -70,12 +76,21 @@ function newSource() {
     })
   }
 
+  // Not directly related to source, but we have the die drawing code here
+  function askMana(m,q) {
+    const d = newDie(m)
+    d.setAttribute("title",q.chHelp)
+    d.classList.add("question")
+    uiNewAnswer(d,q)
+  }
+
 
   gui.container.appendChild(dom)
 
   const obj = {}
   obj.set = set
   obj.ask = ask
+  obj.askMana = askMana
 
   return obj
 }

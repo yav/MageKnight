@@ -14,7 +14,9 @@ finalState :: State -> Bool
 finalState = const False
 
 data Input = Source Mana
-           | Other
+           | AskMana Mana
+           | TestReroll
+           | TestFixed
   deriving (Eq,Ord,Show,Read,Generic,ToJSON,FromJSON)
 
 --------------------------------------------------------------------------------

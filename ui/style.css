@@ -1,3 +1,10 @@
+.ui-question {
+}
+
+.ui-question .answers {
+  display:flex;
+}
+
 .question {
   cursor: pointer;
   border: 2px solid black;
