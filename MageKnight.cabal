@@ -85,6 +85,8 @@ executable MageKnight
   import: Common
   hs-source-dirs: app
   main-is: Main.hs
+  other-modules:
+    Utils
   build-depends:
     base,
     containers,

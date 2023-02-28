@@ -127,6 +127,7 @@ gameTileIsWalkable gt loc =
 
 --------------------------------------------------------------------------------
 
+{-
 instance Export GameTile where
   toJS GameTile { .. } =
     object [ "tile"    .= gameTile
@@ -134,5 +135,5 @@ instance Export GameTile where
            ]
     where
     export (l,c) = object [ "location" .= l, "content"  .= c ]
-
+-}
 

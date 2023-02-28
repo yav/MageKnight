@@ -1,14 +1,21 @@
 module AppTypes where
 
 import GHC.Generics(Generic)
-import Common.Basics(PlayerId)
 import Data.Aeson(ToJSON,FromJSON)
+
+import Common.Basics(PlayerId)
+import Common.Field(declareFields)
 
 import Common
 import Source
 
-data State = State PlayerId Source
+data State = State
+  { _playerId :: PlayerId
+  , _source   :: Source
+  }
   deriving (Generic,ToJSON)
+
+declareFields ''State
 
 finalState :: State -> Bool
 finalState = const False

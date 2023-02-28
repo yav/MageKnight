@@ -43,27 +43,6 @@ data BasicMana  = Red | Green | Blue | White
 data Mana       = BasicMana BasicMana | Gold | Black
                   deriving (Eq,Ord,Show,Read,Generic)
 
-instance ToJSONKey BasicMana where toJSONKey = jsDeriveKey
-instance ToJSONKey Mana where
-  toJSONKey = toJSONKeyText \m ->
-    case m of
-      BasicMana a -> showText a
-      _           -> showText m
-
-instance ToJSON Mana where
-  toJSON m =
-    case m of
-      BasicMana a -> toJSON a
-      _           -> toJSON (showText m)
-
-instance FromJSON Mana where
-  parseJSON v = (BasicMana <$> parseJSON v)
-             <|> check Gold
-             <|> check Black
-    where
-    check y =
-      withText "special mana" (\t -> guard (t == showText y) >> pure y) v
-
 data Time       = Day | Night
                   deriving (Eq,Ord,Show)
 
@@ -110,4 +89,28 @@ ppTime t =
   case t of
     Day   -> text "day"
     Night -> text "night"
+
+--------------------------------------------------------------------------------
+instance ToJSONKey BasicMana where toJSONKey = jsDeriveKey
+
+instance ToJSONKey Mana where
+  toJSONKey = toJSONKeyText \m ->
+    case m of
+      BasicMana a -> showText a
+      _           -> showText m
+
+instance ToJSON Mana where
+  toJSON m =
+    case m of
+      BasicMana a -> toJSON a
+      _           -> toJSON (showText m)
+
+instance FromJSON Mana where
+  parseJSON v = (BasicMana <$> parseJSON v)
+             <|> check Gold
+             <|> check Black
+    where
+    check y =
+      withText "special mana" (\t -> guard (t == showText y) >> pure y) v
+
 

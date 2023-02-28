@@ -72,7 +72,7 @@ function uiButton(lab,q) {
 // Perform a partial update
 function uiUpdate(state) {
   console.log("update")
-  gui.source.set(state[1])
+  gui.source.set(state._source)
 }
 
 

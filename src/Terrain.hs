@@ -29,16 +29,20 @@ module Terrain
     validPlacement
   ) where
 
+import Data.Array (array, (!))
+import Data.Text (Text)
+import Data.Set ( Set )
+import Data.Set qualified as Set
+import Data.Map ( Map )
+import Data.Map qualified as Map
+
+import Data.Aeson qualified as JS
+
 import Common
 import Enemies(EnemyType(Orc,Draconum))
 import Util.JSON
 
-import           Data.Array (array, (!))
-import           Data.Text (Text)
-import           Data.Set ( Set )
-import qualified Data.Set as Set
-import           Data.Map ( Map )
-import qualified Data.Map as Map
+
 
 type TileAddr       = (Int,Int)
 
@@ -228,6 +232,7 @@ validPlacement sh explored t backup pt@(x,y) =
 
 --------------------------------------------------------------------------------
 
+{-
 instance Export Dir where
   toJS dir = toJS (txt :: Text)
     where
@@ -269,7 +274,7 @@ instance Export TileType where
 
 instance Export Tile where
   toJS Tile { .. } = object [ "name" .= tileName, "type" .= tileType ]
-
+-}
 
 
 
