@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 -- | Locations of resources on the file system.
 module Paths where
 

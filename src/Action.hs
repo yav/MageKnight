@@ -17,7 +17,8 @@ import qualified Data.Set  as Set
 
 blueSpecial :: Deed
 blueSpecial =
-  actionDeed Blue "Cold Toughness"
+  actionDeed Blue "Cold Toughness" [] []
+{-
 
     [ produces (2 *** Attack Melee Ice)
     , produces (3 *** Block Ice)
@@ -27,22 +28,24 @@ blueSpecial =
       produces (5 + coldToughnessBlockBonus e *** Block Ice)
       | e <- allEnemies, let name = enemyName e
     ]
+-}
 
 
 greenSpecial :: Deed
 greenSpecial =
-  actionDeed Green "Will Focus"
-
+  actionDeed Green "Will Focus" [] []
+{-
     (   produces (ManaCrystal Green)
     : [ produces (ManaToken (BasicMana b)) | b <- [ Blue, White, Red ] ])
 
     [ r | c <- actions, r <- concentrate 3 c ]
+-}
 
 
 redSpecial :: Deed
 redSpecial =
-  actionDeed Red "Battle Versatility"
-
+  actionDeed Red "Battle Versatility" [] []
+{-
     [ produces (2 *** Attack Melee Physycal)
     , produces (2 *** Block Physycal)
     , produces (1 *** Attack Ranged Physycal)
@@ -55,19 +58,21 @@ redSpecial =
     , produces (3 *** Attack Ranged Physycal)
     , produces (2 *** Attack Siege Physycal)
     ]
+-}
 
 whiteSpecial :: Deed
 whiteSpecial =
-  actionDeed White "Noble Manners"
+  actionDeed White "Noble Manners" [] []
+{-
       [ produces (2 *** Influence) &&&
         produces (IfInteracted [ Fame ]) ]
       [ produces (4 *** Influence) &&&
         produces (IfInteracted [ Fame, Reputation ]) ]
-
+-}
 
 deeds :: [Deed]
-deeds =
-
+deeds = []
+{-
   -- Blue
 
   [ actionDeed Blue "Stamina"
@@ -141,10 +146,10 @@ deeds =
       [ produces (3 *** Attack Ranged Physycal) ]
 
   ]
+-}
 
 
-
-
+{-
 improvise :: Int -> Deed -> [ Rule ]
 improvise amt Deed { .. } =
   [ DeedInHand deedName --> (amt, act) &&&
@@ -182,5 +187,5 @@ coldToughnessBlockBonus Enemy  { .. } = fromAttack + fromAbilities
 
   fromAbilities = Set.size enemyAbilities
 
-
+-}
 

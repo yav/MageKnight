@@ -1,4 +1,8 @@
-module Rule
+module Rule where
+
+data Rule = Rule
+
+{-
   ( Rule
   , ruleOutput
   , ruleInput
@@ -246,7 +250,7 @@ ppResources :: Bag Resource -> Doc
 ppResources = vcat . map ppEntry . bagToListGrouped
   where ppEntry (r,x) = int x <+> ppResource r
 
-
+-}
 
 
 

@@ -27,11 +27,6 @@ data Visibility = Revealed | Hidden
 data Element    = Physycal | Fire | Ice | ColdFire
                   deriving (Eq,Ord,Show)
 
-data Terrain    = Plains | Hills | Forest | Wasteland | Desert | Swamp
-                | Lake | Mountain
-                | Ocean {- for tile A and B -}
-                  deriving (Eq,Ord,Show)
-
 
 data AttackType = Melee | Ranged | Siege
                   deriving (Eq,Ord,Show)

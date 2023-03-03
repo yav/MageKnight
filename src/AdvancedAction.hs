@@ -11,7 +11,8 @@ deeds :: [Deed]
 deeds = blueDeeds ++ greenDeeds ++ redDeeds ++ whiteDeeds
 
 blueDeeds :: [Deed]
-blueDeeds =
+blueDeeds = []
+{-
   [ deed "Crystal Mastery"
       [ ManaCrystal b --> 2 *** ManaCrystal b | b <- anyBasicMana ]
       [ produces RegainUsedCrystals ]
@@ -55,9 +56,11 @@ blueDeeds =
 
   where
   deed = advancedActionDeed Blue
+-}
 
 greenDeeds :: [Deed]
-greenDeeds =
+greenDeeds = []
+{-
   [ deed "Crushing Bolt"
       [ produces (ManaCrystal Green) ]
       [ produces (3 *** Attack Siege Physycal) ]
@@ -85,9 +88,11 @@ greenDeeds =
   ]
   where
   deed = advancedActionDeed Green
+-}
 
 redDeeds :: [Deed]
-redDeeds =
+redDeeds = []
+{-
   [ deed "Blood Rage"
       [ produces (2 *** Attack Melee Physycal)
       , produces (5 *** Attack Melee Physycal) &&& produces GainWound ]
@@ -130,10 +135,12 @@ redDeeds =
   ]
   where
   deed = advancedActionDeed Red
+-}
 
 -- XXX: white
 whiteDeeds :: [Deed]
-whiteDeeds =
+whiteDeeds = []
+{-
   [ deed "Agility" [] []
   , deed "Diplomacy" [] []
   , deed "Heroic Tale" [] []
@@ -144,3 +151,4 @@ whiteDeeds =
   ]
   where
   deed = advancedActionDeed White
+-}

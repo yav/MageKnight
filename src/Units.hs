@@ -110,7 +110,8 @@ findUnit x =
 
 
 regularUnits :: [Unit]
-regularUnits =
+regularUnits = []
+{-
   concat
   [ replicate 3 $
     Unit { unitName       = "Peasants"
@@ -285,9 +286,13 @@ regularUnits =
          }
   ]
 
+-}
+
 -- XXX
 eliteUnits :: [Unit]
-eliteUnits =
+eliteUnits = []
+
+{-
   concat
   [ replicate 3 $
     Unit { unitName       = "Altem Guardians"
@@ -389,6 +394,6 @@ eliteUnits =
          }
   ]
 
-
+-}
 
 

@@ -40,7 +40,6 @@ import Data.Aeson qualified as JS
 
 import Common
 import Enemies(EnemyType(Orc,Draconum))
-import Util.JSON
 
 
 
@@ -56,6 +55,11 @@ data HexNeighbour   = Local HexAddr | Foreign Int Int Dir
                       deriving (Eq,Ord,Show)
 
 data Addr           = Addr { addrGlobal :: TileAddr, addrLocal :: HexAddr }
+                      deriving (Eq,Ord,Show)
+
+data Terrain        = Plains | Hills | Forest | Wasteland | Desert | Swamp
+                    | Lake | Mountain
+                    | Ocean {- for tile A and B -}
                       deriving (Eq,Ord,Show)
 
 data Feature        = MagicalGlade | Mine BasicMana

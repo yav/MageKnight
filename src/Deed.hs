@@ -123,7 +123,8 @@ artifactDeed deedName deedBasic deedPower =
 -- we don't encode rules that are common to all deeds of the given type.
 -- It is here that we add these common patterns.
 deedRules :: Deed -> [Rule]
-deedRules Deed { .. } =
+deedRules Deed { .. } = [] -- XXX
+{-
   case deedType of
     Wound            -> []
     Action c         -> sidewaysRules ++ basicRules ++ actionPowerRules c
@@ -162,4 +163,4 @@ deedRules Deed { .. } =
     [ powerRuleName ===
         produces (DeedDestroyed deedName) &&& r | r <- deedPower ]
 
-
+-}
