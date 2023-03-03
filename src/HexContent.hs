@@ -86,8 +86,8 @@ hexHasShield s h = s `elem` hexShields h
 {- | Find players that have shields on this hex.
 If there are still monsters present, then we return no owners.
 If there are multiple owners, the first player in the list
-we be the one with most shields, or in the case of a draw
-whoever got a shielf first (i.e., the city leader of a city). -}
+will be the one with most shields, or in the case of a draw
+whoever got a shield first (i.e., the city leader of a city). -}
 hexOwners :: HexContent -> [PlayerName]
 hexOwners HexContent { .. }
   | bagIsEmpty hexEnemies =
@@ -144,7 +144,7 @@ hexActiveEnemies HexContent { .. } =
 
 
 
--- | Add som eruins to the cell.
+-- | Add some ruins to the cell.
 hexSetRuins :: Visibility -> Ruins -> HexContent -> HexContent
 hexSetRuins v r HexContent { .. } = HexContent { hexRuins = Just (v,r), .. }
 
