@@ -6,20 +6,7 @@ function newSource() {
 
   const mana = [ "Red", "Green", "White", "Blue", "Gold", "Black" ]
 
-  function mkGroup(x) {
-    const g = html.div("group")
-    g.setAttribute("title",x)
-    return g
-  }
-
-  const groups = { sourceMana: {}, sourceFixed: {}, sourceUsed: {} }
-  const cont = { sourceMana:  mkGroup("Available mana")
-               , sourceFixed: mkGroup("Used mana, not rerolled")
-               , sourceUsed:  mkGroup("Used mana, rerolled")
-               }
-  dom.appendChild(cont.sourceMana)
-  dom.appendChild(cont.sourceFixed)
-  dom.appendChild(cont.sourceUsed)
+  const groups = {}
 
   function newDie(mana) {
     const d = html.img('img/mana/' + mana.toLowerCase() + '.png')
@@ -28,41 +15,41 @@ function newSource() {
     return d
   }
 
-  function setGroup(name, allAmts) {
-    const amts = allAmts[name]
-    const g = groups[name]
-    const c = cont[name]
+  function mkGroup(id,lab) {
+    const g = html.div("group")
+    g.setAttribute("title",lab)
+    const qs = {}
+
     const n = mana.length
     for (let i = 0; i < n; ++i) {
-      const m    = mana[i]
-      const have = g[m] || []
-      g[m]       = have
-      const need = amts[m] || 0
+      const m = mana[i]
+      qs[m] = newQuantity(() => newDie(m))
+      g.appendChild(qs[m].dom)
+    }
+    groups[id] = qs
+    dom.appendChild(g)
+    return g
+  }
 
-      const diff = have.length - need
-      for (let j = 0; j < diff; ++j) {
-        have.pop().remove()
-      }
-      for (let j = diff; j < 0; ++j) {
-        const d = newDie(m)
-        if (name !== "sourceMana") html.setDim(d,baseSize*3/4,baseSize*3/4)
-        have.push(d)
-        c.appendChild(d)
+  mkGroup("sourceMana",  "Available mana")
+  mkGroup("sourceFixed", "Used mana, not rerolled")
+  mkGroup("sourceUsed",  "Used mana, rerolled")
+
+  function set(s) {
+    for(name in groups) {
+      const amts = s[name]
+      const g    = groups[name]
+      const n = mana.length
+      for (let i = 0; i < n; ++i) {
+        const m  = mana[i]
+        g[m].set(amts[m] || 0)
       }
     }
   }
 
-  function set(s) {
-    lastMember = null
-    for(c in groups) setGroup(c,s)
-  }
-
   function ask(m,q) {
     const g = groups.sourceMana
-    const have = g[m] || []
-    if (have.length === 0) return
-
-    const it = have[0]
+    const it = g[m].get()
     it.classList.add("question")
     const tit = it.getAttribute("title")
     it.setAttribute("title", q.chHelp)
