@@ -5,7 +5,8 @@ import Deed
 
 -- XXX
 deeds :: [Deed]
-deeds =
+deeds = []
+{-
   [ spellDeed Blue  "Chill"               "Lethal Chill" [] []
   , spellDeed Blue  "Mana Bolt"           "Mana Thunderbolt" [] []
   , spellDeed Blue  "Snow Storm"          "Blizzard" [] []
@@ -53,7 +54,7 @@ deeds =
     -- interactive
 
   ]
-
+-}
 
 interactiveSpell :: Deed -> Bool
 interactiveSpell d = deedName d `elem`

@@ -1,5 +1,6 @@
 module Combat where
 
+{-
 import Common
 import Enemies
 import Util.Perhaps
@@ -20,7 +21,6 @@ import           Data.List(partition,nub)
 import           Prelude hiding (any, foldr)
 import           qualified Data.Text as Text
 import           Control.Monad(when)
-
 
 --------------------------------------------------------------------------------
 
@@ -567,5 +567,5 @@ successfulBlock blocks enemy =
 
     Summoner -> error "[Bug] Tried to block a summoner"
 
-
+-}
 

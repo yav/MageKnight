@@ -47,6 +47,7 @@ library
     Skill,
     DummyPlayer,
     Combat,
+    Fight,
 
     Game,
     Common,

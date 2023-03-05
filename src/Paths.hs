@@ -2,6 +2,7 @@
 module Paths where
 
 import           Data.Char(toLower,isAscii,isAlphaNum)
+import           Data.List(nub)
 import           Data.Text(Text)
 import qualified Data.Text as Text
 import qualified Data.Set as Set
@@ -92,17 +93,19 @@ featureHelpUrl f =
 enemyPowerHelpUrl :: Enemy -> [FilePath]
 enemyPowerHelpUrl Enemy { .. } =
   coldFireDefense ++
-    concatMap defenseInfo (Set.toList enemyAbilities) ++ attackInfo
+    concatMap defenseInfo (Set.toList enemyAbilities) ++
+    nub (concatMap attackInfo enemyAttack)
   where
-  attackInfo = case enemyAttack of
-                 AttacksWith el _ ->
-                  case el of
-                    Physycal      -> []
-                    Fire          -> [ url "fire_attack" ]
-                    Ice           -> [ url "ice_attack" ]
-                    ColdFire      -> [ url "cold_fire_attack" ]
+  attackInfo x =
+    case x of
+      AttacksWith el _ ->
+       case el of
+         Physycal      -> []
+         Fire          -> [ url "fire_attack" ]
+         Ice           -> [ url "ice_attack" ]
+         ColdFire      -> [ url "cold_fire_attack" ]
 
-                 Summoner         -> [ url "summon_attack" ]
+      Summoner         -> [ url "summon_attack" ]
 
   coldFireDefense
     | Resists Fire `Set.member` enemyAbilities &&
