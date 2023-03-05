@@ -9,9 +9,9 @@ import Common.RNGM
 import Common.Field
 import AppTypes
 
-import Debug.Trace
 import Common
 import Source
+import Enemies(allEnemies)
 import Utils
 
 main :: IO ()
@@ -21,7 +21,10 @@ main = startApp App
   , appJS = $(jsHandlers [ ''Update, ''Input ])
   , appInitialState = \rng _opts ps ->
       case ps of
-        [p] -> Right (State p (withRNG_ rng (newSource 6)))
+        [p] -> Right State { _playerId = p
+                           , _source   = withRNG_ rng (newSource 6)
+                           , _enemies  = allEnemies
+                           }
         _   -> Left "need exactly 1 player"
   , appStart = gameLoop
   }

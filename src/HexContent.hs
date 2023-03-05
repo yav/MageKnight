@@ -42,12 +42,15 @@ import Util.Bag
 
 import           Data.Maybe ( fromMaybe )
 import           Data.List ( delete, sortBy, groupBy, nub )
+import           Data.Map(Map)
 import           Data.Function ( on )
 import           Data.Set ( Set )
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 import           Data.Char ( toLower, isAlphaNum )
 import qualified Data.Text as Text
+
+type EnemyPool = Map EnemyType (ResourceQ Enemy)
 
 -- | The contents of a single hex cell.
 data HexContent = HexContent
@@ -260,6 +263,7 @@ hexWithCity color level pool
 
 --------------------------------------------------------------------------------
 
+{-
 instance Export HexContent where
   toJS HexContent { .. } =
     object [ "shields" .= map toImage (reverse hexShields)
@@ -287,7 +291,7 @@ instance Export HexContent where
         | isAlphaNum c  = toLower c
         | otherwise     = '_'
 
-
+-}
 
 
 

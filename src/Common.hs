@@ -25,7 +25,7 @@ data Visibility = Revealed | Hidden
                   deriving (Eq,Ord,Show)
 
 data Element    = Physycal | Fire | Ice | ColdFire
-                  deriving (Eq,Ord,Show)
+                  deriving (Eq,Ord,Show,Generic,ToJSON)
 
 
 data AttackType = Melee | Ranged | Siege

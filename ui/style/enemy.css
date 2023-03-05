@@ -1,0 +1,30 @@
+.enemy {
+  display: inline-block;
+  position: relative;
+  border-radius: 50%;
+  border: 0px;
+  background-size: cover;
+}
+
+.enemy .help {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  background-color: white;
+  color: black;
+  border: 1px solid black;
+}
+
+.enemy .help .name {
+  text-align: center;
+  font-weight: bold;
+}
+
+.enemy .help .item {
+  margin-bottom: 1em;
+}
+
+.enemy .help.hidden {
+  display: none;
+}

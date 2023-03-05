@@ -1,43 +1,23 @@
-module Enemies where
+module Enemies
+  ( Enemy(..)
+  , EnemyType(..)
+  , allEnemyTypes
+
+  , EnemyAbility(..)
+  , EnemyAttack(..)
+
+  , allEnemies
+  , orcs, guardians, mages, underworld, citizens, draconum
+  ) where
+
+import GHC.Generics(Generic)
+import Data.Set (Set)
+import Data.Set qualified as Set
+import Data.Text (Text)
+import Data.Aeson(ToJSON)
 
 import Common(Element(..))
-import Util.ResourceQ(ResourceQ)
-import Util.JSON
 
-import           Data.Set (Set)
-import qualified Data.Set as Set
-import           Data.Map (Map)
-import           Data.Text (Text)
-
-type EnemyPool = Map EnemyType (ResourceQ Enemy)
-
-data EnemyAbility =
-
-    Fortified       -- ^ No ranged attack
-  | Unfortified     -- ^ Never fortified
-  | Elusive Int     -- ^ Higher defence, unless fully blocked
-  | Resists Element -- ^ "ColdFire" does not appear as a separate resiatnce;
-                    --   instead, an enemy would have fire and ice reistance.
-  | ResistArcane    -- ^ Can only be attacked/block no special stuff
-  | Swift           -- ^ Needs twice the usual block
-  | Brutal          -- ^ Deals twice the usual damage
-  | Poisons         -- ^ Get twice the wounds. Hero: half in discard pile.
-  | Paralyzes       -- ^ If wounded:
-                    -- Hero: discard non-wound cards;  Unit: destroyed.
-  | Assassin        -- ^ Damage goes to hero
-  | Cumbersome      -- ^ May use move as block
-    deriving (Show,Eq,Ord)
-
-data EnemyAttack = AttacksWith Element Int
-                 | Summoner
-                 -- XXX: Double attack
-                   deriving (Eq,Show)
-
-data EnemyType  = Orc | Guardian | Mage | Underworld | Citizen | Draconum
-                  deriving (Eq,Ord,Show,Enum,Bounded)
-
-allEnemyTypes :: [EnemyType]
-allEnemyTypes = [ minBound .. maxBound ]
 
 data Enemy = Enemy
   { enemyName           :: Text
@@ -47,7 +27,7 @@ data Enemy = Enemy
   , enemyFameGain       :: Int                -- ^ Fame gain for kill
   , enemyReputationGain :: Int                -- ^ Reputation change for kill
   , enemyAbilities      :: Set EnemyAbility   -- ^ Special abilities
-  } deriving Show
+  } deriving (Show, Generic, ToJSON)
 
 instance Eq Enemy where
   x == y = enemyName x == enemyName y
@@ -56,25 +36,46 @@ instance Ord Enemy where
   compare x y = compare (enemyName x) (enemyName y)
 
 
-enemyTypeText :: EnemyType -> Text
-enemyTypeText et =
-  case et of
-    Orc         -> "orc"
-    Guardian    -> "guardian"
-    Mage        -> "mage"
-    Underworld  -> "underworld"
-    Citizen     -> "citizen"
-    Draconum    -> "draconum"
+--------------------------------------------------------------------------------
+data EnemyType  = Orc | Guardian | Mage | Underworld | Citizen | Draconum
+                  deriving (Eq,Ord,Show,Enum,Bounded,Generic,ToJSON)
 
-instance Export EnemyType where
-  toJS = toJS . enemyTypeText
-
+allEnemyTypes :: [EnemyType]
+allEnemyTypes = [ minBound .. maxBound ]
+--------------------------------------------------------------------------------
 
 
 --------------------------------------------------------------------------------
+data EnemyAbility =
+
+    -- attack control
+    Fortified       -- ^ No ranged attack
+  | Unfortified     -- ^ Never fortified
+
+    -- block
+  | Elusive Int     -- ^ Higher defence, unless fully blocked
+  | Resists Element -- ^ "ColdFire" does not appear as a separate resiatnce;
+                    --   instead, an enemy would have fire and ice reistance.
+  | ResistArcane    -- ^ Can only be attacked/block no special stuff
+  | Cumbersome      -- ^ May use move as block
+  | Swift           -- ^ Needs twice the usual block
+
+    -- damage
+  | Brutal          -- ^ Deals twice the usual damage
+  | Poisons         -- ^ Get twice the wounds. Hero: half in discard pile.
+  | Paralyzes       -- ^ If wounded:
+                    -- Hero: discard non-wound cards;  Unit: destroyed.
+  | Assassin        -- ^ Damage goes to hero
+    deriving (Show,Eq,Ord,Generic,ToJSON)
+
+data EnemyAttack = AttacksWith Element Int
+                 | Summoner
+                   deriving (Eq,Show,Generic,ToJSON)
+--------------------------------------------------------------------------------
+
 
 allEnemies :: [Enemy]
-allEnemies = orcs ++ keep ++ dungeon ++ magical ++ draconum ++ citizens
+allEnemies = orcs ++ guardians ++ underworld ++ mages ++ draconum ++ citizens
 
 
 orcs :: [Enemy]
@@ -154,7 +155,7 @@ orcs = concat
       { enemyName      = "Orc Trackers"
       , enemyType      = Orc
       , enemyArmor     = 3
-      , enemyAbilities = Set.fromList [ Elusive 6 ]
+      , enemyAbilities = Set.fromList [ Elusive 6, Assassin ]
       , enemyAttack    = [ AttacksWith Physycal 4 ]
       , enemyFameGain  = 3
       , enemyReputationGain = 0
@@ -187,8 +188,8 @@ orcs = concat
   ]
 
 
-keep :: [Enemy]
-keep = concat
+guardians :: [Enemy]
+guardians = concat
 
   [ replicate 3 Enemy
       { enemyName      = "Crossbowmen"
@@ -231,7 +232,7 @@ keep = concat
       }
 
    , replicate 1 Enemy
-      { enemyName      = "Heroes"
+      { enemyName      = "Fire Heroes"
       , enemyType      = Guardian
       , enemyArmor     = 4
       , enemyAbilities = Set.fromList [ Resists Ice ]
@@ -241,7 +242,7 @@ keep = concat
       }
 
    , replicate 1 Enemy
-      { enemyName      = "Heroes"
+      { enemyName      = "Ice Heroes"
       , enemyType      = Guardian
       , enemyArmor     = 4
       , enemyAbilities = Set.fromList [ Resists Fire ]
@@ -251,7 +252,7 @@ keep = concat
       }
 
    , replicate 1 Enemy
-      { enemyName      = "Heroes"
+      { enemyName      = "Swift Heroes"
       , enemyType      = Guardian
       , enemyArmor     = 5
       , enemyAbilities = Set.fromList [ Swift ]
@@ -261,7 +262,7 @@ keep = concat
       }
 
    , replicate 1 Enemy
-      { enemyName      = "Heroes"
+      { enemyName      = "Fortified Heroes"
       , enemyType      = Guardian
       , enemyArmor     = 4
       , enemyAbilities = Set.fromList [ Fortified ]
@@ -297,8 +298,8 @@ keep = concat
   ]
 
 
-dungeon :: [Enemy]
-dungeon = concat
+underworld :: [Enemy]
+underworld = concat
 
   [ replicate 2 Enemy
       { enemyName      = "Crypt Worm"
@@ -383,8 +384,8 @@ dungeon = concat
 
 
 
-magical :: [Enemy]
-magical = concat
+mages :: [Enemy]
+mages = concat
   [ replicate 2 Enemy
       { enemyName      = "Monks"
       , enemyType      = Mage

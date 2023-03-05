@@ -34,8 +34,7 @@ module Land
 import  Terrain
 import  HexContent
 import  GameTile
-import  Enemies( Enemy(..), EnemyType(..)
-               , allEnemies, allEnemyTypes, enemyTypeText )
+import  Enemies( Enemy(..), EnemyType(..), allEnemies, allEnemyTypes )
 import  Player
 import  Ruins(Ruins, ruins, Objectve(..))
 import  Common(Time(..), Visibility(..))
@@ -53,6 +52,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import           Control.Monad( foldM, guard )
 
+import Common.Utils
 
 -- | General setting for setting up the map.
 data LandSetup = LandSetup
@@ -360,7 +360,7 @@ spawnCreatures tys l =
 -- Fails if there are no more enemies available of the required type.
 spawnCreature :: EnemyType -> Land -> Perhaps (Enemy, Land)
 spawnCreature ty Land { .. } =
-  perhaps (Text.unwords [ "Insufficient", enemyTypeText ty, "enemies."]) $
+  perhaps (Text.unwords [ "Insufficient", showText ty, "enemies."]) $
   do rq      <- Map.lookup ty enemyPool
      (e,rq1) <- rqTake rq
      return (e, Land { enemyPool = Map.insert ty rq1 enemyPool, .. })

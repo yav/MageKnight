@@ -71,8 +71,10 @@ function uiButton(lab,q) {
 
 // Perform a partial update
 function uiUpdate(state) {
-  console.log("update")
   gui.source.set(state._source)
+  const es = state._enemies
+  for (let i = 0; i < es.length; ++i)
+    newEnemy(state._enemies[i])
 }
 
 
