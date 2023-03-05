@@ -232,7 +232,7 @@ guardians = concat
       }
 
    , replicate 1 Enemy
-      { enemyName      = "Fire Heroes"
+      { enemyName      = "Ice Heroes"
       , enemyType      = Guardian
       , enemyArmor     = 4
       , enemyAbilities = Set.fromList [ Resists Ice ]
@@ -242,7 +242,7 @@ guardians = concat
       }
 
    , replicate 1 Enemy
-      { enemyName      = "Ice Heroes"
+      { enemyName      = "Fire Heroes"
       , enemyType      = Guardian
       , enemyArmor     = 4
       , enemyAbilities = Set.fromList [ Resists Fire ]
@@ -519,7 +519,7 @@ draconum = concat
       { enemyName      = "Storm Dragon"
       , enemyType      = Draconum
       , enemyArmor     = 7
-      , enemyAbilities = Set.fromList [ Elusive 14, Resists Ice ]
+      , enemyAbilities = Set.fromList [ Elusive 14, Resists Ice, Swift ]
       , enemyAttack    = [ AttacksWith Ice 4 ]
       , enemyFameGain  = 7
       , enemyReputationGain = 0

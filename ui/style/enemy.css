@@ -13,18 +13,36 @@
   z-index: 2;
   background-color: white;
   color: black;
-  border: 1px solid black;
+  border: 0.1em solid black;
+  border-radius: 0.5em;
+  box-shadow: 0.25em 0.25em 0.2em 0.2em rgba(0,0,0,0.5);
 }
 
 .enemy .help .name {
   text-align: center;
   font-weight: bold;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.enemy .help .name .icon {
+  border: solid black 0.1em;
+  border-radius: 1em;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.5em;
+}
+
+.enemy .help .name .label {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .enemy .help .item {
-  margin-bottom: 1em;
+  margin: 0.25em 0.5em 0.25em 0.5em;
 }
 
 .enemy .help.hidden {
   display: none;
 }
+

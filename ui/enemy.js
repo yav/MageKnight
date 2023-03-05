@@ -1,7 +1,7 @@
 
 function newEnemy(e) {
-  console.log(e)
   const baseSize = 96
+  const urlI = "img/enemies/" + e.enemyType + "/Type.jpg"
   const url = "img/enemies/" + e.enemyType + "/" + e.enemyName + ".jpg"
 
   const dom = html.div("enemy")
@@ -10,26 +10,128 @@ function newEnemy(e) {
 
 
   const help = html.div("help hidden")
-  html.setSize(help,"left", 0.75 * baseSize )
+  html.setSize(help,"left", baseSize)
+  html.setSize(help,"top", 0)
   dom.appendChild(help)
 
-  function entry(x) {
+  function entry(x,y,h) {
     const e = html.div("item")
-    e.textContent = x
+    e.style.backgroundImage = "url(\"img/rules/abilities.jpg\")"
+    html.setSize(e,"backgroundSize", 800)
+    html.setSize2(e,"backgroundPosition", x == 1 ? -35
+                                        : x == 2 ? -290
+                                        : -282
+                                        , -y)
+    html.setDim(e,235,h)
     help.appendChild(e)
   }
 
   const name = html.div("item name")
-  name.textContent = e.enemyName
   help.appendChild(name)
 
+  const icon = html.img(urlI)
+  icon.classList.add("icon")
+  icon.style.width  = "1em"
+  icon.style.height = "1em"
+  name.appendChild(icon)
+
+  const lab = html.div("label")
+  lab.textContent = e.enemyName
+  name.appendChild(lab)
+
+  const attacks = e.enemyAttack
+  const attackLen = attacks.length
+  if (attackLen > 1) {
+    entry(2.5,660,100)
+  }
+
+
+  const doneAttack = {}
+  for (let i = 0; i < attackLen; ++i) {
+    const a = attacks[i]
+    switch (a.tag) {
+      case "Summoner":
+        if (doneAttack.Summoner) continue;
+        entry(1,255,60);
+        doneAttack.Summoner = true;
+        break
+
+      case "AttacksWith":
+        if (doneAttack[a.contents[0]]) continue
+
+        switch (a.contents[0]) {
+          case "Fire": entry(1,115,35); break
+          case "Ice": entry(1,165,30); break
+          case "ColdFire": entry(1,210,40); break
+        }
+        doneAttack[a.contents[0]] = true
+    }
+  }
+
   const as = e.enemyAbilities
-  for (let i = 0; i < as.length; ++i)
-    entry(JSON.stringify(as[i]))
+  let fire = false
+  let ice  = false
+  let both = false
+  for (let i = 0; i < as.length; ++i) {
+    const a = as[i]
+    switch (a.tag) {
+      case "Swift": entry(1,320,40); break
+      case "Brutal": entry(1,370,35); break
+      case "Poisons": entry(1,410,90); break
+      case "Paralyzes": entry(1,500,90); break
+      case "Assassin": entry(1,590,50); break
+      case "Cumbersome": entry(1,640,65); break
+      case "Fortified": entry(2,115,45); break
+      case "Resists":
+        switch(a.contents) {
+          case "Physycal": entry(2,175,30); break
+          case "Fire":
+            entry(2,225,30)
+            fire = true
+            break
+          case "Ice":
+            entry(2,295,30)
+            ice = true
+            break
+        }
+        if (fire && ice && !both) {
+          entry(2,365,35)
+          both = true
+        }
+        break
+      case "Elusive": entry(2,415,70); break;
+      case "Unfortified": entry(2,495,35); break;
+      case "ResistArcane": entry(2,545,45); break;
+    }
+  }
 
-
-  dom.addEventListener("mouseenter", () => help.classList.remove("hidden"))
+  dom.addEventListener("mouseenter", () => {
+    help.classList.remove("hidden")
+    const w = window.innerWidth
+    const h = window.innerHeight
+    let d = help.getBoundingClientRect()
+    console.log(d)
+    console.log(w)
+    console.log(h)
+    if (d.right > w) {
+        help.style.left = -d.width + "px"
+    }
+    d = help.getBoundingClientRect()
+    let over = false
+    if (d.left < 0) {
+      help.style.left = -(d.width + d.left) + "px"
+      html.setSize(help, "top", baseSize)
+      over = true
+    }
+    d = help.getBoundingClientRect()
+    if (d.bottom > h) {
+      const extra = d.bottom - h
+      help.style.top = (over ? -d.height : -extra) + "px"
+    }
+  })
   dom.addEventListener("mouseleave", () => help.classList.add("hidden"))
 
+
   gui.container.appendChild(dom)
+
 }
