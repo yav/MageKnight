@@ -71,10 +71,23 @@ function uiButton(lab,q) {
 
 // Perform a partial update
 function uiUpdate(state) {
-  gui.source.set(state._source)
-  const es = state._enemies
-  for (let i = 0; i < es.length; ++i)
-    newEnemy(state._enemies[i])
+
+  const dom = html.div("")
+  dom.style.display = "flex"
+  dom.style.flexDirection = "row"
+  gui.container.appendChild(dom)
+
+  newCardSheet("basic")(dom)
+  newCardSheet("advanced")(dom)
+  newCardSheet("units_regular")(dom)
+  newCardSheet("units_elite")(dom)
+  newCardSheet("spells")(dom)
+  newCardSheet("artifacts")(dom)
+
+  // gui.source.set(state._source)
+  // const es = state._enemies
+  // for (let i = 0; i < es.length; ++i)
+  //   newEnemy(state._enemies[i])
 }
 
 

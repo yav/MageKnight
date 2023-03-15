@@ -1,3 +1,5 @@
+
+
 .ui-question {
 }
 
@@ -8,4 +10,8 @@
 .question {
   cursor: pointer;
   border: 2px solid black;
+}
+
+.hidden {
+  display: none !important;
 }

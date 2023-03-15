@@ -1,0 +1,28 @@
+.card-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.card {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 2px;
+}
+
+.card.small {
+  display: flex;
+  flex-direction: column;
+}
+
+.card.big {
+  z-index: 10;
+  position: absolute;
+}
+
+.card.element {
+  display: inline-block;
+  margin: 0;
+}
+
+
