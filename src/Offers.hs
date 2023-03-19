@@ -40,7 +40,7 @@ import Offer
 
 import Units
 import Skill
-import DeedDecks ( Deed,advancedActions, spells, interactiveSpell, artifacts)
+import DeedDecks ( Deed,advancedActions, spells, artifacts)
 
 
 
@@ -173,13 +173,10 @@ data OfferSetup = OfferSetup
 
 
 defaultOfferSetup :: Int {- ^ Number of players -} ->
-                     Bool {- ^ Is this a coop game -} ->
                      OfferSetup
-defaultOfferSetup playerNum coop = OfferSetup
+defaultOfferSetup playerNum = OfferSetup
   { useSpellNum = 3
-  , useSpells   = if playerNum == 1 || coop
-                      then filter (not . interactiveSpell) spells
-                      else spells
+  , useSpells   = spells
 
   , useAdvancedActionNum = 3
   , useAdvancedActions  = advancedActions

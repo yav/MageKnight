@@ -1,6 +1,5 @@
 module Units where
 
-import Rule
 import Common
 
 import Util.JSON
@@ -74,7 +73,6 @@ data Unit = Unit { unitName       :: Text
                  , unitArmor      :: Int
                  , unitResists    :: Set Element
                  , unitSource     :: Set UnitSource
-                 , unitAbilities  :: [Rule]  -- XXX: finish up
                  }
 
 data UnitSource =

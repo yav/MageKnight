@@ -21,15 +21,8 @@ library
   import: Common
   hs-source-dirs: src
   exposed-modules:
-    Server,
-    Paths,
 
-    Rule,
     Deed,
-    Action,
-    AdvancedAction,
-    Spell,
-    Artifact,
     DeedDecks,
 
     Units,
@@ -46,7 +39,6 @@ library
     Tactic,
     Skill,
     DummyPlayer,
-    Combat,
     Fight,
 
     Game,

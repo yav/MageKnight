@@ -3,7 +3,6 @@ module DeedDecks
   , advancedActions
   , spells
   , actions
-  , Spell.interactiveSpell
   , artifacts
 
   , makeCustomDeck
@@ -18,10 +17,6 @@ module DeedDecks
   ) where
 
 import           Deed
-import qualified Action         as BasicAction
-import qualified AdvancedAction as AdvancedAction
-import qualified Spell          as Spell
-import qualified Artifact       as Artifact
 import           Player (PlayerName)
 
 import           Data.Maybe (mapMaybe)
@@ -32,23 +27,19 @@ findDeed :: DeedName -> Maybe Deed
 findDeed name = find ((name ==) . deedName) allDeeds
 
 basicActions :: [Deed]
-basicActions = BasicAction.blueSpecial
-             : BasicAction.greenSpecial
-             : BasicAction.redSpecial
-             : BasicAction.whiteSpecial
-             : BasicAction.deeds
+basicActions = [] -- XXX
 
 advancedActions :: [Deed]
-advancedActions = AdvancedAction.deeds
+advancedActions = [] -- XXX
 
 actions :: [Deed]
 actions = basicActions ++ advancedActions
 
 spells :: [Deed]
-spells = Spell.deeds
+spells = [] -- XXX
 
 artifacts :: [Deed]
-artifacts = Artifact.deeds
+artifacts = [] -- XXX
 
 -- | All cards that may appear in the deed deck
 allDeeds :: [Deed]

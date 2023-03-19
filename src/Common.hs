@@ -13,11 +13,6 @@ import Data.Aeson.Types
 
 import Common.Utils
 
-
-type DeedName   = Text
-type EnemyName  = Text
-
-
 data Usable     = Unused | Used
                   deriving (Show,Eq)
 

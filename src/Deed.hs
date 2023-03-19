@@ -13,16 +13,14 @@ module Deed
   , ActiveWay(..)
   , SimpleDeed(..)
 
-  , deedRules
   ) where
 
 import Common
-import Rule
 import Util.JSON
 
 import           Data.Text ( Text )
-import qualified Data.Text as Text
 
+type DeedName = Text
 
 -- | A deed that has been played to get its benefits
 data ActiveDeed = ActiveDeed
@@ -40,8 +38,6 @@ data SimpleDeed = Move1 | Attack1 | Block1 | Influence1
 data Deed     = Deed { deedName      :: DeedName
                      , deedNamePower :: Maybe DeedName -- ^ For spells
                      , deedType      :: DeedType
-                     , deedBasic     :: [ Rule ]
-                     , deedPower     :: [ Rule ]
                      }
 
 deedColor :: Deed -> Maybe BasicMana
@@ -78,21 +74,19 @@ wound :: Deed
 wound = Deed { deedName      = "Wound"
              , deedNamePower = Nothing
              , deedType      = Wound
-             , deedBasic     = []
-             , deedPower     = []
              }
 
 -- | Make a basic action.
-actionDeed :: BasicMana -> DeedName -> [Rule] -> [Rule] -> Deed
-actionDeed color deedName deedBasic deedPower =
+actionDeed :: BasicMana -> DeedName -> Deed
+actionDeed color deedName =
   Deed { deedNamePower = Nothing
        , deedType      = Action color
        , ..
        }
 
 -- | Make an advanced action.
-advancedActionDeed :: BasicMana -> DeedName -> [Rule] -> [Rule] -> Deed
-advancedActionDeed color deedName deedBasic deedPower =
+advancedActionDeed :: BasicMana -> DeedName -> Deed
+advancedActionDeed color deedName =
   Deed { deedNamePower = Nothing
        , deedType      = AdvancedAction color
        , ..
@@ -100,67 +94,18 @@ advancedActionDeed color deedName deedBasic deedPower =
 
 
 -- | Make a spell.
-spellDeed :: BasicMana -> DeedName -> DeedName -> [Rule] -> [Rule] -> Deed
-spellDeed color deedName powerName deedBasic deedPower =
+spellDeed :: BasicMana -> DeedName -> DeedName -> Deed
+spellDeed color deedName powerName =
   Deed { deedNamePower = Just powerName
        , deedType      = Spell color
        , ..
        }
 
 -- | Make an artifact.
-artifactDeed :: DeedName -> [Rule] -> [Rule] -> Deed
-artifactDeed deedName deedBasic deedPower =
+artifactDeed :: DeedName -> Deed
+artifactDeed deedName =
   Deed { deedNamePower = Nothing
        , deedType      = Artifact
        , ..
        }
 
---------------------------------------------------------------------------------
-
-
-
--- | All possible ways to play a deed.  When we define an individual deed,
--- we don't encode rules that are common to all deeds of the given type.
--- It is here that we add these common patterns.
-deedRules :: Deed -> [Rule]
-deedRules Deed { .. } = [] -- XXX
-{-
-  case deedType of
-    Wound            -> []
-    Action c         -> sidewaysRules ++ basicRules ++ actionPowerRules c
-    AdvancedAction c -> sidewaysRules ++ basicRules ++ actionPowerRules c
-    Spell c          -> sidewaysRules ++ spellBasicRules c ++ spellPowerRules c
-    Artifact         -> sidewaysRules ++ basicRules ++ artifactPowerRules
-
-  where
-  sidewaysRules =
-    [ "use for 1 movement" === DeedInHand deedName --> Movement
-    , "use for 1 influece" === DeedInHand deedName --> Influence
-    , "use for 1 attack"   === DeedInHand deedName --> Attack Melee Physycal
-    , "use for 1 block"    === DeedInHand deedName --> Block Physycal
-    ]
-
-  powerRuleName = case deedNamePower of
-                    Nothing -> Text.append "Advanced " deedName
-                    Just nm -> nm
-
-  basicRules =
-    [ deedName === requires (DeedInHand deedName) &&& r | r <- deedBasic ]
-
-  actionPowerRules c =
-    [ powerRuleName ===
-        requires [ DeedInHand deedName, ManaToken (BasicMana c) ] &&& r
-                                                            | r <- deedPower ]
-
-  spellBasicRules c =
-    [ requires [ ManaToken (BasicMana c) ] &&& r | r <- basicRules ]
-
-  spellPowerRules c =
-    [ onlyWhen (TimeIs Night) &&& requires (ManaToken Black) &&& r
-                                                    | r <- actionPowerRules c ]
-
-  artifactPowerRules =
-    [ powerRuleName ===
-        produces (DeedDestroyed deedName) &&& r | r <- deedPower ]
-
--}
