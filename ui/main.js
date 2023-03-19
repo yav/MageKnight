@@ -25,6 +25,8 @@ function uiRedraw(state) {
   gui.container.innerHTML = ""
   gui.question_cleanup = []
 
+  gui.cards = newCards()
+
   const ui_q = html.div("ui-question")
   gui.question_text    = html.div("description")
   gui.question_answers = html.div("answers")
@@ -77,17 +79,19 @@ function uiUpdate(state) {
   dom.style.flexDirection = "row"
   gui.container.appendChild(dom)
 
-  newCardSheet("basic")(dom)
-  newCardSheet("advanced")(dom)
-  newCardSheet("units_regular")(dom)
-  newCardSheet("units_elite")(dom)
-  newCardSheet("spells")(dom)
-  newCardSheet("artifacts")(dom)
+  gui.source.set(state._source)
+  const es = state._enemies
+  for (let i = 0; i < es.length; ++i)
+    newEnemy(state._enemies[i])
 
-  // gui.source.set(state._source)
-  // const es = state._enemies
-  // for (let i = 0; i < es.length; ++i)
-  //   newEnemy(state._enemies[i])
+  gui.cards.drawSet("basic")
+  //newCardSheet("basic")(dom)
+  //newCardSheet("advanced")(dom)
+  //newCardSheet("units_regular")(dom)
+  //newCardSheet("units_elite")(dom)
+  //newCardSheet("spells")(dom)
+  //newCardSheet("artifacts")(dom)
+
 }
 
 

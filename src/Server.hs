@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Server where
 
+{-
 import Common(Mana(..), BasicMana(..))
 import Terrain(Addr(..),Dir(..),HexAddr(..),hexAddr)
 import DeedDecks(Deed,findDeed)
@@ -124,4 +125,4 @@ manaParam pname =
        _        -> badInput (BS.append "Inavlid mana: " pname)
 
 
-
+-}

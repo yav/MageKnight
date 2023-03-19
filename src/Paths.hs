@@ -1,6 +1,7 @@
 -- | Locations of resources on the file system.
 module Paths where
 
+{-
 import           Data.Char(toLower,isAscii,isAlphaNum)
 import           Data.List(nub)
 import           Data.Text(Text)
@@ -127,5 +128,5 @@ enemyPowerHelpUrl Enemy { .. } =
                     Paralyzes     -> [ url "paralyze" ]
 
   url x = "img" </> "manual" </> "enemy_abilities" </> x <.> "png"
-
+-}
 

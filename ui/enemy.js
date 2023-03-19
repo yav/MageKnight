@@ -84,7 +84,11 @@ function newEnemy(e) {
       case "Fortified": entry(2,115,45); break
       case "Resists":
         switch(a.contents) {
-          case "Physycal": entry(2,175,30); break
+
+          case "Physical":
+            entry(2,175,30)
+            break
+
           case "Fire":
             entry(2,225,30)
             fire = true
@@ -104,6 +108,31 @@ function newEnemy(e) {
       case "ResistArcane": entry(2,545,45); break;
     }
   }
+
+  let tit = "D:" + e.enemyArmor + ",A:"
+  for (let i = 0; i < e.enemyAttack.length; ++i) {
+    const a = e.enemyAttack[i]
+    switch (a.tag) {
+      case "Summoner": tit += "S,"; break
+      default:
+        tit += a.contents[1]
+        switch(a.contents[0]) {
+          case "Fire": tit += "F,"; break
+          case "Ice": tit += "I,"; break
+          case "ColdFire": tit += "CF,"; break
+          case "Physical": tit += ","; break
+        }
+    }
+  }
+
+  const titD = html.div("item")
+  tit += "F:" + e.enemyFameGain
+  if (e.enemyReputationGain !== 0) {
+    tit += ",R:" + e.enemyReputationGain
+  }
+  titD.textContent = tit
+  help.appendChild(titD)
+
   newTooltip(dom,help)
 
   gui.container.appendChild(dom)

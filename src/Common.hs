@@ -24,7 +24,7 @@ data Usable     = Unused | Used
 data Visibility = Revealed | Hidden
                   deriving (Eq,Ord,Show)
 
-data Element    = Physycal | Fire | Ice | ColdFire
+data Element    = Physical | Fire | Ice | ColdFire
                   deriving (Eq,Ord,Show,Generic,ToJSON)
 
 
@@ -64,7 +64,7 @@ anyAttack = [ Melee, Ranged, Siege ]
 ppElement :: Element -> Doc
 ppElement el =
   case el of
-    Physycal  -> text "physycal"
+    Physical  -> text "physycal"
     Fire      -> text "fire"
     Ice       -> text "ice"
     ColdFire  -> text "cold fire"

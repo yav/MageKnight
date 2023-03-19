@@ -1,4 +1,4 @@
-function newCardSheet(name,width,height) {
+function newCards() {
   const cardWidth  = 220
   const cardHeight = 308
 
@@ -11,11 +11,11 @@ function newCardSheet(name,width,height) {
     , spells:       { width: 6000, heght: 5600, rows: 4, cols: 6, ho: 0.24, vo: [0.3,6.5]}
     }
 
-  const url = "img/cards/" + name + ".jpg"
 
-  const info = dims[name]
+  function newCard(cardTy,r,c) {
 
-  function newCard(r,c) {
+    const url = "img/cards/" + cardTy + ".jpg"
+    const info = dims[cardTy]
 
     function card() {
       const dom = html.div("card element")
@@ -67,13 +67,22 @@ function newCardSheet(name,width,height) {
     return cardC
   }
 
-  return function(w) {
+  function drawSet(set) {
+    const info = dims[set]
     const col = html.div("card-container")
     for (let r = 0; r < info.rows; ++r)
       for (let c = 0; c < info.cols; ++c)
-        col.appendChild(newCard(r,c))
+        col.appendChild(newCard(set,r,c))
 
-    w.appendChild(col)
+    gui.container.appendChild(col)
   }
+
+
+
+  const obj = {}
+  obj.drawCard = newCard
+  obj.drawSet = drawSet
+
+  return obj
 
 }
