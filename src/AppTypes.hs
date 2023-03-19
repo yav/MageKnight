@@ -9,11 +9,13 @@ import Common.Field(declareFields)
 import Common
 import Source
 import Enemies
+import Deed
 
 data State = State
   { _playerId :: PlayerId
   , _source   :: Source
   , _enemies  :: [Enemy]
+  , _deeds    :: [Deed]
   }
   deriving (Generic,ToJSON)
 

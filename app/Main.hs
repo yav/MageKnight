@@ -12,6 +12,7 @@ import AppTypes
 import Common
 import Source
 import Enemies(allEnemies)
+import DeedDecks(allDeeds)
 import Utils
 
 main :: IO ()
@@ -24,6 +25,7 @@ main = startApp App
         [p] -> Right State { _playerId = p
                            , _source   = withRNG_ rng (newSource 6)
                            , _enemies  = allEnemies
+                           , _deeds    = allDeeds
                            }
         _   -> Left "need exactly 1 player"
   , appStart = gameLoop

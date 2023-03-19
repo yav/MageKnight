@@ -1,7 +1,6 @@
 module Common where
 
 import GHC.Generics
-import Data.Text ( Text )
 import Control.Applicative((<|>))
 import Control.Monad(guard)
 import Text.PrettyPrint

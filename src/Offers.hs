@@ -31,7 +31,6 @@ module Offers
   , disbandUnit
   ) where
 
-import Util.JSON
 import Util.Perhaps
 import Util.Random
 import Util.Q
@@ -340,6 +339,7 @@ takeSkill s1 s2 n0 o =
 
 --------------------------------------------------------------------------------
 
+{-
 instance Export Offers where
   toJS o =
     object
@@ -350,4 +350,4 @@ instance Export Offers where
       , "skills"          .= commonSkillOffer o
       ]
 
-
+-}

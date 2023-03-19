@@ -9,36 +9,22 @@ module Deed
   , spellDeed
   , artifactDeed
 
-  , ActiveDeed(..)
-  , ActiveWay(..)
-  , SimpleDeed(..)
-
   ) where
 
+import GHC.Generics
+import Data.Aeson(ToJSON)
+
 import Common
-import Util.JSON
 
 import           Data.Text ( Text )
 
 type DeedName = Text
 
--- | A deed that has been played to get its benefits
-data ActiveDeed = ActiveDeed
-  { baseDeed  :: Deed       -- ^ The card that was played
-  , activeWay :: ActiveWay  -- ^ How it was played
-  }
-
-data ActiveWay  = ActiveBase          -- ^ Basic ability, or day spell.
-                | ActivePower         -- ^ Powered up card, or night spell.
-                | ActiveAs SimpleDeed -- ^ Play "sideways"
-
-data SimpleDeed = Move1 | Attack1 | Block1 | Influence1
-
-
-data Deed     = Deed { deedName      :: DeedName
-                     , deedNamePower :: Maybe DeedName -- ^ For spells
-                     , deedType      :: DeedType
-                     }
+data Deed = Deed
+  { deedName      :: DeedName
+  , deedNamePower :: Maybe DeedName -- ^ For spells
+  , deedType      :: DeedType
+  } deriving (Generic,ToJSON)
 
 deedColor :: Deed -> Maybe BasicMana
 deedColor d =
@@ -48,8 +34,13 @@ deedColor d =
     Spell b          -> Just b
     _                -> Nothing
 
-data DeedType = Wound | Action BasicMana | AdvancedAction BasicMana
-              | Spell BasicMana | Artifact
+data DeedType =
+    Wound
+  | Action BasicMana
+  | AdvancedAction BasicMana
+  | Spell BasicMana
+  | Artifact
+    deriving (Generic, ToJSON)
 
 instance Eq Deed where
   x == y = deedName x == deedName y
@@ -57,24 +48,13 @@ instance Eq Deed where
 instance Ord Deed where
   compare x y = compare (deedName x) (deedName y)
 
-instance Export Deed where
-  toJS Deed { .. } = object [ "name" .= deedName, "type" .= deedType ]
-
-instance Export DeedType where
-  toJS ty = toJS $ case ty of
-                     Wound            -> "wound" :: Text
-                     Action _         -> "action"
-                     AdvancedAction _ -> "action"
-                     Spell _          -> "spell"
-                     Artifact         -> "artifact"
-
-
 -- | Make a wound.
 wound :: Deed
-wound = Deed { deedName      = "Wound"
-             , deedNamePower = Nothing
-             , deedType      = Wound
-             }
+wound =
+  Deed { deedName      = "Wound"
+       , deedNamePower = Nothing
+       , deedType      = Wound
+       }
 
 -- | Make a basic action.
 actionDeed :: BasicMana -> DeedName -> Deed
@@ -108,4 +88,6 @@ artifactDeed deedName =
        , deedType      = Artifact
        , ..
        }
+
+--------------------------------------------------------------------------------
 
