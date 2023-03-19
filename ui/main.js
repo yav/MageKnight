@@ -85,12 +85,11 @@ function uiUpdate(state) {
     newEnemy(state._enemies[i])
 
   gui.cards.drawSet("basic")
-  //newCardSheet("basic")(dom)
-  //newCardSheet("advanced")(dom)
-  //newCardSheet("units_regular")(dom)
-  //newCardSheet("units_elite")(dom)
-  //newCardSheet("spells")(dom)
-  //newCardSheet("artifacts")(dom)
+  gui.cards.drawSet("advanced")
+  gui.cards.drawSet("units_regular")
+  gui.cards.drawSet("units_elite")
+  gui.cards.drawSet("spells")
+  gui.cards.drawSet("artifacts")
 
 }
 
