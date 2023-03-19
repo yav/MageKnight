@@ -26,13 +26,13 @@ data Deed = Deed
   , deedType      :: DeedType
   } deriving (Generic,ToJSON)
 
-deedColor :: Deed -> Maybe BasicMana
+deedColor :: Deed -> [BasicMana]
 deedColor d =
   case deedType d of
-    Action b         -> Just b
-    AdvancedAction b -> Just b
-    Spell b          -> Just b
-    _                -> Nothing
+    Action b         -> [b]
+    AdvancedAction b -> [b]
+    Spell b          -> [b]
+    _                -> []
 
 data DeedType =
     Wound
@@ -74,8 +74,8 @@ advancedActionDeed color deedName =
 
 
 -- | Make a spell.
-spellDeed :: BasicMana -> DeedName -> DeedName -> Deed
-spellDeed color deedName powerName =
+spellDeed :: BasicMana -> (DeedName,DeedName) -> Deed
+spellDeed color (deedName,powerName) =
   Deed { deedNamePower = Just powerName
        , deedType      = Spell color
        , ..
@@ -89,5 +89,4 @@ artifactDeed deedName =
        , ..
        }
 
---------------------------------------------------------------------------------
 

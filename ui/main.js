@@ -84,12 +84,17 @@ function uiUpdate(state) {
   for (let i = 0; i < es.length; ++i)
     newEnemy(state._enemies[i])
 
-  gui.cards.drawSet("basic")
-  gui.cards.drawSet("advanced")
-  gui.cards.drawSet("units_regular")
-  gui.cards.drawSet("units_elite")
-  gui.cards.drawSet("spells")
-  gui.cards.drawSet("artifacts")
+  const ds = state._deeds
+  for (let i = 0; i < ds.length; ++i) {
+    gui.container.appendChild(gui.cards.drawDeed(state._deeds[i]))
+  }
+
+  // gui.cards.drawSet("Wound")
+  //gui.cards.drawSet("advanced")
+  //gui.cards.drawSet("units_regular")
+  //gui.cards.drawSet("units_elite")
+  //gui.cards.drawSet("spells")
+  //gui.cards.drawSet("artifacts")
 
 }
 
