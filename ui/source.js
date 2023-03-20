@@ -50,17 +50,7 @@ function newSource() {
   function ask(m,q) {
     const g = groups.sourceMana
     const it = g[m].get()
-    it.classList.add("question")
-    const tit = it.getAttribute("title")
-    it.setAttribute("title", q.chHelp)
-
-    function onClick() { sendJSON(q); uiQuestionCleanup() }
-    it.addEventListener("click",onClick)
-    uiAddQuestionCleanup(() => {
-      it.classList.remove("question")
-      it.removeEventListener("click",onClick)
-      it.setAttribute("title", tit)
-    })
+    uiExistingAnswer(g[m].get(),q)
   }
 
   // Not directly related to source, but we have the die drawing code here

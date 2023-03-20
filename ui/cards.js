@@ -2,6 +2,10 @@ function newCards() {
   const cardWidth  = 220
   const cardHeight = 308
 
+  // Size of small card as fraction of full card
+  const vf         = 0.08
+  const hf         = 0.70
+
   function joinName(x,y) { return x + " / " + y }
 
   function getName(deed) {
@@ -12,6 +16,7 @@ function newCards() {
   const dims =
     { Action:
         { width: 7000, heght: 5600, rows: 4, cols: 7, ho: 0.22, vo: [6.3]
+        , boxes: [ [0.57, 0.15], [0.72, 0.25] ]
         , cards:
             [ "March"
             , "Tranquility"
@@ -49,6 +54,7 @@ function newCards() {
 
     , AdvancedAction:
         { width: 8000, heght: 8400, rows: 6, cols: 8, ho: 0.22, vo: [6.3]
+        , boxes: [ [0.57, 0.15], [0.72, 0.25] ]
         , cards:
             [ "Fire Bolt"
             , "Ice Bolt"
@@ -99,24 +105,28 @@ function newCards() {
 
     , units_regular:
         { width: 4000, heght: 5600, rows: 4, cols: 4, ho: 0.22, vo: [6.3]
+        , boxes: []
         , cards:
             []
         }
 
     , units_elite:  
         { width: 4000, heght: 5600, rows: 4, cols: 4, ho: 0.22, vo: [6.3]
+        , boxes: []
         , cards:
             []
         }
 
     , artifacts:
         { width: 5000, heght: 7000, rows: 5, cols: 5, ho: 0.22, vo: [6.0]
+        , boxes: []
         , cards:
             []
         }
 
     , Spell:
         { width: 6000, heght: 5600, rows: 4, cols: 6, ho: 0.24, vo: [0.3,6.5]
+        , boxes: [ [0.02, 0.48], [0.5, 0.48] ]
         , cards:
             [ joinName("Energy Flow"         , "Energy Steal")
             , joinName("Cure"                , "Disease")
@@ -161,84 +171,85 @@ function newCards() {
       }
     }
 
-
   function drawDeed(deed) {
-    console.log(deed)
-    console.log(getName(deed))
-    const [r,c] = cardLoc[getName(deed)]
-    return newCard(deed.deedType.tag,r,c)
-  }
+    const name    = getName(deed)
+    const [r,c]   = cardLoc[name]
+    const cardTy  = deed.deedType.tag
+    const url     = "img/cards/" + cardTy + ".jpg"
+    const info    = dims[cardTy]
 
-  function newCard(cardTy,r,c) {
-
-    const url = "img/cards/" + cardTy + ".jpg"
-    const info = dims[cardTy]
-
-    function card() {
-      const dom = html.div("card element")
+    function card(ty) {
+      const dom = html.div("card " + ty)
       html.setSize(dom,"backgroundSize", info.cols * cardWidth)
       dom.style.backgroundImage = "url(\"" + url + "\")"
       html.setSize(dom,"borderRadius", cardWidth / 30)
       return dom
     }
 
-    const vf   = 0.08
-    const hf   = 0.70
+    function small() {
 
-    function small(d,i) {
-      const hoff = cardWidth * hf * info.ho
-      const voff = cardHeight * vf * info.vo[i]
+      const dom = html.div("small card")
 
-      html.setDim(d, cardWidth * hf, cardHeight * vf)
-      html.setSize2(d,"backgroundPosition",
-                          -c * cardWidth -hoff, -r * cardHeight - voff)
+      for (let i = 0; i < info.vo.length; ++i) {
+        const s    = card("element")
+        const hoff = cardWidth * hf * info.ho
+        const voff = cardHeight * vf * info.vo[i]
 
+        html.setDim(s, cardWidth * hf, cardHeight * vf)
+        html.setSize2(s,"backgroundPosition",
+                           -c * cardWidth -hoff, -r * cardHeight - voff)
+
+        if (i !== 0) dom.appendChild(html.br())
+        dom.appendChild(s)
+      }
+
+      return dom
     }
 
     function big(d) {
-      d.classList.add("big")
-      html.setDim(d, cardWidth, cardHeight)
-      html.setSize2(d,"backgroundPosition", -c * cardWidth, -r * cardHeight)
+      const dom = card("big")
+      html.setDim(dom, cardWidth, cardHeight)
+      html.setSize2(dom,"backgroundPosition", -c * cardWidth, -r * cardHeight)
+
+      return dom
     }
 
-    const cardC = html.div("card")
-    html.setDim(cardC, cardWidth * hf, cardHeight * vf * info.vo.length)
+    function selectorBoxes(dom) {
+      const outline = 0.025
+      const boxes = info.boxes
 
-    const bigCard = card()
-    big(bigCard)
-    bigCard.classList.add("hidden")
-    cardC.appendChild(bigCard)
+      const bs = []
+      for (let i = 0; i < boxes.length; ++i) {
+        const [boxY,boxH] = boxes[i]
+        const box = html.div("box hidden")
+        html.setSize(box,"border-radius",cardWidth/30)
+        html.setDim(box, (1 - 2 * outline) * cardWidth, boxH * cardHeight )
+        html.setSize(box, "left", outline * cardWidth)
+        html.setSize(box, "top",  boxY * cardHeight)
+        bs[i] = box
+        dom.appendChild(box)
+      }
 
-    const smallCard = html.div("small card")
-
-    for (let i = 0; i < info.vo.length; ++i) {
-      const s = card()
-      small(s,i)
-      if (i !== 0) smallCard.appendChild(html.br())
-      smallCard.appendChild(s)
+      return {
+        get:  (i) => bs[i],
+        hide: (i) => bs[i].classList.add("hidden"),
+        show: (i) => bs[i].classList.remove("hidden"),
+      }
     }
 
-    cardC.appendChild(smallCard)
-    newTooltip(cardC, bigCard)
-
-    return cardC
+    const obj = {}
+    obj.name = name
+    obj.small = small
+    obj.big = big
+    obj.selectors = selectorBoxes
+    return obj
   }
-
-  function drawSet(set) {
-    const info = dims[set]
-    const col = html.div("card-container")
-    for (let r = 0; r < info.rows; ++r)
-      for (let c = 0; c < info.cols; ++c)
-        col.appendChild(newCard(set,r,c))
-
-    gui.container.appendChild(col)
-  }
-
-
 
   const obj = {}
-  obj.drawDeed = drawDeed
-  obj.drawSet  = drawSet
+  obj.width       = cardWidth
+  obj.height      = cardHeight
+  obj.getName     = getName
+  obj.drawDeed    = drawDeed
 
   return obj
 

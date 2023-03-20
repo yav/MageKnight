@@ -7,12 +7,6 @@ module DeedDecks
 
   , makeCustomDeck
   , makeDeckFor
-  , arytheaDeck
-  , goldyxDeck
-  , norowasDeck
-  , tovakDeck
-  , wolfhawkDeck
-  , krangDeck
 
   , allDeeds
   , findDeed
@@ -154,17 +148,17 @@ allDeeds = wound : basicActions ++ advancedActions ++ spells ++ artifacts
 makeCustomDeck :: [DeedName] -> [Deed]
 makeCustomDeck = mapMaybe (\x -> find ((x ==) . deedName) allDeeds)
 
-makeDeckFor :: PlayerName -> Maybe [Deed]
+makeDeckFor :: PlayerName -> [Deed]
 makeDeckFor name =
-  do deedNames <- case name of
-                    "Arythea"   -> Just arytheaDeck
-                    "Tovak"     -> Just tovakDeck
-                    "goldyx"    -> Just goldyxDeck
-                    "Norowas"   -> Just norowasDeck
-                    "Wolfhawk"  -> Just wolfhawkDeck
-                    "Krang"     -> Just krangDeck
-                    _           -> Nothing
-     return (makeCustomDeck deedNames)
+  makeCustomDeck
+    case name of
+      "Arythea"   -> arytheaDeck
+      "Tovak"     -> tovakDeck
+      "goldyx"    -> goldyxDeck
+      "Norowas"   -> norowasDeck
+      "Wolfhawk"  -> wolfhawkDeck
+      "Krang"     -> krangDeck
+      _           -> []
 
 -- | A started deck with no special cards.
 basicDeck :: [(DeedName,DeedName)] -> [ DeedName ]

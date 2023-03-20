@@ -10,12 +10,14 @@ import Common
 import Source
 import Enemies
 import Deed
+import Hand
 
 data State = State
   { _playerId :: PlayerId
   , _source   :: Source
   , _enemies  :: [Enemy]
   , _deeds    :: [Deed]
+  , _hand     :: Hand
   }
   deriving (Generic,ToJSON)
 
@@ -26,6 +28,13 @@ finalState = const False
 
 data Input = Source Mana
            | AskMana Mana
+
+           -- Hand management
+           | AskHand Int
+           | AskSelectedSideways
+           | AskSelectedAdvanced
+
+
            | TestReroll
            | TestFixed
   deriving (Eq,Ord,Show,Read,Generic,ToJSON,FromJSON)

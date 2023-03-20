@@ -1,28 +1,30 @@
-.card-container {
-  display: flex;
-  flex-direction: column;
-}
-
-.card {
-  position: relative;
-  display: inline-block;
-  vertical-align: middle;
-  margin: 2px;
-}
-
 .card.small {
   display: flex;
   flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .card.big {
-  z-index: 10;
-  position: absolute;
+  position: relative;
+  display: inline-block;
+}
+
+.card.big.sideways {
+  transform: rotate(90deg);
 }
 
 .card.element {
   display: inline-block;
   margin: 0;
+}
+
+.card .box {
+  position: absolute;
+  box-sizing: border-box;
+  background-color: rgba(0,0,0,0.5);
+
 }
 
 

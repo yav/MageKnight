@@ -25,6 +25,8 @@ library
     Deed,
     DeedDecks,
 
+    Hand,
+
     Units,
 
     Enemies,

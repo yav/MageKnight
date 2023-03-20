@@ -12,7 +12,8 @@ import AppTypes
 import Common
 import Source
 import Enemies(allEnemies)
-import DeedDecks(allDeeds)
+import DeedDecks(allDeeds, makeDeckFor, spells, advancedActions)
+import Hand
 import Utils
 
 main :: IO ()
@@ -26,10 +27,13 @@ main = startApp App
                            , _source   = withRNG_ rng (newSource 6)
                            , _enemies  = allEnemies
                            , _deeds    = allDeeds
+                           , _hand     = newHand deck
                            }
         _   -> Left "need exactly 1 player"
   , appStart = gameLoop
   }
+  where
+  deck = take 3 spells ++ take 5 (makeDeckFor "Arythea")
 
 gameLoop :: Interact ()
 gameLoop =
@@ -37,11 +41,29 @@ gameLoop =
      let p = getField playerId s
          src = getField source s
          avail = Set.toList (availableMana src)
-     inp <- choose p "Choose Action"
-          $ [ (TestReroll, "reroll") ] ++
+         hnd = getField hand s
+
+         opts0 = [ (TestReroll, "reroll") ] ++
             [ (TestFixed, "reroll") ] ++
-            [ (Source m, showText m) | m <- avail ]
+            [ (Source m, showText m) | m <- avail ] ++
+            [ (AskHand i, "Select card")
+                | (i,_) <- zip [0..] (getField handCards hnd) ]
+
+         opts = case getField handSelected hnd of
+                   Nothing -> opts0
+                   Just sel  ->
+                     case getField selectedMode sel of
+                       SelectedBasic ->
+                          (AskSelectedAdvanced, "Power up") :
+                          (AskSelectedSideways, "Use sideways") : opts0
+                       _ -> opts0
+
+
+     inp <- choose p "Choose Action" opts
      case inp of
+       AskHand i -> updateThe_ hand (handSelect i)
+       AskSelectedAdvanced -> updateThe_ hand (handSelectMode SelectedAdvanced)
+       AskSelectedSideways -> updateThe_ hand (handSelectMode SelectedSideways)
        TestReroll -> updateThe_ source refillSource
        TestFixed ->
           do inp1 <- choose p "Choose mana"

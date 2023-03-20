@@ -1,0 +1,48 @@
+.hand {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+.hand .view-pane {
+  position: relative;
+  padding: 0;
+}
+
+.hand .preview {
+  position: absolute;
+  left: 0;
+  z-index: 2;
+}
+
+.hand .selected {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.hand .sideways-question {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-block;
+  background-color: rgba(0,0,0,0.80);
+  color: white;
+  font-size: smaller;
+  width: 1em;
+  height: 1em;
+  text-align: center;
+}
+
+.hand .cards {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+}
