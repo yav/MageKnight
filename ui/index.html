@@ -2,15 +2,16 @@
 <html>
 <head>
 <meta charset="UTF-8" />
+<link rel="stylesheet" href="style/layout.css">
 <link rel="stylesheet" href="style/common.css">
 <link rel="stylesheet" href="style/source.css">
 <link rel="stylesheet" href="style/enemy.css">
 <link rel="stylesheet" href="style/quantity.css">
 <link rel="stylesheet" href="style/cards.css">
-<link rel="stylesheet" href="style/hand.css">
 <script src="common-js/connect.js"></script>
 <script src="common-js/html.js"></script>
 <script src="dynamic.js"></script>
+<script src="constants.js"></script>
 <script src="quantity.js"></script>
 <script src="tooltip.js"></script>
 <script src="source.js"></script>
@@ -20,4 +21,16 @@
 <script src="question.js"></script>
 <script src="main.js"></script>
 </head>
-<body id="main" onload="main()"></body></html>
+<body id="main" onload="main()">
+<div class="lhs">
+  <div id="hand" class="hand"></div>
+</div>
+<div class="mid">
+  <div id="card-view" class="card-view">
+    <div id="card-preview"  class="preview"></div>
+    <div id="card-selected" class="selected"></div>
+  </div>
+</div>
+<div class="rhs"></div>
+</body>
+</html>

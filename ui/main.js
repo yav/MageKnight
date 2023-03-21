@@ -7,13 +7,13 @@ function main() {
   playerId = conn.playerId
   sendJSON = conn.sendJSON
   if (conn.size) { html.setScale(conn.size) }
+  setupConstants()
 }
 
 // Redraw the whole state
 function uiRedraw(state) {
   gui = {}
   gui.container = html.getBody()
-  gui.container.innerHTML = ""
   gui.question_cleanup = []
 
   gui.cards   = newCards()
@@ -40,8 +40,6 @@ function uiButton(lab,q) {
 
 // Perform a partial update
 function uiUpdate(state) {
-
-  console.log("Scale = " + html.getVar("scale"))
 
   const dom = html.div("")
   dom.style.display = "flex"

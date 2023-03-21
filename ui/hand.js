@@ -3,27 +3,9 @@ function newHand() {
   const width   = gui.cards.width
   const height  = gui.cards.height
 
-  const dom = html.div("hand")
-  html.setSize(dom, "width", height + width)
-
-  const dview = html.div("view-pane")
-  html.setDim(dview, height, height)
-
-  const dpreview = html.div("preview")
-
-  const dselected = html.div("selected")
-  html.setDim(dselected, height, height)
-
-  dview.appendChild(dselected)
-  dview.appendChild(dpreview)
-
-  const dcards = html.div("cards")
-  html.setSize(dcards, "width", width)
-
-  dom.appendChild(dcards)
-  dom.appendChild(dview)
-  gui.container.appendChild(dom)
-
+  const dcards    = document.getElementById("hand")
+  const dpreview  = document.getElementById("card-preview")
+  const dselected = document.getElementById("card-selected")
 
   const getName   = gui.cards.getName
   const draw      = (d) => gui.cards.drawDeed(d)
@@ -138,7 +120,7 @@ function newHand() {
 
   function askSideways(q) {
     if (selected === null) return
-    const dom = html.div("hand sideways-question question")
+    const dom = html.div("sideways-question question")
     dom.textContent = "*"
     dom.setAttribute("title", "Use sideways")
     selected.dom.appendChild(dom)
