@@ -41,6 +41,8 @@ function uiButton(lab,q) {
 // Perform a partial update
 function uiUpdate(state) {
 
+  console.log("Scale = " + html.getVar("scale"))
+
   const dom = html.div("")
   dom.style.display = "flex"
   dom.style.flexDirection = "row"
