@@ -1,18 +1,32 @@
 
 .source {
-  border: 1px solid black;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  background-color: #003;
 }
 
 .source .group {
   margin-left: 1em;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: start;
 }
 
-.source .die {
+.die {
   box-sizing: border-box;
+  width:          calc(var(--dieSize) * 1px);
+  height:         calc(var(--dieSize) * 1px);
+  border-radius:  calc(var(--dieSize) * 0.1px);
+  background-size: calc(var(--dieSize) * 1px) calc(var(--dieSize) * 1px);
 }
+
+.die.Red   { background-image: url(../img/mana/red.png); }
+.die.Blue  { background-image: url(../img/mana/blue.png); }
+.die.Green { background-image: url(../img/mana/green.png); }
+.die.White { background-image: url(../img/mana/white.png); }
+.die.Gold  { background-image: url(../img/mana/gold.png); }
+.die.Black { background-image: url(../img/mana/black.png); }
