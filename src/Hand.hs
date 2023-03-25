@@ -2,6 +2,7 @@ module Hand where
 
 import GHC.Generics
 import Data.Aeson
+import Data.Map qualified as Map
 
 import Common.Field
 
@@ -40,6 +41,17 @@ handSelectMode m h =
   case getField handSelected h of
     Nothing -> h
     Just s -> setField handSelected (Just $ setField selectedMode m s) h
+
+handPlayable :: Hand -> [Int]
+handPlayable =
+    Map.elems
+  . Map.delete "Wound"
+  . Map.fromList
+  . reverse
+  . zipWith mk [0..]
+  . getField handCards
+  where
+  mk n d = (deedName d, n)
 
 newSelected :: Deed -> SelectedDeed
 newSelected d = SelectedDeed

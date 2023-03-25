@@ -12,6 +12,7 @@ import AppTypes
 import Common
 import Source
 import Enemies(allEnemies)
+import Deed(wound)
 import DeedDecks(allDeeds, makeDeckFor, spells, advancedActions)
 import Hand
 import Utils
@@ -33,7 +34,7 @@ main = startApp App
   , appStart = gameLoop
   }
   where
-  deck = take 3 spells ++ take 5 (makeDeckFor "Arythea")
+  deck = wound : take 3 spells ++ take 5 (makeDeckFor "Arythea")
 
 gameLoop :: Interact ()
 gameLoop =
@@ -46,8 +47,7 @@ gameLoop =
          opts0 = [ (TestReroll, "reroll") ] ++
             [ (TestFixed, "reroll") ] ++
             [ (Source m, showText m) | m <- avail ] ++
-            [ (AskHand i, "Select card")
-                | (i,_) <- zip [0..] (getField handCards hnd) ]
+            [ (AskHand i, "Select card") | i <- handPlayable hnd ]
 
          opts = case getField handSelected hnd of
                    Nothing -> opts0
