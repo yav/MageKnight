@@ -5,7 +5,11 @@ function newSource() {
 
   const groups = {}
 
-  function newDie(mana) { return html.div("die " + mana) }
+  function newDie(mana) {
+    const dom = uiFromTemplate("die")
+    die.classList.add(mana)
+    return dom
+  }
 
   function mkGroup(id) {
     const g = document.getElementById(id)
