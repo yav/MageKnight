@@ -1,30 +1,15 @@
-module AppTypes where
+module AppTypes
+  ( module AppTypes
+  , module State
+  ) where
 
 import GHC.Generics(Generic)
 import Data.Aeson(ToJSON,FromJSON)
 
 import Common.Basics(PlayerId)
-import Common.Field(declareFields)
 
 import Common
-import Source
-import Enemies
-import Deed
-import Hand
-
-data State = State
-  { _playerId :: PlayerId
-  , _source   :: Source
-  , _enemies  :: [Enemy]
-  , _deeds    :: [Deed]
-  , _hand     :: Hand
-  }
-  deriving (Generic,ToJSON)
-
-declareFields ''State
-
-finalState :: State -> Bool
-finalState = const False
+import State
 
 data Input = Source Mana
            | AskMana Mana
@@ -38,6 +23,7 @@ data Input = Source Mana
            | TestReroll
            | TestFixed
   deriving (Eq,Ord,Show,Read,Generic,ToJSON,FromJSON)
+
 
 --------------------------------------------------------------------------------
 -- No interesting updates or multiple players

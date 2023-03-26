@@ -120,9 +120,7 @@ function newHand() {
 
   function askSideways(q) {
     if (selected === null) return
-    const dom = html.div("sideways-question question")
-    dom.textContent = "*"
-    dom.setAttribute("title", "Use sideways")
+    const dom = uiFromTemplate("card-sideways-icon")
     selected.dom.appendChild(dom)
     uiAddQuestionCleanup(() => dom.remove())
     dom.addEventListener("click",() => {

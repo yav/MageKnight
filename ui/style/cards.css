@@ -1,3 +1,7 @@
+.card {
+  background-size: calc(var(--background-columns) * var(--cardWidth_px));
+}
+
 .card.small {
   display: flex;
   flex-direction: column;
@@ -6,25 +10,68 @@
   align-items: center;
 }
 
+
+.card .element {
+  display: inline-block;
+  width:  var(--smallCardWidth_px);
+  height: var(--smallCardHeight_px);
+  margin: 0;
+}
+
+
 .card.big {
   position: relative;
   display: inline-block;
+  width:  var(--cardWidth_px);
+  height: var(--cardHeight_px);
+  border-radius: calc(var(--cardHeight_px / 30));
 }
 
 .card.big.sideways {
   transform: rotate(90deg);
 }
 
-.card.element {
-  display: inline-block;
-  margin: 0;
-}
-
-.card .box {
+.card.big .box {
   position: absolute;
   box-sizing: border-box;
   background-color: rgba(0,0,0,0.5);
-
+  /*border-radius: calc(var(--cardHeight_px) / 30);*/
+  width:  var(--cardWidth_px);
+  height: calc(var(--cardWidth_px) * var(--mk-box-height));
+  left:   0;
+  top:    calc(var(--cardHeight_px) * var(--mk-box-top));
 }
 
+.card .sideways-question {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-block;
+  background-color: rgba(0,0,0,0.80);
+  color: white;
+  font-size: smaller;
+  width: 1em;
+  height: 1em;
+  text-align: center;
+}
+
+.card.Wound {
+  background-image: url("../img/cards/Wound.jpg");
+}
+
+.card.Action {
+  background-image: url("../img/cards/Action.jpg");
+}
+
+.card.AdvancedAction {
+  background-image: url("../img/cards/AdvancedAction.jpg");
+}
+
+.card.Spell {
+  background-image: url("../img/cards/Spell.jpg");
+}
+
+.card.Artifact {
+  background-image: url("../img/cards/Artifact.jpg");
+}
 

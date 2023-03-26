@@ -7,13 +7,13 @@ import Common.CallJS(jsHandlers)
 import Common.Utils(showText)
 import Common.RNGM
 import Common.Field
+import Common.Bag
 import AppTypes
 
 import Common
 import Source
-import Enemies(allEnemies)
 import Deed(wound)
-import DeedDecks(allDeeds, makeDeckFor, spells, advancedActions)
+import DeedDecks(makeDeckFor, spells)
 import Hand
 import Utils
 
@@ -24,11 +24,10 @@ main = startApp App
   , appJS = $(jsHandlers [ ''Update, ''Input ])
   , appInitialState = \rng _opts ps ->
       case ps of
-        [p] -> Right State { _playerId = p
+        [p] -> Right State { playerId = p
                            , _source   = withRNG_ rng (newSource 6)
-                           , _enemies  = allEnemies
-                           , _deeds    = allDeeds
                            , _hand     = newHand deck
+                           , _mana     = bagEmpty
                            }
         _   -> Left "need exactly 1 player"
   , appStart = gameLoop
@@ -39,7 +38,7 @@ main = startApp App
 gameLoop :: Interact ()
 gameLoop =
   do s <- getState
-     let p = getField playerId s
+     let p = playerId s
          src = getField source s
          avail = Set.toList (availableMana src)
          hnd = getField hand s

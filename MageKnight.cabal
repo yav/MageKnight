@@ -22,10 +22,11 @@ library
   hs-source-dirs: src
   exposed-modules:
 
+    State,
     Deed,
     DeedDecks,
-
     Hand,
+    Source,
 
     Units,
 
@@ -47,7 +48,6 @@ library
     Common,
     Offer,
     Offers,
-    Source,
 
     Util.JSON,
     Util.Random,

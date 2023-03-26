@@ -19,6 +19,7 @@
 <script src="cards.js"></script>
 <script src="hand.js"></script>
 <script src="question.js"></script>
+<script src="template.js"></script>
 <script src="main.js"></script>
 </head>
 <body id="main" onload="main()">
@@ -37,5 +38,20 @@
   </div>
 </div>
 <div class="rhs"></div>
+
+<!-- Templates.  These are not displayed directly but rather cloned -->
+<div class="hidden">
+
+  <div id="card-big"          class="card big"></div>
+  <div id="card-sideways-icon"
+       title="Use sideways"
+       class="question sideways-question"
+  >*</div>
+  <div id="card-big-selector" class="box hidden"></div>
+
+  <div id="card-small"        class="card small"></div>
+  <div id="card-element"      class="card element"></div>
+
+</div>
 </body>
 </html>

@@ -9,6 +9,8 @@ function setupConstants() {
   constant.dieSize         = 32
 
   const glob = document.documentElement.style
-  for (c in constant)
+  for (c in constant) {
     glob.setProperty("--" + c, constant[c])
+    glob.setProperty("--" + c + "_px", constant[c] + "px")
+  }
 }
