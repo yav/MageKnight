@@ -7,7 +7,7 @@ function newSource() {
 
   function newDie(mana) {
     const dom = uiFromTemplate("die")
-    die.classList.add(mana)
+    dom.classList.add(mana)
     return dom
   }
 

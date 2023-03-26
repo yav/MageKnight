@@ -1,4 +1,3 @@
-
 .source {
   display: flex;
   flex-direction: row;
@@ -18,10 +17,10 @@
 
 .die {
   box-sizing: border-box;
-  width:          calc(var(--dieSize) * 1px);
-  height:         calc(var(--dieSize) * 1px);
-  border-radius:  calc(var(--dieSize) * 0.1px);
-  background-size: calc(var(--dieSize) * 1px) calc(var(--dieSize) * 1px);
+  width:            var(--dieSize_px);
+  height:           var(--dieSize_px);
+  border-radius:    calc(var(--dieSize) * 0.1px);
+  background-size:  var(--dieSize_px) var(--dieSize_px)
 }
 
 .die.Red   { background-image: url(../img/mana/red.png); }
