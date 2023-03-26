@@ -3,3 +3,22 @@
   align-items: center;
   justify-content: start;
 }
+
+.quantity.grouped {
+  position: relative;
+  display:  inline-block;
+}
+
+.quantity.grouped .counter {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: calc(var(--dieSize_px) / 3);
+  height: calc(var(--dieSize_px) / 3);
+  font-size: calc(var(--dieSize_px) / 4);
+  text-align: center;
+  z-index: 2;
+  background-color: rgba(0,0,0,0.5);
+  color: white;
+  border-radius: calc(var(--dieSize_px) / 20);
+}

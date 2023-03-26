@@ -10,15 +10,16 @@ function uiFromTemplateNested(id) {
   const dom = uiFromTemplate(id)
   const els = {}
   function search(it) {
-    for (n in it.children) {
-      const a = n.getAttribute("id")
+    for (const el of it.children) {
+      const a = el.getAttribute("id")
       if (a !== undefined) {
-        els[a] = n
-        n.removeAttribute("id")
+        els[a] = el
+        el.removeAttribute("id")
       }
-      search(n)
+      search(el)
     }
   }
-  return { dom: dom, nested: els }
+  search(dom)
+  return [ dom, els ]
 }
 

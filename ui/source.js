@@ -18,7 +18,8 @@ function newSource() {
     const n = mana.length
     for (let i = 0; i < n; ++i) {
       const m = mana[i]
-      qs[m] = newQuantity(() => newDie(m))
+      //qs[m] = newQuantity(false, () => newDie(m))
+      qs[m] = newQuantityGrouped(newDie(m))
       g.appendChild(qs[m].dom)
     }
     groups[id] = qs
