@@ -1,4 +1,11 @@
-.ui-question {
+#question-box {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  overflow: scroll;
+  background-color: green;
+  width: 100%;
 }
 
 .ui-question .answers {
@@ -24,3 +31,5 @@
     box-shadow: 0 0 3px 3px rgba(255,255,255,0.3);
   }
 }
+
+

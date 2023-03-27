@@ -27,7 +27,8 @@ function uiAddQuestionCleanup(f) {
 
 // Set the explanation for what we are asking.
 function uiSetQuestion(q) {
-  gui.question_text.textContent = q
+  const dom = document.getElementById("question-box")
+  dom.textContent = q
 }
 
 function uiNewAnswer(dom,q) {

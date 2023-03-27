@@ -21,9 +21,7 @@ function uiRedraw(state) {
   gui.source  = newSource()
 
   const ui_q = html.div("ui-question")
-  gui.question_text    = html.div("description")
   gui.question_answers = html.div("answers")
-  ui_q.appendChild(gui.question_text)
   ui_q.appendChild(gui.question_answers)
   gui.container.appendChild(ui_q)
 

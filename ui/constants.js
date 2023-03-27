@@ -7,6 +7,8 @@ function setupConstants() {
   constant.smallCardHeight = 0.08 * constant.cardHeight
 
   constant.dieSize         = 32
+  constant.buttonHeight    = 32
+  constant.buttonWidth     = 64
 
   const glob = document.documentElement.style
   for (c in constant) {
