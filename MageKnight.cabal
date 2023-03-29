@@ -23,10 +23,13 @@ library
   exposed-modules:
 
     State,
+    Input,
     Deed,
     DeedDecks,
     Hand,
+
     Source,
+    ManaPool,
 
     Units,
 

@@ -5,17 +5,17 @@ import Data.Aeson(ToJSON)
 
 import Common.Basics(PlayerId)
 import Common.Field(declareFields)
-import Common.Bag
 
-import Common
 import Hand
 import Source
+import ManaPool
 
 data State = State
-  { playerId  :: PlayerId
-  , _source   :: Source
-  , _hand     :: Hand
-  , _mana     :: Bag Mana
+  { playerId    :: PlayerId
+  , _source     :: Source
+  , _sourceUsed :: Bool
+  , _hand       :: Hand
+  , _mana       :: ManaPool
   }
   deriving (Generic,ToJSON)
 

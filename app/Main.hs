@@ -1,18 +1,21 @@
 module Main where
 
 import Data.Set qualified as Set
+import Data.Maybe(fromMaybe)
+import Data.Text(Text)
 
 import Common.Interact
 import Common.CallJS(jsHandlers)
 import Common.Utils(showText)
 import Common.RNGM
 import Common.Field
-import Common.Bag
+import Common.Basics
 import AppTypes
 
 import Common
 import Source
-import Deed(wound)
+import ManaPool
+import Deed(wound,deedColor)
 import DeedDecks(makeDeckFor, spells)
 import Hand
 import Utils
@@ -24,10 +27,11 @@ main = startApp App
   , appJS = $(jsHandlers [ ''Update, ''Input ])
   , appInitialState = \rng _opts ps ->
       case ps of
-        [p] -> Right State { playerId = p
+        [p] -> Right State { playerId  = p
                            , _source   = withRNG_ rng (newSource 6)
+                           , _sourceUsed = False
                            , _hand     = newHand deck
-                           , _mana     = bagEmpty
+                           , _mana     = emptyManaPool
                            }
         _   -> Left "need exactly 1 player"
   , appStart = gameLoop
@@ -35,8 +39,99 @@ main = startApp App
   where
   deck = wound : take 3 spells ++ take 5 (makeDeckFor "Arythea")
 
+
+setAndContinue :: State -> Interact ()
+setAndContinue s =
+  do update (SetState s)
+     gameLoop
+
+getUseSourceInputOptions :: Interact [ TopInputOption ]
+getUseSourceInputOptions =
+  do s <- getState
+     let pool         = getField mana s
+         sourceVal    = getField source s
+         available    = Set.toList (availableMana sourceVal)
+
+     pure [ ( playerId s :-> Source m
+            , "Use mana from the source" :: Text
+            , setAndContinue
+                $ setField source
+                             (fromMaybe sourceVal (takeMana m sourceVal))
+                $ setField sourceUsed True
+                $ setField mana (addSourceMana m pool)
+                  s
+            )
+          | not (getField sourceUsed s)
+          , m <- available
+          ]
+
+
+getSelectedCardOptions :: Interact [ TopInputOption ]
+getSelectedCardOptions =
+  do s <- getState
+     let opt a b c = (playerId s :-> a, b, c)
+         handVal   = getField hand s
+         pool      = getField mana s
+
+     pure
+       case getField handSelected handVal of
+         Nothing -> []
+         Just selected ->
+           let deed   = getField selectedDeed selected
+               colors = [ c | c <- map BasicMana (deedColor deed)
+                            , hasMana 1 c pool ]
+               -- XXX: time of day restrictions/gold
+           in
+           [ opt AskSelectedAdvanced "Use powered action"
+             do mb <- chooseMaybe
+                         (playerId s)
+                         "Choose mana"
+                         [ (AskMana m, "Power up") | m <- colors ]
+                setAndContinue
+                  case mb of
+                    Just (AskMana m) ->
+                      setField hand
+                          (handSelectMode SelectedAdvanced handVal) $
+                      setField mana (removeMana m pool) s
+                    _ -> s
+
+           | getField selectedMode selected /= SelectedAdvanced
+           , not (null colors)
+           ]
+           ++
+           [ opt AskSelectedSideways "Turn sideways"
+           $ setAndContinue
+           $ setField hand (handSelectMode SelectedSideways handVal)
+           $ s
+           | getField selectedMode selected == SelectedBasic
+           ]
+
+
+getPlayCardOptions :: Interact [ TopInputOption ]
+getPlayCardOptions =
+  do s <- getState
+     let handVal = getField hand s
+     pure
+       case getField handSelected handVal of
+         Just {} -> []
+         Nothing -> [ (playerId s :-> AskHand i, "Select card",
+                      setAndContinue (setField hand (handSelect i handVal) s)
+                      )
+                    | i <- handPlayable handVal
+                    ]
+
 gameLoop :: Interact ()
 gameLoop =
+  askInputs "Choose action" =<<
+  fmap concat (sequence
+                 [ getPlayCardOptions
+                 , getSelectedCardOptions
+                 , getUseSourceInputOptions
+                 ])
+
+
+oldGameLoop :: Interact ()
+oldGameLoop =
   do s <- getState
      let p = playerId s
          src = getField source s

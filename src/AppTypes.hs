@@ -1,33 +1,19 @@
 module AppTypes
   ( module AppTypes
   , module State
+  , module Input
   ) where
-
-import GHC.Generics(Generic)
-import Data.Aeson(ToJSON,FromJSON)
 
 import Common.Basics(PlayerId)
 
-import Common
 import State
-
-data Input = Source Mana
-           | AskMana Mana
-
-           -- Hand management
-           | AskHand Int
-           | AskSelectedSideways
-           | AskSelectedAdvanced
-
-
-           | TestReroll
-           | TestFixed
-  deriving (Eq,Ord,Show,Read,Generic,ToJSON,FromJSON)
+import Input
 
 
 --------------------------------------------------------------------------------
 -- No interesting updates or multiple players
 
+-- This is a data because jsHandlers only supports data
 data Update = SetState State
 
 doUpdate   :: Update -> State -> State

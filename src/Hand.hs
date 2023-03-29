@@ -22,7 +22,7 @@ data SelectedMode =
     SelectedBasic
   | SelectedAdvanced
   | SelectedSideways
-    deriving (Generic, ToJSON)
+    deriving (Eq, Generic, ToJSON)
 
 declareFields ''Hand
 declareFields ''SelectedDeed
