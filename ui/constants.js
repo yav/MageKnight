@@ -1,3 +1,5 @@
+const mana = [ "Red", "Green", "White", "Blue", "Gold", "Black" ]
+
 const constant = {}
 
 function setupConstants() {

@@ -19,9 +19,10 @@ function uiRedraw(state) {
     gui = {}
     gui.question_cleanup = []
 
-    gui.cards   = newCards()
-    gui.hand    = newHand()
-    gui.source  = newSource()
+    gui.cards     = newCards()
+    gui.hand      = newHand()
+    gui.source    = newSource()
+    gui.manaPool  = newManaPool()
     initialized = true
   }
 
@@ -42,6 +43,7 @@ function uiUpdate(state) {
 
   gui.source.set(state._source)
   gui.hand.set(state._hand)
+  gui.manaPool.set(state._mana)
 
 }
 

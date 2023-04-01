@@ -1,7 +1,4 @@
 function newSource() {
-  const baseSize = 32
-
-  const mana = [ "Red", "Green", "White", "Blue", "Gold", "Black" ]
 
   const groups = {}
 
@@ -18,7 +15,6 @@ function newSource() {
     const n = mana.length
     for (let i = 0; i < n; ++i) {
       const m = mana[i]
-      //qs[m] = newQuantity(false, () => newDie(m))
       qs[m] = newQuantityGrouped(newDie(m))
       g.appendChild(qs[m].dom)
     }

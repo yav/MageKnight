@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="style/layout.css">
 <link rel="stylesheet" href="style/common.css">
 <link rel="stylesheet" href="style/source.css">
+<link rel="stylesheet" href="style/manaPool.css">
 <link rel="stylesheet" href="style/enemy.css">
 <link rel="stylesheet" href="style/quantity.css">
 <link rel="stylesheet" href="style/cards.css">
@@ -15,6 +16,7 @@
 <script src="quantity.js"></script>
 <script src="tooltip.js"></script>
 <script src="source.js"></script>
+<script src="manaPool.js"></script>
 <script src="enemy.js"></script>
 <script src="cards.js"></script>
 <script src="hand.js"></script>
@@ -40,10 +42,11 @@
     <div id="sourceFixed"  class="group" title="Used mana (fixed)"></div>
     <div id="sourceUsed" class="group" title="Used manad (reroll)"></div>
   </div>
-  <div id="resources"></div>
+  <div id="resources">
+    <div id="manaPool"></div>
+  </div>
   <div id="common-buttons" class="button-bar">
-    <div id="undo-button"  class="button question"
-                          onclick="uiUndo()">Undo</div>
+    <div id="undo-button"  class="button question" onclick="uiUndo()">Undo</div>
     <div id="question-box"></div>
     <div id="multi-button" class="button">...</div>
   </div>
@@ -56,7 +59,12 @@
   <div id="quantity-grouped" class="quantity grouped"
     ><div id="counter" class="counter"></div></div>
 
-  <div id="die" class="die"></div>
+  <div id="die"  class="die"></div>
+  <div id="mana" class="mana"></div>
+  <div id="mana-from-source"
+    class="mana from-source"
+    title="Needs to be spent before the end of turn"
+  ></div>
 
   <div id="card-big"          class="card big"></div>
   <div id="card-sideways-icon"

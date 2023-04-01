@@ -1,0 +1,23 @@
+.mana {
+  display:          inline-block;
+  width:            var(--dieSize_px);
+  height:           var(--dieSize_px);
+  border-radius:    calc(var(--dieSize) * 0.1px);
+  background-size:  var(--dieSize_px) var(--dieSize_px)
+}
+
+.mana.from-source {
+  --mk-mana-source-border: calc(var(--dieSize_px) * 0.1);
+  box-shadow:
+    0 0
+    var(--mk-mana-source-border)
+    var(--mk-mana-source-border)
+    red;
+}
+
+.mana.Red   { background-image: url(../img/mana/red.png); }
+.mana.Blue  { background-image: url(../img/mana/blue.png); }
+.mana.Green { background-image: url(../img/mana/green.png); }
+.mana.White { background-image: url(../img/mana/white.png); }
+.mana.Gold  { background-image: url(../img/mana/gold.png); }
+.mana.Black { background-image: url(../img/mana/black.png); }
