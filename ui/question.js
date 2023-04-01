@@ -14,6 +14,7 @@ function uiQuestion(q) {
   })(q.chChoice)
 }
 
+
 function uiQuestionCleanup() {
   const todo = gui.question_cleanup
   const n = todo.length
@@ -36,7 +37,7 @@ function uiNewAnswer(dom,q) {
     sendJSON(q)
     uiQuestionCleanup()
   })
-  gui.question_answers.appendChild(dom)
+  document.getElementById("resources").appendChild(dom)
   uiAddQuestionCleanup(() => dom.remove())
 }
 
@@ -54,5 +55,6 @@ function uiExistingAnswer(dom,q) {
   })
 }
 
+function uiUndo() { sendJSON( {tag: "undo"} ) }
 
 

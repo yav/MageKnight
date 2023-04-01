@@ -1,7 +1,5 @@
 
 function newHand() {
-  const width   = gui.cards.width
-  const height  = gui.cards.height
 
   const dcards    = document.getElementById("hand")
   const dpreview  = document.getElementById("card-preview")

@@ -1,6 +1,7 @@
 let sendJSON = null
 let playerId = null
 let gui      = null
+let initialized = false
 
 function main() {
   const conn = srvConnect()
@@ -12,18 +13,18 @@ function main() {
 
 // Redraw the whole state
 function uiRedraw(state) {
-  gui = {}
-  gui.container = html.getBody()
-  gui.question_cleanup = []
+  console.log("uiRedraw")
 
-  gui.cards   = newCards()
-  gui.hand    = newHand()
-  gui.source  = newSource()
+  if (!initialized) {
+    gui = {}
+    gui.question_cleanup = []
 
-  const ui_q = html.div("ui-question")
-  gui.question_answers = html.div("answers")
-  ui_q.appendChild(gui.question_answers)
-  gui.container.appendChild(ui_q)
+    gui.cards   = newCards()
+    gui.hand    = newHand()
+    gui.source  = newSource()
+    initialized = true
+  }
+
 
   uiUpdate(state.game)
   uiQuestions(state.questions)
@@ -39,24 +40,8 @@ function uiButton(lab,q) {
 // Perform a partial update
 function uiUpdate(state) {
 
-  const dom = html.div("")
-  dom.style.display = "flex"
-  dom.style.flexDirection = "row"
-  gui.container.appendChild(dom)
-
   gui.source.set(state._source)
   gui.hand.set(state._hand)
-
-
-  //const es = state._enemies
-  //for (let i = 0; i < es.length; ++i)
-  //  newEnemy(state._enemies[i])
-
-  //const ds = state._deeds
-  //for (let i = 0; i < ds.length; ++i) {
-  //  gui.container.appendChild(gui.cards.drawDeed(state._deeds[i]))
-  //}
-
 
 }
 

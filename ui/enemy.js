@@ -135,6 +135,6 @@ function newEnemy(e) {
 
   newTooltip(dom,help)
 
-  gui.container.appendChild(dom)
+  document.getElementById("rhs").appendChild(dom)
 
 }
