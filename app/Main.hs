@@ -1,7 +1,6 @@
 module Main where
 
 import Data.Set qualified as Set
-import Data.Maybe(fromMaybe)
 import Data.Text(Text)
 
 import Common.Interact
@@ -54,7 +53,7 @@ getUseSourceInputOptions :: TopInputOptions
 getUseSourceInputOptions s =
   [ topOpt s (Source m) "Use mana from the source" $
     setAndContinue
-      $ setField source (fromMaybe sourceVal (takeMana m sourceVal))
+      $ setField source (takeMana m sourceVal)
       $ setField sourceUsed True
       $ setField mana (addSourceMana m pool)
         s

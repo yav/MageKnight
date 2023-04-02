@@ -7,6 +7,7 @@ module Source
 
   , availableMana
   , takeMana
+  , takeManaMaybe
   , stealMana
   , returnStolenMana
   , takeAndConvertMana
@@ -14,6 +15,7 @@ module Source
 
 import GHC.Generics
 import Data.Set(Set)
+import Data.Maybe(fromMaybe)
 import Control.Monad (replicateM)
 
 import Common.Bag
@@ -83,16 +85,19 @@ renewSource src =
 
 
 -- | Try to take some mana from the source.
-takeMana :: Mana -> Source -> Maybe Source
-takeMana m Source { .. } =
+takeManaMaybe :: Mana -> Source -> Maybe Source
+takeManaMaybe m Source { .. } =
   do b <- bagChangeMaybe (-1) m sourceMana
      return Source { sourceMana = b, sourceUsed = bagChange 1 m sourceUsed, .. }
+
+takeMana :: Mana -> Source -> Source
+takeMana m s = fromMaybe s (takeManaMaybe m s)
 
 -- | Take some mana from the source, and reduce its size.
 -- Used for mana steal.
 stealMana :: Mana -> Source -> Maybe Source
 stealMana m s =
-  do Source { .. } <- takeMana m s
+  do Source { .. } <- takeManaMaybe m s
      return Source { sourceUsed = bagChange (-1) m sourceUsed, .. }
 
 -- | Increases the number of dice in the source by one.
@@ -104,7 +109,7 @@ returnStolenMana m Source { .. } =
 -- available until the next turn.
 takeAndConvertMana :: Mana -> Mana -> Source -> Maybe Source
 takeAndConvertMana mFrom mTo s =
-  do Source { .. } <- takeMana mFrom s
+  do Source { .. } <- takeManaMaybe mFrom s
      return Source { sourceUsed = bagChange (-1) mFrom sourceUsed
                    , sourceFixed = bagChange 1 mTo sourceFixed, .. }
 

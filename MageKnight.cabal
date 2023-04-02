@@ -84,7 +84,10 @@ executable MageKnight
   hs-source-dirs: app
   main-is: Main.hs
   other-modules:
-    Utils
+    Utils,
+    Deed.Action,
+    Deed.Basic,
+    Deed.Decks
   build-depends:
     base,
     containers,
