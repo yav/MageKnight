@@ -13,13 +13,15 @@ import AppTypes
 import Common
 import Source
 import ManaPool
-import Deed(wound,deedColor)
+import Deed(wound,deedName,deedColor)
 import DeedDecks(makeDeckFor, spells)
 import Hand
 import Utils
+import Deed.Decks(playDeed)
 
 main :: IO ()
-main = startApp App
+main =
+  startApp App
   { appOptions = []
   , appColors = [ "red" ]
   , appJS = $(jsHandlers [ ''Update, ''Input ])
@@ -80,6 +82,7 @@ getSelectedCardOptions s =
     Nothing -> []
     Just selected ->
       let deed   = getField selectedDeed selected
+          mode   = getField selectedMode selected
           colors = [ c | c <- map BasicMana (deedColor deed)
                        , hasMana 1 c pool ]
       in
@@ -96,7 +99,7 @@ getSelectedCardOptions s =
                  setField mana (removeMana m pool) s
                _ -> s
 
-      | getField selectedMode selected /= SelectedAdvanced
+      | mode /= SelectedAdvanced
       , not (null colors)
       ]
       ++
@@ -104,7 +107,14 @@ getSelectedCardOptions s =
       $ setAndContinue
       $ setField hand (handSelectMode SelectedSideways handVal)
       $ s
-      | getField selectedMode selected == SelectedBasic
+      | mode == SelectedBasic
+      ]
+      ++
+      [ topOpt s (ActionButton "Play") "Play card"
+        do playDeed mode (deedName deed)
+           updateThe_ hand (setField handSelected Nothing)
+           sync
+           gameLoop
       ]
   where
   handVal   = getField hand s

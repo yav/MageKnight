@@ -6,9 +6,9 @@ import Data.Aeson(ToJSON,FromJSON)
 
 import Common
 
-data Input = Source { inpMana :: Mana }      -- ^ Mana in the source
-           | AskMana { inpMana :: Mana }     -- ^ Just mana color
-           | AskManaPool { inpMana :: Mana } -- ^ Mana in the mana pool
+data Input = Source Mana      -- ^ Mana in the source
+           | AskMana Mana     -- ^ Just mana color
+           | AskManaPool Mana -- ^ Mana in the mana pool
 
            -- Hand management
            | AskHand Int
@@ -21,3 +21,10 @@ data Input = Source { inpMana :: Mana }      -- ^ Mana in the source
            | TestFixed
   deriving (Eq,Ord,Show,Read,Generic,ToJSON,FromJSON)
 
+inpMana :: Input -> Mana
+inpMana inp =
+  case inp of
+    Source m -> m
+    AskMana m -> m
+    AskManaPool m -> m
+    _ -> error "inpMana: not implemented"

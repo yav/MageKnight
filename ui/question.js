@@ -1,7 +1,7 @@
 // Various things that can be used to answer the question.
 function uiQuestion(q) {
   hsInput({
-    Source: (m) => gui.source.ask(m,q),
+    Source: (m) => { gui.source.ask(m,q)},
     AskMana: (m) => gui.source.askMana(m,q),
     AskManaPool: (m) => gui.manaPool.askMana(m,q),
 
@@ -9,6 +9,7 @@ function uiQuestion(q) {
     AskSelectedSideways: () => gui.hand.askSideways(q),
     AskSelectedAdvanced: () => gui.hand.askAdvanced(q),
 
+    ActionButton: (msg) => uiActionButton(msg,q),
 
     TestReroll: () => uiButton("Reroll",q),
     TestFixed: () => uiButton("Test fixed",q),
@@ -59,6 +60,14 @@ function uiExistingAnswer(dom,q) {
 function uiUndo() {
   uiQuestionCleanup()
   sendJSON( {tag: "undo"} )
+}
+
+function uiActionButton(msg,q) {
+  const dom = document.getElementById("multi-button")
+  dom.textContent = msg
+  dom.classList.remove("hidden")
+  uiExistingAnswer(dom,q)
+  uiAddQuestionCleanup(() => dom.classList.add("hidden"))
 }
 
 
