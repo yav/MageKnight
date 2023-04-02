@@ -33,8 +33,19 @@ function newManaPool () {
     }
   }
 
+  // Here we depend on the state of another component.
+  // This is OK because in this app the state should not change
+  // while asking questions, and once a questions are very temporary:
+  // as soon as one is answered all the rest disappear
+  function askMana(c,q) {
+    let src = availManaFromSource[c]
+    if (src.get() === 0) src = availMana
+    uiExistingAnswer(src.dom,q)
+  }
+
   const obj = {}
   obj.set = set
+  obj.askMana = askMana
   return obj
 }
 

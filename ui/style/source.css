@@ -7,6 +7,10 @@
   background-color: #003;
 }
 
+#sourceUsed .die {
+  opacity: 50%;
+}
+
 .source .group {
   margin-left: 1em;
   display: flex;

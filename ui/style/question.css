@@ -1,0 +1,29 @@
+#question-box {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  overflow: scroll;
+  background-color: green;
+  width: 100%;
+}
+
+.question {
+  cursor: pointer;
+  outline: 2px solid white;
+  /*
+  animation: 2s infinite alternate question-border;
+  animation-timing-function: ease-in-out;
+  */
+}
+
+@keyframes question-border {
+  from {
+    box-shadow: 0 0 3px 3px rgba(0,0,0,0.3);
+  }
+  to {
+    box-shadow: 0 0 3px 3px rgba(255,255,255,0.3);
+  }
+}
+
+

@@ -33,7 +33,7 @@ function newQuantityGrouped(thing) {
   const obj = {}
   obj.dom = dom
   obj.set = set
-  obj.get = () => dom
+  obj.get = () => have
 
   return obj
 }

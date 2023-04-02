@@ -5,6 +5,7 @@ module ManaPool
   , hasMana
   , removeMana
   , removeManaMaybe
+  , convertMana
   ) where
 
 import GHC.Generics
@@ -32,6 +33,17 @@ addSourceMana m mp = mp { mpSource = bagChange 1 m (mpSource mp) }
 
 addMana :: Mana -> ManaPool -> ManaPool
 addMana m mp = mp { mpMana = bagChange 1 m (mpMana mp) }
+
+convertMana :: Mana -> Mana -> ManaPool -> ManaPool
+convertMana fromM toM mp =
+  fromMaybe mp $
+    do yes <- attempt (mpSource mp)
+       pure mp { mpSource = yes }
+    <|>
+    do yes <- attempt (mpMana mp)
+       pure mp { mpMana = yes }
+  where
+  attempt b = bagChange 1 toM <$> bagChangeMaybe (-1) fromM b
 
 hasMana :: Int -> Mana -> ManaPool -> Bool
 hasMana amt m mp = amt <= tot

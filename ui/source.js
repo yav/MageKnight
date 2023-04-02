@@ -40,8 +40,7 @@ function newSource() {
 
   function ask(m,q) {
     const g = groups.sourceMana
-    const it = g[m].get()
-    uiExistingAnswer(g[m].get(),q)
+    uiExistingAnswer(g[m].dom,q)
   }
 
   // Not directly related to source, but we have the die drawing code here

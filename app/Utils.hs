@@ -13,4 +13,3 @@ sync =
 
 
 type InputOption a = (WithPlayer Input, Text, Interact a)
-type TopInputOption = InputOption ()

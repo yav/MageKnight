@@ -1,35 +1,5 @@
-#question-box {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  overflow: scroll;
-  background-color: green;
-  width: 100%;
-}
-
-.ui-question .answers {
-  display:flex;
-}
-
-.question {
-  cursor: pointer;
-  padding: 2px;
-  animation: 2s infinite alternate question-border;
-  animation-timing-function: ease-in-out;
-}
-
 .hidden {
   display: none !important;
-}
-
-@keyframes question-border {
-  from {
-    box-shadow: 0 0 3px 3px rgba(0,0,0,0.3);
-  }
-  to {
-    box-shadow: 0 0 3px 3px rgba(255,255,255,0.3);
-  }
 }
 
 

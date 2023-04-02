@@ -3,6 +3,7 @@ function uiQuestion(q) {
   hsInput({
     Source: (m) => gui.source.ask(m,q),
     AskMana: (m) => gui.source.askMana(m,q),
+    AskManaPool: (m) => gui.manaPool.askMana(m,q),
 
     AskHand: (m) => gui.hand.ask(m,q),
     AskSelectedSideways: () => gui.hand.askSideways(q),
@@ -55,6 +56,9 @@ function uiExistingAnswer(dom,q) {
   })
 }
 
-function uiUndo() { sendJSON( {tag: "undo"} ) }
+function uiUndo() {
+  uiQuestionCleanup()
+  sendJSON( {tag: "undo"} )
+}
 
 
