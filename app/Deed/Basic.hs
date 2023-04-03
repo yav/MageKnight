@@ -1,6 +1,6 @@
 module Deed.Basic (allBasic) where
 
-import Data.Set qualified as Set
+import Data.Text qualified as Text
 
 import Common.Field
 import Common.Interact
@@ -52,14 +52,32 @@ basicManaPull s =
 
 
 powerManaPull :: DeedDef
-powerManaPull _ = pure ()
-{-
+powerManaPull = count 1
   where
-  count done
-    | done >= 2 = pure ()
+  count :: Int -> State -> Interact ()
+  count dieNum s
+    | dieNum > 2 = pure ()
     | otherwise =
-      do 
--}
+      do mb <- chooseMaybe pid msg [ (Source m, "Set and use") | m <- avail ]
+         case mb of
+           Nothing -> count 3 s
+           Just mi ->
+             do let m = inpMana mi
+                tgt <- inpMana <$>
+                       choose pid "Set to"
+                          [ (AskMana t,"Set to") | t <- anyMana, t /= Gold ]
+                update
+                  $ SetState
+                  $ setField source (takeAndConvertMana m tgt sourceVal)
+                  $ setField mana   (addMana tgt manaVal) s
+                count (dieNum + 1) =<< getState
+      where
+      pid       = playerId s
+      sourceVal = getField source s
+      manaVal   = getField mana s
+      avail     = availableMana sourceVal
+      msg       = "Mana Pull (" <> Text.pack (show dieNum) <> "/2)"
+
 
 
 
