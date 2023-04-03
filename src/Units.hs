@@ -2,7 +2,6 @@ module Units where
 
 import Common
 
-import Util.JSON
 import Util.Perhaps
 
 import           Data.Text (Text)
@@ -82,24 +81,6 @@ data UnitSource =
   | FromMageTower
   | FromCity
     deriving (Eq,Ord,Show)
-
-
-instance Export Unit where
-  toJS Unit { .. } = toJS unitName
-
-instance Export UnitType where
-  toJS t = toJS (txt :: Text)
-    where
-    txt = case t of
-            RegularUnit -> "regular"
-            EliteUnit   -> "elite"
-
-instance Export ActiveUnit where
-  toJS ActiveUnit { .. } =
-    object [ "unit"   .= baseUnit
-           , "ready"  .= unitReady
-           , "wounds" .= unitWounds
-           ]
 
 
 findUnit :: Text -> Maybe Unit

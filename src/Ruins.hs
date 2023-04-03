@@ -5,10 +5,10 @@ module Ruins
   , ruins
   ) where
 
+import Common.Bag
+
 import Common
 import Enemies
-
-import Util.Bag
 
 import Data.Text(Text)
 

@@ -41,7 +41,6 @@ import  Common(Time(..), Visibility(..))
 
 import  Util.Random
 import  Util.ResourceQ
-import  Util.JSON
 import  Util.Perhaps
 
 import           Data.Maybe ( mapMaybe, fromMaybe, maybeToList )
@@ -552,36 +551,4 @@ locationCardBonus p l = maximum $ map bounus
           _ -> Nothing
 
 
-
-{-
-instance Export Land where
-  toJS Land { .. } =
-    object [ "time"      .= timeOfDay
-           , "mapShape"  .= mapShape
-           , "map"       .= map expTile (Map.toList addBounds)
-           , "nextTiles" .= map tileType (unexploredTiles ++ backupTiles)
-           ]
-    where
-    expTile ((x,y),t) = object [ "x" .= x, "y" .= y, "tile" .= t ]
-
-    mbPlace = case (unexploredTiles, backupTiles) of
-               ([],[]) -> Nothing
-               (Tile { .. } : _, _) ->
-                  Just (gameTilePlaceHolder tileType, valid tileType False)
-               (_, Tile { .. } : _) ->
-                  Just (gameTilePlaceHolder tileType, valid tileType True)
-
-    valid = validPlacement mapShape (`Map.member` theMap)
-
-    addBounds =
-      case mbPlace of
-        Nothing -> theMap
-        Just (pl,isValid) -> foldr addBoundsAt theMap (Map.keys theMap)
-          where
-          addBoundsAt x m = foldr addBound m (globalNeighbours x)
-          addBound x m
-            | isValid x   = Map.insertWith (\_ old -> old) x pl m
-            | otherwise   = m
-
--}
 

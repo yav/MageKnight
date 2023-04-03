@@ -14,7 +14,6 @@ module GameTile
 import Terrain
 import HexContent
 import Player (PlayerName)
-import Util.JSON
 
 import           Data.Map ( Map )
 import qualified Data.Map as Map
@@ -121,19 +120,4 @@ gameTileIsWalkable gt loc =
            _                       -> True
 
   where HexInfo { hexLandInfo = HexLandInfo { .. }, .. } = gameTileInfo loc gt
-
-
-
-
---------------------------------------------------------------------------------
-
-{-
-instance Export GameTile where
-  toJS GameTile { .. } =
-    object [ "tile"    .= gameTile
-           , "content" .= map export (Map.toList gameTileContent)
-           ]
-    where
-    export (l,c) = object [ "location" .= l, "content"  .= c ]
--}
 

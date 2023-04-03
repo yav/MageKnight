@@ -1,28 +1,6 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings, Trustworthy #-}
 module GameOld where
 
-import Debug.Trace
-
-
-import Common
-import Deed
-import Offers
-import Source
-import Land
-import Units
-import Terrain
-import Player
-import DeedDecks(makeCustomDeck, arytheaDeck)
-
-import Util.JSON
-import Util.Perhaps
-import Util.Bag
-
-import           Data.Text (Text)
-import           Data.Maybe(fromMaybe)
-import qualified Data.Set as Set
-
-
 {-
 testGame :: StdGen -> Game
 testGame g =

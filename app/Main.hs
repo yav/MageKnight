@@ -1,6 +1,5 @@
 module Main where
 
-import Data.Set qualified as Set
 import Data.Text(Text)
 
 import Common.Interact
@@ -71,7 +70,7 @@ getUseSourceInputOptions s =
   where
   pool         = getField mana s
   sourceVal    = getField source s
-  available    = Set.toList (availableMana sourceVal)
+  available    = availableMana sourceVal
 
 
 

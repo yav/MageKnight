@@ -10,11 +10,11 @@ module Source
   , takeManaMaybe
   , stealMana
   , returnStolenMana
+  , takeAndConvertManaMaybe
   , takeAndConvertMana
   ) where
 
 import GHC.Generics
-import Data.Set(Set)
 import Data.Maybe(fromMaybe)
 import Control.Monad (replicateM)
 
@@ -38,8 +38,8 @@ sourceSize Source { .. } =
 
 
 -- | Mana present in the source.
-availableMana :: Source -> Set Mana
-availableMana = bagToSet . sourceMana
+availableMana :: Source -> [Mana]
+availableMana = map fst . bagToNumList . sourceMana
 
 -- | Roll this many mana dice.
 rollDice :: Int -> Gen [Mana]
@@ -107,10 +107,16 @@ returnStolenMana m Source { .. } =
 
 -- | Set a unit of the first mana to the second.  The new mana is not
 -- available until the next turn.
-takeAndConvertMana :: Mana -> Mana -> Source -> Maybe Source
-takeAndConvertMana mFrom mTo s =
+takeAndConvertManaMaybe :: Mana -> Mana -> Source -> Maybe Source
+takeAndConvertManaMaybe mFrom mTo s =
   do Source { .. } <- takeManaMaybe mFrom s
      return Source { sourceUsed = bagChange (-1) mFrom sourceUsed
                    , sourceFixed = bagChange 1 mTo sourceFixed, .. }
+
+takeAndConvertMana :: Mana -> Mana -> Source -> Source
+takeAndConvertMana mFrom mTo s =
+  fromMaybe s (takeAndConvertManaMaybe mFrom mTo s)
+
+
 
 

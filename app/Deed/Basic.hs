@@ -48,7 +48,18 @@ basicManaPull s =
   pid       = playerId s
   sourceVal = getField source s
   manaVal   = getField mana s
-  avail     = Set.toList (availableMana sourceVal)
+  avail     = availableMana sourceVal
+
 
 powerManaPull :: DeedDef
 powerManaPull _ = pure ()
+{-
+  where
+  count done
+    | done >= 2 = pure ()
+    | otherwise =
+      do 
+-}
+
+
+

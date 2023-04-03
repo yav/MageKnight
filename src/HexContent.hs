@@ -31,14 +31,15 @@ module HexContent
   , hexWithCity
   ) where
 
+import Common.Bag
+
 import Common
 import Enemies
 import Ruins
 import Player
 
+
 import Util.ResourceQ
-import Util.JSON
-import Util.Bag
 
 import           Data.Maybe ( fromMaybe )
 import           Data.List ( delete, sortBy, groupBy, nub )
@@ -47,8 +48,6 @@ import           Data.Function ( on )
 import           Data.Set ( Set )
 import qualified Data.Set as Set
 import qualified Data.Map as Map
-import           Data.Char ( toLower, isAlphaNum )
-import qualified Data.Text as Text
 
 type EnemyPool = Map EnemyType (ResourceQ Enemy)
 
@@ -104,7 +103,7 @@ hexOwners HexContent { .. }
          $ map (reorder . map fst)  -- 
          $ groupBy ((==) `on` snd)  -- group by same number of shields
          $ sortBy moreFirst         -- sort players, most shields first
-         $ bagToListGrouped         -- count shields per player
+         $ bagToNumList             -- count shields per player
          $ bagFromList hexShields
 
   | otherwise = []
@@ -127,7 +126,7 @@ hexReveal HexContent { .. } =
 -- | Add an enemy to a hex-cell.
 hexAddEnemy :: Visibility -> Enemy -> HexContent -> HexContent
 hexAddEnemy v e HexContent { .. } =
-  HexContent { hexEnemies = bagAdd 1 (v,e) hexEnemies, .. }
+  HexContent { hexEnemies = bagChange 1 (v,e) hexEnemies, .. }
 
 -- | Remove all enemies from a hex cell.
 hexTakeEnemies :: HexContent -> ([Enemy], HexContent)
@@ -259,39 +258,5 @@ hexWithCity color level pool
                , e 1 Underworld $ e 1 Mage $ e 3 Citizen []
                ]
   where e n t = (replicate n t ++)
-
-
---------------------------------------------------------------------------------
-
-{-
-instance Export HexContent where
-  toJS HexContent { .. } =
-    object [ "shields" .= map toImage (reverse hexShields)
-           , "enemies" .= fmap enemy      (bagToList hexEnemies)
-           , "players" .= fmap (toImage . playerName) (Set.toList hexPlayers)
-           , "ruins"   .= fmap jsruins     hexRuins
-           ]
-      where
-      jsEnemy ty name = object [ "type" .= toJS ty
-                               , "name" .= toImage name
-                               ]
-
-      enemy (v,e) = jsEnemy (enemyType e)
-                  $ case v of
-                      Hidden   -> "back"
-                      Revealed -> enemyName e
-
-      jsruins (v,r) = case v of
-                        Hidden   -> "back"
-                        Revealed -> toImage (ruinsName r)
-
-      toImage = Text.map cvt
-
-      cvt c
-        | isAlphaNum c  = toLower c
-        | otherwise     = '_'
-
--}
-
 
 

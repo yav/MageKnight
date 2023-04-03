@@ -69,6 +69,8 @@ module Player
   , tacticPreparation
   ) where
 
+import Common.Bag
+
 import Common
 import Deed
 import Units
@@ -76,9 +78,7 @@ import Terrain
 import Skill
 import Tactic
 
-import Util.Bag
 import Util.Perhaps
-import Util.JSON
 import Util.Random
 import Util.Misc(repeatN)
 
@@ -225,14 +225,14 @@ handEmpty Player { .. } = null hand
 -- Fails if the inventory already has 3 crystals of this color.
 addCrystal :: BasicMana -> Player -> Maybe Player
 addCrystal c Player { .. } =
-  do guard (bagLookup c crystals < 3)
-     return Player { crystals = bagAdd 1 c crystals, .. }
+  do guard (bagContains c crystals < 3)
+     return Player { crystals = bagChange 1 c crystals, .. }
 
 -- | Use up one of the player's crystals.
 -- Fails if there is no such crystal.
 removeCrystal :: BasicMana -> Player -> Maybe Player
 removeCrystal c Player { .. } =
-  do cs <- bagRemove 1 c crystals
+  do cs <- bagChangeMaybe (-1) c crystals
      return Player { crystals = cs, .. }
 
 
@@ -532,29 +532,3 @@ tacticPreparation n Player { .. } =
                           Player { hand = b : hand, deedDeck = as ++ bs, .. }
     _ -> Nothing
 
---------------------------------------------------------------------------------
-
-{-
-instance Export Player where
-  toJS Player { .. } =
-    object
-      [ "name"        .= name
-      , "fameInfo"    .= object [ "fame"  .= fame
-                                , "level" .= l
-                                , "start" .= start
-                                , "end"   .= end
-                                ]
-      , "reputation"  .= reputation
-      , "units"       .= units
-      , "crystals"    .= object [ toKeyJS x .= n
-                                          | (x,n) <- bagToListGrouped crystals ]
-      , "cards"       .= hand
-      , "deeds"       .= length deedDeck
-      , "discards"    .= length discardPile
-      , "skills"      .= [ object [ "skill" .= s, "usable" .= (u == Unused) ]
-                                                            | (s,u) <- skills ]
-      , "location"    .= location
-      , "unsafe"      .= fmap fst onUnsafe
-      ]
-    where (l,(start,end)) = playerLevel' Player { .. }
--}
