@@ -31,7 +31,6 @@ module Offers
   , disbandUnit
   ) where
 
-import Util.Perhaps
 import Util.Random
 import Util.Q
 
@@ -325,17 +324,17 @@ newSkill :: Skill -> Offers -> Offers
 newSkill s o = o { commonSkillOffer = s : commonSkillOffer o }
 
 -- | Reject both skill, and take one from the offer.
-takeSkill :: Skill -> Skill -> Int -> Offers -> Perhaps (Skill, Offers)
+takeSkill :: Skill -> Skill -> Int -> Offers -> Maybe (Skill, Offers)
 takeSkill s1 s2 n0 o =
   do (s,others) <- get n0 (commonSkillOffer o)
      return (s, o { commonSkillOffer = s1 : s2 : others })
   where
-  get _ []        = Failed "This skill is not available."
+  get _ []        = Nothing
   get n (x : xs)
-    | n == 0      = Ok (x,xs)
+    | n == 0      = Just (x,xs)
     | n >  0      = do (y,ys) <- get (n-1) xs
                        return (y,x:ys)
-    | otherwise   = Failed "This skill is not available."
+    | otherwise   = Nothing
 
 --------------------------------------------------------------------------------
 

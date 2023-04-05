@@ -1,6 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleInstances #-}
 module Terrain
   ( -- * Addressing
     Addr(..), TileAddr,
@@ -236,53 +233,6 @@ validPlacement sh explored t backup pt@(x,y) =
 
 --------------------------------------------------------------------------------
 
-{-
-instance Export Dir where
-  toJS dir = toJS (txt :: Text)
-    where
-    txt = case dir of
-            NE -> "NE"
-            E  -> "E"
-            SE -> "SE"
-            SW -> "SW"
-            W  -> "W"
-            NW -> "NW"
-
-
-instance Export MapShape where
-  toJS sh = case sh of
-              Wedge           -> object [ "shape" .= ("wedge" :: Text) ]
-              OpenMap up down -> object [ "shape" .= ("open" :: Text)
-                                        , "up"    .= up
-                                        , "down"  .= down
-                                        ]
-
-instance Export Addr where
-  toJS Addr { addrGlobal = (x,y), .. } = object [ "x"   .= x
-                                                , "y"   .= y
-                                                , "hex" .= addrLocal
-                                                ]
-
-
-instance Export HexAddr where
-  toJS addr = case addr of
-                Center   -> toJS ("C" :: Text)
-                Border b -> toJS b
-
-instance Export TileType where
-  toJS t = toJS (txt :: Text)
-    where
-    txt = case t of
-            BasicTile -> "country"
-            CoreTile  -> "core"
-
-instance Export Tile where
-  toJS Tile { .. } = object [ "name" .= tileName, "type" .= tileType ]
--}
-
-
-
---------------------------------------------------------------------------------
 
 class IsHexAddr a where
   hexAddr :: a -> HexAddr

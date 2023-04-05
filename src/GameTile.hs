@@ -11,13 +11,13 @@ module GameTile
   , gameTileIsSafe
   ) where
 
-import Terrain
-import HexContent
-import Player (PlayerName)
 
 import           Data.Map ( Map )
 import qualified Data.Map as Map
 
+import Common.Basics(PlayerId)
+import Terrain
+import HexContent
 
 -- | An active game tile.  Keeps track of what's on each hex.
 data GameTile = GameTile
@@ -73,7 +73,7 @@ gameTileSearch p GameTile { .. } =
 
 
 -- | Is this a safe location for the given player.
-gameTileIsSafe :: GameTile -> HexAddr -> PlayerName -> Bool
+gameTileIsSafe :: GameTile -> HexAddr -> PlayerId -> Bool
 gameTileIsSafe gt loc p =
   case hexTerrain of
     Lake      -> False
@@ -94,7 +94,7 @@ gameTileIsSafe gt loc p =
 
 -- | Would (normal) moving on this tile end the movement phase?
 -- XXX: does not aacount for provoking
-gameTileEndsMovement :: GameTile -> HexAddr -> PlayerName -> Bool
+gameTileEndsMovement :: GameTile -> HexAddr -> PlayerId -> Bool
 gameTileEndsMovement gt loc p =
   case hexTerrain of
     _ -> case hexFeature of

@@ -8,9 +8,11 @@ module Land
   , isRevealed
 
     -- * Moving players
+{-
   , placePlayer
   , removePlayer
   , movePlayer
+-}
   , provoked
 
     -- * Time
@@ -20,7 +22,7 @@ module Land
     -- * Info about tiles
   , getFeatureAt
   , getRevealedEnemiesAt
-  , locationCardBonus
+--  , locationCardBonus
 
     -- * Combat
   , EnemyLifeSpan(..)
@@ -31,11 +33,12 @@ module Land
 
   ) where
 
+import Common.Basics(PlayerId)
+
 import  Terrain
 import  HexContent
 import  GameTile
 import  Enemies( Enemy(..), EnemyType(..), allEnemies, allEnemyTypes )
-import  Player
 import  Ruins(Ruins, ruins, Objectve(..))
 import  Common(Time(..), Visibility(..))
 
@@ -273,7 +276,7 @@ data CombatInfo = CombatInfo
 
 
 -- | Reveal all hidden enemies, remove them from map etc.
-startCombatAt :: PlayerName -> Addr -> Land -> Perhaps (CombatInfo, Land)
+startCombatAt :: PlayerId -> Addr -> Land -> Perhaps (CombatInfo, Land)
 startCombatAt pn a l =
   do i <- perhaps "Invalid address." $ getHexInfo a l
      (es1,l1) <- spawnCombatEnemies pn i l
@@ -289,7 +292,7 @@ startCombatAt pn a l =
     in ((hexLandInfo, zip es (repeat EnemyMultiCombat)), c)
 
 
-spawnCombatEnemies :: PlayerName -> HexInfo -> Land ->
+spawnCombatEnemies :: PlayerId -> HexInfo -> Land ->
                                       Perhaps ([(Enemy,EnemyLifeSpan)],Land)
 spawnCombatEnemies pn HexInfo { hexLandInfo = HexLandInfo { .. }, .. } l =
     case hexFeature of
@@ -426,23 +429,26 @@ updateAddr' Addr { .. } f Land { .. } =
      return (res, Land { theMap = Map.insert addrGlobal gt1 theMap, .. })
 
 
+{-
 -- | Place a player on the map.  If during the day, reveal *adjecent*
 -- relevant locations.  It does not reveal enemies *on* the location.
-placePlayer :: Player -> Land -> Land
+placePlayer :: PlayerId -> Land -> Land
 placePlayer p = revealHiddenNeighbours loc
               . revealHidden loc
               . updateAddr loc (hexAddPlayer p . hexContent)
   where loc = playerLocation p
 
 -- | Remove a player from the map.
-removePlayer :: Player -> Land -> Land
+removePlayer :: PlayerId -> Land -> Land
 removePlayer p = updateAddr (playerLocation p) (hexRemovePlayer p . hexContent)
+-}
 
+{-
 {- | Move a player to the given address.  Most of the time the address
 will be adjacent to the player, however, this might not be the case if
 "Space Bending" is activated.
 Fails if the address is not on the map. -}
-movePlayer :: Player -> Addr -> Land -> Perhaps (Player, Land)
+movePlayer :: PlayerId -> Addr -> Land -> Perhaps (PlayerId, Land)
 movePlayer p newLoc l
   | isRevealed newLoc l = Ok (p1, placePlayer p1 l1)
   | otherwise           = Failed "This address is not on the map."
@@ -450,7 +456,7 @@ movePlayer p newLoc l
   l1      = removePlayer p l
   p1      = playerSetLoc (isSafe (playerName p) newLoc l1) newLoc p
 
-
+-}
 
 
 -- | Compute which addresses start wars, if we move from one location
@@ -502,7 +508,7 @@ getTime :: Land -> Time
 getTime Land { .. } = timeOfDay
 
 -- | Is this a safe location for the given player.
-isSafe :: PlayerName -> Addr -> Land -> Bool
+isSafe :: PlayerId -> Addr -> Land -> Bool
 isSafe p Addr { .. } Land { .. } =
   case Map.lookup addrGlobal theMap of
     Nothing -> False
@@ -516,7 +522,7 @@ searchLand p Land { .. } =
   ]
 
 -- | How many keeps are owned by this player.
-numberOfOwnedKeeps :: PlayerName -> Land -> Int
+numberOfOwnedKeeps :: PlayerId -> Land -> Int
 numberOfOwnedKeeps p = length . searchLand hasKeep
   where
   hasKeep h =
@@ -525,9 +531,10 @@ numberOfOwnedKeeps p = length . searchLand hasKeep
       _         -> False
 
 
+{-
 -- | How many extra cards does a player get based on their location
 -- (i.e., due to conquered keeps and cities)
-locationCardBonus :: Player -> Land -> Int
+locationCardBonus :: PlayerId -> Land -> Int
 locationCardBonus p l = maximum $ map bounus
                                 $ loc : [ neighbour loc d | d <- allDirections ]
   where
@@ -551,4 +558,4 @@ locationCardBonus p l = maximum $ map bounus
           _ -> Nothing
 
 
-
+-}

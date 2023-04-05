@@ -12,13 +12,12 @@ module DeedDecks
   , findDeed
   ) where
 
+import Data.Text(Text)
 import Data.Maybe (mapMaybe)
 import Data.List (find, (\\))
 
 import Common
 import Deed
-import Player (PlayerName)
-
 
 
 findDeed :: DeedName -> Maybe Deed
@@ -148,7 +147,7 @@ allDeeds = wound : basicActions ++ advancedActions ++ spells ++ artifacts
 makeCustomDeck :: [DeedName] -> [Deed]
 makeCustomDeck = mapMaybe (\x -> find ((x ==) . deedName) allDeeds)
 
-makeDeckFor :: PlayerName -> [Deed]
+makeDeckFor :: Text -> [Deed]
 makeDeckFor name =
   makeCustomDeck
     case name of

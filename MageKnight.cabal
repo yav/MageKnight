@@ -42,7 +42,6 @@ library
     HexContent,
     Terrain,
 
-    Player,
     Tactic,
     Fight,
 
