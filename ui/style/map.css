@@ -16,10 +16,57 @@
   position: absolute;
 }
 
-.tile.CountryTile.Name1 {
-  background-image: url("../img/map-tiles/country/1.png");
+.tile .hex {
+  position: absolute;
+  width:  calc(var(--tileSize_px) / 3);
+  height: calc(var(--tileSize_px) * 0.4);
+  clip-path: polygon(0 25%, 50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%);
+);
 }
 
-.tile.CountryTile.NameA {
-  background-image: url("../img/map-tiles/country/A.png");
+.tile .hex:hover {
+  background-color: rgba(0,0,0,0.5);
 }
+
+.tile .hex.Center {
+  left: calc(var(--tileSize_px) / 3);
+  top:  calc(var(--tileSize_px) * 0.3);
+}
+
+.tile .hex.E {
+  left: calc(2 * var(--tileSize_px) / 3);
+  top:  calc(0.3 * var(--tileSize_px));
+}
+
+.tile .hex.W {
+  left: 0;
+  top:  calc(0.3 * var(--tileSize_px));
+}
+
+.tile .hex.NE {
+  left: calc(1.5 * var(--tileSize_px) / 3);
+  top:  0;
+}
+
+.tile .hex.NW {
+  left: calc(0.5 * var(--tileSize_px) / 3);
+  top:  0;
+}
+
+.tile .hex.SE {
+  left: calc(1.5 * var(--tileSize_px) / 3);
+  top:  calc(0.6 * var(--tileSize_px));
+}
+
+.tile .hex.SW {
+  left: calc(0.5 * var(--tileSize_px) / 3);
+  top:  calc(0.6 * var(--tileSize_px));
+}
+
+
+
+
+
+
+
+

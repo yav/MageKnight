@@ -3,7 +3,7 @@ function newMap() {
   const domMap = document.getElementById("map")
   const dim    = domMap.getBoundingClientRect()
   let glob_x = 0
-  let glob_y = dim.height - constant.tileSize * 7/10
+  let glob_y = 0
 
   const tiles = {}
 
@@ -37,11 +37,12 @@ function newMap() {
     }
     [x_pos,y_pos] = tileLoc(x,y)
 
-    const [tile,els]   = uiFromTemplateNested("map-tile")
-    tile.classList.add(t.tileType)
-    tile.classList.add("Name" + t.tileName)
-    tile.style.left = x_pos + "px"
-    tile.style.top  = y_pos + "px"
+    const [tile,els] = uiFromTemplateNested("map-tile")
+    const url = "img/map-tiles/" + t.tileType + "/" + t.tileName + ".png"
+    const style = tile.style
+    style.backgroundImage = "url(\"" + url + "\")"
+    style.left = x_pos + "px"
+    style.top  = y_pos + "px"
     domMap.appendChild(tile)
 
     cols[y] = { tile: t, dom: tile }
@@ -52,12 +53,12 @@ function newMap() {
   }
 
   const ex1 = { tileType: "CountryTile", tileName: "A" }
-  const ex2 = { tileType: "CountryTile", tileName: "1" }
-  setTile(ex1,0,0)
-  setTile(ex1,1,0)
-  setTile(ex1,2,0)
-  setTile(ex1,3,0)
-  setTile(ex1,0,1)
+  for (let x = 0; x < 3; ++x) {
+    for (let y = 0; y < 3; ++y) {
+      const ex2 = { tileType: "CountryTile", tileName: 1 + (x + y) % 9 }
+      setTile(ex2,x,y)
+    }
+  }
 
   const obj = {}
   return obj
