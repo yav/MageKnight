@@ -12,6 +12,8 @@ function setupConstants() {
   constant.buttonHeight    = 32
   constant.buttonWidth     = 64
 
+  constant.tileSize        = 300
+
   const glob = document.documentElement.style
   for (c in constant) {
     glob.setProperty("--" + c, constant[c])

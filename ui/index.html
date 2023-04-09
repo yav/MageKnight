@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8" />
+<link rel="stylesheet" href="style/map.css">
 <link rel="stylesheet" href="style/layout.css">
 <link rel="stylesheet" href="style/common.css">
 <link rel="stylesheet" href="style/question.css">
@@ -19,6 +20,7 @@
 <script src="source.js"></script>
 <script src="manaPool.js"></script>
 <script src="enemy.js"></script>
+<script src="map.js"></script>
 <script src="cards.js"></script>
 <script src="hand.js"></script>
 <script src="question.js"></script>
@@ -52,7 +54,9 @@
     <div id="multi-button" class="hidden button">...</div>
   </div>
 </div>
-<div class="rhs"></div>
+<div class="rhs">
+  <div id="map"></div>
+</div>
 
 <!-- Templates.  These are not displayed directly but rather cloned -->
 <div class="hidden">
@@ -76,6 +80,8 @@
 
   <div id="card-small"        class="card small"></div>
   <div id="card-element"      class="card element"></div>
+
+  <div id="map-tile" class="tile"></div>
 
 </div>
 </body>

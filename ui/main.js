@@ -23,6 +23,7 @@ function uiRedraw(state) {
     gui.hand      = newHand()
     gui.source    = newSource()
     gui.manaPool  = newManaPool()
+    gui.map       = newMap()
     initialized = true
   }
 

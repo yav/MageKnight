@@ -1,0 +1,25 @@
+#map {
+  left:0;
+  top: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  overflow-x: scroll;
+  overflow-y: scroll;
+}
+
+.tile {
+  width: var(--tileSize_px);
+  height: var(--tileSize_px);
+  background-size: var(--tileSize_px) var(--tileSize_px);
+  position: absolute;
+}
+
+.tile.CountryTile.Name1 {
+  background-image: url("../img/map-tiles/country/1.png");
+}
+
+.tile.CountryTile.NameA {
+  background-image: url("../img/map-tiles/country/A.png");
+}
