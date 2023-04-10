@@ -1,4 +1,5 @@
 const mana = [ "Red", "Green", "White", "Blue", "Gold", "Black" ]
+const hex_locs = [ "Center", "NE", "E", "SE", "SW", "W", "NW" ]
 
 const constant = {}
 
