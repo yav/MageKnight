@@ -3,6 +3,10 @@ module HexContent
     HexContent
   , hexEmpty
 
+    -- * Ownership
+  , hexAddShield
+  , hexHasShield
+
     -- * Enemies
   , hexWithEnemy
   , hexAddEnemyFromPool
@@ -10,17 +14,6 @@ module HexContent
   , hexTakeEnemies
   , hexHasEnemies
   , hexActiveEnemies
-
-    -- * Players
-  , hexAddPlayer
-  , hexRemovePlayer
-  , hexHasPlayers
-
-    -- * Shields
-  , hexAddShield
-  , hexRemoveShield
-  , hexHasShield
-  , hexOwners
 
     -- * Ruins
   , hexWithRuins
@@ -32,14 +25,9 @@ module HexContent
   ) where
 
 import           Data.Maybe ( fromMaybe )
-import           Data.List ( delete, sortBy, groupBy, nub )
 import           Data.Map(Map)
-import           Data.Function ( on )
-import           Data.Set ( Set )
-import qualified Data.Set as Set
 import qualified Data.Map as Map
 
-import Common.Basics
 import Common.Bag
 
 import Common
@@ -55,63 +43,25 @@ type EnemyPool = Map EnemyType (ResourceQ Enemy)
 
 -- | The contents of a single hex cell.
 data HexContent = HexContent
-  { hexShields  :: [ PlayerId ]
-    -- ^ In reversed order.  The order is used to break ties when
-    -- computing city leaders.
-
+  { hexShield   :: Bool
   , hexEnemies  :: Bag (Visibility, Enemy)
   , hexRuins    :: Maybe (Visibility, Ruins)
-  , hexPlayers  :: Set PlayerId
   }
 
 -- | An empty hex cell.
 hexEmpty :: HexContent
 hexEmpty = HexContent
-  { hexShields = []
+  { hexShield  = False
   , hexEnemies = bagEmpty
   , hexRuins   = Nothing
-  , hexPlayers = Set.empty
   }
 
--- | Add a shield for the given player.
-hexAddShield :: PlayerId -> HexContent -> HexContent
-hexAddShield s HexContent { .. } =
-  HexContent { hexShields = s : hexShields, .. }
+--------------------------------------------------------------------------------
+hexAddShield :: HexContent -> HexContent
+hexAddShield h = h { hexShield = True }
 
--- | Remove a shield for the given player.
-hexRemoveShield :: PlayerId -> HexContent -> HexContent
-hexRemoveShield s HexContent { .. } =
-  HexContent { hexShields = delete s hexShields, .. }
-
--- | Does the player have a shield on this hex.
-hexHasShield :: PlayerId -> HexContent -> Bool
-hexHasShield s h = s `elem` hexShields h
-
-{- | Find players that have shields on this hex.
-If there are still monsters present, then we return no owners.
-If there are multiple owners, the first player in the list
-will be the one with most shields, or in the case of a draw
-whoever got a shield first (i.e., the city leader of a city). -}
-hexOwners :: HexContent -> [PlayerId]
-hexOwners HexContent { .. }
-  | bagIsEmpty hexEnemies =
-    case hexShields of
-      [s] -> [s]    -- the common case
-
-      -- For cities, and also Maze/Labyrint from expansion, there may be
-      -- multiple shields. We arrange these so that the "city" leader
-      -- is first in the list.
-      _ -> concatMap (reorder . map fst)  -- 
-         $ groupBy ((==) `on` snd)  -- group by same number of shields
-         $ sortBy moreFirst         -- sort players, most shields first
-         $ bagToNumList             -- count shields per player
-         $ bagFromList hexShields
-
-  | otherwise = []
-
-  where
-  moreFirst (_,m) (_,n) = compare n m
-  reorder ps            = filter (`elem` ps) (nub (reverse hexShields))
+hexHasShield :: HexContent -> Bool
+hexHasShield = hexShield
 
 --------------------------------------------------------------------------------
 
@@ -161,22 +111,6 @@ hexRuinsObjective HexContent { .. } =
   case hexRuins of
     Nothing    -> []
     Just (_, Ruins { .. } ) -> bagToList ruinsIn
-
---------------------------------------------------------------------------------
-
--- | Add a player figure to the cell.
-hexAddPlayer :: PlayerId -> HexContent -> HexContent
-hexAddPlayer p HexContent { .. } =
-  HexContent { hexPlayers = Set.insert p hexPlayers, .. }
-
--- | Remove a player figure.
-hexRemovePlayer :: PlayerId -> HexContent -> HexContent
-hexRemovePlayer p HexContent { .. } =
-  HexContent { hexPlayers = Set.delete p hexPlayers, .. }
-
--- | Are there any players on this hex.
-hexHasPlayers :: HexContent -> Bool
-hexHasPlayers HexContent { .. } = not (Set.null hexPlayers)
 
 --------------------------------------------------------------------------------
 

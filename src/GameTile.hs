@@ -72,40 +72,39 @@ gameTileSearch p GameTile { .. } =
       ]
 
 
--- | Is this a safe location for the given player.
-gameTileIsSafe :: GameTile -> HexAddr -> PlayerId -> Bool
-gameTileIsSafe gt loc p =
+-- | Is this a safe location for the player.
+gameTileIsSafe :: GameTile -> HexAddr -> Bool
+gameTileIsSafe gt loc =
   case hexTerrain of
     Lake      -> False
     Mountain  -> False
     Ocean     -> False
     _ -> case hexFeature of
            Nothing -> True
-           Just f  -> not (hexHasPlayers hexContent) &&
-             (case f of
-                Keep             -> hexHasShield p hexContent
-                MageTower        -> noEnemies
-                RampagingEnemy _ -> noEnemies
-                City _    -> noEnemies
-                _                -> True)
+           Just f  ->
+             case f of
+               Keep             -> noEnemies
+               MageTower        -> noEnemies
+               RampagingEnemy _ -> noEnemies
+               City _    -> noEnemies
+               _                -> True
   where
   HexInfo { hexLandInfo = HexLandInfo { .. },  .. } = gameTileInfo loc gt
   noEnemies      = not (hexHasEnemies hexContent)
 
 -- | Would (normal) moving on this tile end the movement phase?
 -- XXX: does not aacount for provoking
-gameTileEndsMovement :: GameTile -> HexAddr -> PlayerId -> Bool
-gameTileEndsMovement gt loc p =
-  case hexTerrain of
-    _ -> case hexFeature of
-           Just MageTower          -> enemies
-           Just Keep               -> enemies || not (hexHasShield p hexContent)
-           Just (RampagingEnemy _) -> enemies
-           Just (City _)           -> enemies
-           _                       -> False
+gameTileEndsMovement :: GameTile -> HexAddr -> Bool
+gameTileEndsMovement gt loc =
+  case hexFeature of
+    Just MageTower          -> enemies
+    Just Keep               -> enemies
+    Just (RampagingEnemy _) -> enemies
+    Just (City _)           -> enemies
+    _                       -> False
 
   where HexInfo { hexLandInfo = HexLandInfo { .. }, .. } = gameTileInfo loc gt
-        enemies        = hexHasEnemies hexContent
+        enemies = hexHasEnemies hexContent
 
 -- | Can we walk onto this hex at all?
 -- XXX: Not quite right;

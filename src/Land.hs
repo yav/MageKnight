@@ -7,12 +7,6 @@ module Land
   , exploreAt
   , isRevealed
 
-    -- * Moving players
-{-
-  , placePlayer
-  , removePlayer
-  , movePlayer
--}
   , provoked
 
     -- * Time
@@ -26,8 +20,8 @@ module Land
 
     -- * Combat
   , EnemyLifeSpan(..)
-  , CombatInfo(..)
-  , startCombatAt
+  -- , CombatInfo(..)
+  -- , startCombatAt
   , summonCreature
   , discardEnemy
 
@@ -275,6 +269,7 @@ data CombatInfo = CombatInfo
   }
 
 
+{-
 -- | Reveal all hidden enemies, remove them from map etc.
 startCombatAt :: PlayerId -> Addr -> Land -> Perhaps (CombatInfo, Land)
 startCombatAt pn a l =
@@ -292,62 +287,61 @@ startCombatAt pn a l =
     in ((hexLandInfo, zip es (repeat EnemyMultiCombat)), c)
 
 
-spawnCombatEnemies :: PlayerId -> HexInfo -> Land ->
+spawnCombatEnemies :: HexInfo -> Land ->
                                       Perhaps ([(Enemy,EnemyLifeSpan)],Land)
-spawnCombatEnemies pn HexInfo { hexLandInfo = HexLandInfo { .. }, .. } l =
+spawnCombatEnemies HexInfo { hexLandInfo = HexLandInfo { .. }, .. } l =
     case hexFeature of
-           Nothing -> none
-           Just f ->
-             case f of
+      Nothing -> none
+      Just f ->
+        case f of
 
-               MagicalGlade        -> none
-               Mine _              -> none
-               Village             -> none
-               City _              -> none
+          MagicalGlade        -> none
+          Mine _              -> none
+          Village             -> none
+          City _              -> none
 
-               Monastery
-                 | isOwned         -> none
-                 | otherwise       -> spawn EnemySingleCombat [Mage]
+          Monastery
+            | isOwned         -> none
+            | otherwise       -> spawn EnemySingleCombat [Mage]
 
-               Keep | ownedByOther -> spawn EnemySingleCombat [Guardian]
-                    | otherwise    -> none
+          Keep | isOwned      -> none
+               | otherwise    -> EnemySingleCombat [Guardian]
 
-               MageTower           -> none
+          MageTower           -> none
 
-               -- Dungeons and tombs always bring a new creature,
-               -- even when conquered.
-               Dungeon             -> spawn EnemySingleCombat [Underworld]
-               Tomb                -> spawn EnemySingleCombat [Draconum]
+          -- Dungeons and tombs always bring a new creature,
+          -- even when conquered.
+          Dungeon             -> spawn EnemySingleCombat [Underworld]
+          Tomb                -> spawn EnemySingleCombat [Draconum]
 
-               MonsterDen
-                | not (isOwned || hasEnemies) ->
-                   spawn EnemyMultiCombat [Underworld]
-                | otherwise -> none
+          MonsterDen
+           | not (isOwned || hasEnemies) ->
+              spawn EnemyMultiCombat [Underworld]
+           | otherwise -> none
 
-               SpawningGrounds
-                | not isOwned ->
-                  let enemyNum = length (hexActiveEnemies hexContent)
-                      new      = 2 - enemyNum
-                  in spawn EnemyMultiCombat (replicate new Underworld)
-                | otherwise -> none
+          SpawningGrounds
+           | not isOwned ->
+             let enemyNum = length (hexActiveEnemies hexContent)
+                 new      = 2 - enemyNum
+             in spawn EnemyMultiCombat (replicate new Underworld)
+           | otherwise -> none
 
-               AncientRuins
-                 | not isOwned && not hasEnemies ->
-                    spawn EnemyMultiCombat
-                              [ e | Fight e <- hexRuinsObjective hexContent ]
-                 | otherwise -> none
+          AncientRuins
+            | not isOwned && not hasEnemies ->
+               spawn EnemyMultiCombat
+                         [ e | Fight e <- hexRuinsObjective hexContent ]
+            | otherwise -> none
 
-               RampagingEnemy _ -> none
+          RampagingEnemy _ -> none
   where
   none         = return ([], l)
-  owners       = hexOwners hexContent
-  isOwned      = not (null owners)
+  isOwned      = hexHasShield hexContent
   ownedByOther = not (null (delete pn owners))
   hasEnemies   = hexHasEnemies hexContent
 
   spawn v ts   = do (es,l1) <- spawnCreatures ts l
                     return (zip es (repeat v), l1)
-
+-}
 
 -- | Spawn enemies of the required types.
 spawnCreatures :: [EnemyType] -> Land -> Perhaps ([Enemy], Land)
@@ -429,36 +423,6 @@ updateAddr' Addr { .. } f Land { .. } =
      return (res, Land { theMap = Map.insert addrGlobal gt1 theMap, .. })
 
 
-{-
--- | Place a player on the map.  If during the day, reveal *adjecent*
--- relevant locations.  It does not reveal enemies *on* the location.
-placePlayer :: PlayerId -> Land -> Land
-placePlayer p = revealHiddenNeighbours loc
-              . revealHidden loc
-              . updateAddr loc (hexAddPlayer p . hexContent)
-  where loc = playerLocation p
-
--- | Remove a player from the map.
-removePlayer :: PlayerId -> Land -> Land
-removePlayer p = updateAddr (playerLocation p) (hexRemovePlayer p . hexContent)
--}
-
-{-
-{- | Move a player to the given address.  Most of the time the address
-will be adjacent to the player, however, this might not be the case if
-"Space Bending" is activated.
-Fails if the address is not on the map. -}
-movePlayer :: PlayerId -> Addr -> Land -> Perhaps (PlayerId, Land)
-movePlayer p newLoc l
-  | isRevealed newLoc l = Ok (p1, placePlayer p1 l1)
-  | otherwise           = Failed "This address is not on the map."
-  where
-  l1      = removePlayer p l
-  p1      = playerSetLoc (isSafe (playerName p) newLoc l1) newLoc p
-
--}
-
-
 -- | Compute which addresses start wars, if we move from one location
 -- to another normally (i.e., "walking").
 provoked :: Land -> Addr -> Addr -> [(Addr,[Enemy])]
@@ -507,12 +471,12 @@ setTime t Land { .. } = Land { timeOfDay = t, .. }
 getTime :: Land -> Time
 getTime Land { .. } = timeOfDay
 
--- | Is this a safe location for the given player.
-isSafe :: PlayerId -> Addr -> Land -> Bool
-isSafe p Addr { .. } Land { .. } =
+-- | Is this a safe location for the player.
+isSafe :: Addr -> Land -> Bool
+isSafe Addr { .. } Land { .. } =
   case Map.lookup addrGlobal theMap of
     Nothing -> False
-    Just gt -> gameTileIsSafe gt addrLocal p
+    Just gt -> gameTileIsSafe gt addrLocal
 
 
 searchLand :: (HexInfo -> Bool) -> Land -> [Addr]
@@ -521,41 +485,3 @@ searchLand p Land { .. } =
                 , addrLocal       <- gameTileSearch p t
   ]
 
--- | How many keeps are owned by this player.
-numberOfOwnedKeeps :: PlayerId -> Land -> Int
-numberOfOwnedKeeps p = length . searchLand hasKeep
-  where
-  hasKeep h =
-    case hexFeature (hexLandInfo h) of
-      Just Keep -> hexHasShield p (hexContent h)
-      _         -> False
-
-
-{-
--- | How many extra cards does a player get based on their location
--- (i.e., due to conquered keeps and cities)
-locationCardBonus :: PlayerId -> Land -> Int
-locationCardBonus p l = maximum $ map bounus
-                                $ loc : [ neighbour loc d | d <- allDirections ]
-  where
-  loc = playerLocation p
-
-  bounus Addr { .. } =
-    fromMaybe 0 $
-    do gt <- Map.lookup addrGlobal (theMap l)
-       let HexInfo { hexLandInfo = HexLandInfo { .. }, .. } =
-                                                    gameTileInfo addrLocal gt
-           pn             = playerName p
-       case hexFeature of
-          Just (City _) ->
-            case hexOwners hexContent of
-               q : qs | pn == q       -> Just 2
-                      | pn `elem` qs  -> Just 1
-               _                      -> Nothing
-
-          Just Keep
-            | hexHasShield pn hexContent -> Just (numberOfOwnedKeeps pn l)
-          _ -> Nothing
-
-
--}

@@ -15,6 +15,7 @@ module Terrain
     TileType(..),
     HexLandInfo(..),
     terrainCostsDuring,
+    tileTerrain,
 
     -- * Tiles
     tileA, tileB, countryTiles, coreNonCityTiles, cityTiles,
@@ -26,24 +27,28 @@ module Terrain
     validPlacement
   ) where
 
-import Data.Array (array, (!))
+import GHC.Generics
 import Data.Text (Text)
+import Data.Text qualified as Text
+import Text.Read(readMaybe)
 import Data.Set ( Set )
 import Data.Set qualified as Set
 import Data.Map ( Map )
 import Data.Map qualified as Map
 
 import Data.Aeson qualified as JS
+import Data.Aeson.Types qualified as JS
 
 import Common
 import Enemies(EnemyType(Orc,Draconum))
+import Data.Aeson (FromJSON,ToJSON)
 
 
 
 type TileAddr       = (Int,Int)
 
 data Dir            = NE | E | SE | SW | W | NW
-                      deriving (Eq,Ord,Show,Enum,Bounded)
+  deriving (Eq,Ord,Show,Read,Enum,Bounded,Generic,FromJSON,ToJSON)
 
 data HexAddr        = Center | Border Dir
                       deriving (Eq,Ord,Show)
@@ -52,12 +57,12 @@ data HexNeighbour   = Local HexAddr | Foreign Int Int Dir
                       deriving (Eq,Ord,Show)
 
 data Addr           = Addr { addrGlobal :: TileAddr, addrLocal :: HexAddr }
-                      deriving (Eq,Ord,Show)
+                      deriving (Eq,Ord,Show,Generic,FromJSON,ToJSON)
 
 data Terrain        = Plains | Hills | Forest | Wasteland | Desert | Swamp
                     | Lake | Mountain
                     | Ocean {- for tile A and B -}
-                      deriving (Eq,Ord,Show)
+                      deriving (Eq,Ord,Show,Generic,ToJSON)
 
 data Feature        = MagicalGlade | Mine BasicMana
                     | Village | Monastery
@@ -66,23 +71,27 @@ data Feature        = MagicalGlade | Mine BasicMana
                     | MonsterDen | SpawningGrounds
                     | AncientRuins
                     | RampagingEnemy EnemyType
-                      deriving (Eq,Show)
+                      deriving (Eq,Show,Generic,ToJSON)
 
 data TileType       = BasicTile | CoreTile
+                      deriving (Generic,ToJSON)
 
 data HexLandInfo    = HexLandInfo { hexTerrain :: Terrain
                                   , hexFeature :: Maybe Feature
-                                  }
+                                  } deriving (Generic, ToJSON)
 
-data Tile           = Tile { tileName     :: Text
-                           , tileType     :: TileType
-                           , tileTerrain  :: HexAddr -> HexLandInfo
-                           }
+data Tile           = Tile { tileName        :: Text
+                           , tileType        :: TileType
+                           , tileTerrainMap  :: Map HexAddr HexLandInfo
+                           } deriving (Generic,ToJSON)
+
+tileTerrain :: Tile -> HexAddr -> HexLandInfo
+tileTerrain t x = Map.findWithDefault (hexContent Ocean) x (tileTerrainMap t)
 
 placeHolderTile :: TileType -> Tile
 placeHolderTile ty = Tile { tileName = "placeholder"
                           , tileType = ty
-                          , tileTerrain = \_ -> hexContent Ocean
+                          , tileTerrainMap = mempty
                           }
 
 allDirections :: [Dir]
@@ -233,9 +242,38 @@ validPlacement sh explored t backup pt@(x,y) =
 
 --------------------------------------------------------------------------------
 
+instance ToJSON HexAddr where
+  toJSON = JS.toJSON . hexAddrToText
+
+instance FromJSON HexAddr where
+  parseJSON v =
+    JS.withText "HexAddr" (\x ->
+      case hexAddrFromText x of
+        Just yes -> pure yes
+        _        -> fail "Invalid hex addr"
+      )
+    v
+
+
+--------------------------------------------------------------------------------
+
+hexAddrToText :: HexAddr -> Text
+hexAddrToText x =
+  case x of
+    Center -> "Center"
+    Border y -> Text.pack (show y)
+
+hexAddrFromText :: Text -> Maybe HexAddr
+hexAddrFromText txt =
+  case txt of
+    "Center" -> pure Center
+    _        -> Border <$> readMaybe (Text.unpack txt)
 
 class IsHexAddr a where
   hexAddr :: a -> HexAddr
+
+instance JS.ToJSONKey HexAddr where
+  toJSONKey = JS.toJSONKeyText hexAddrToText
 
 instance IsHexAddr Dir where
   hexAddr = Border
@@ -261,19 +299,11 @@ instance IsHexContent (Terrain,EnemyType) where
 
 type Hex = (HexAddr, HexLandInfo)
 
-listTileFun :: [Hex] -> HexAddr -> HexLandInfo
-listTileFun xs = \d -> arr ! cvt d
-  where
-  arr   = array (0,1 + fromEnum (maxBound :: Dir)) [ (cvt c,a) | (c,a) <- xs ]
-  cvt c = case c of
-            Center   -> 0
-            Border b -> 1 + fromEnum b
-
 (|->) :: (IsHexAddr a, IsHexContent b) => a -> b -> Hex
 a |-> b = (hexAddr a, hexContent b)
 
 tile :: Text -> TileType -> [Hex] -> Tile
-tile tileName tileType hexes = Tile { tileTerrain = listTileFun hexes, .. }
+tile tileName tileType hexes = Tile { tileTerrainMap = Map.fromList hexes, .. }
 
 
 tileA :: Tile
