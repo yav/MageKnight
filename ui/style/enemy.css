@@ -4,6 +4,10 @@
   border-radius: 50%;
   border: 0px;
   background-size: cover;
+  width:  var(--enemySize_px);
+  height: var(--enemySize_px);
+  left: calc( (var(--hexWidth_px) - var(--enemySize_px)) / 2 );
+  top: calc( (var(--hexHeight_px) - var(--enemySize_px)) / 2 );
 }
 
 .enemy .help {

@@ -45,7 +45,7 @@ function uiUpdate(state) {
   gui.source.set(state._source)
   gui.hand.set(state._hand)
   gui.manaPool.set(state._mana)
-
+  gui.map.set(state._land.landMap)
 }
 
 

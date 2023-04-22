@@ -14,6 +14,12 @@ function setupConstants() {
   constant.buttonWidth     = 64
 
   constant.tileSize        = 300
+  constant.hexWidth        = constant.tileSize / 3
+  constant.hexHeight       = constant.tileSize  * 0.4
+  constant.charWidth       = constant.hexWidth  * 0.6
+  constant.charHeight      = constant.hexHeight * 0.6
+
+  constant.enemySize       = constant.hexWidth * 0.8
 
   const glob = document.documentElement.style
   for (c in constant) {

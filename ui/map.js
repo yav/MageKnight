@@ -25,38 +25,125 @@ function newMap() {
     }
   }
 
-  function setContent(x,y,c) {
-    const cur = tiles[x][y].content
-    for (let li = 0; li < hex_locs.length; ++li) {
-      const l = hex_locs[li]
-      const have = cur[l]
-      const need = c[l]
-      if (have !== undefined &&
-          need !== undefined &&
-          have.name === need.name ||
-          have === undefined &&
-          need === undefined) continue
+  // XXX: Drawing of multiple enemies
+  // Currently they'd end up on top of each other
+  // XXX: Tool tip should go with hex, not with enemy
+  function newEnemySet(hex) {
+    const have = {}
 
-      if (have !== undefined) have.dom.remove()
-      if (need === undefined) {
-        cur[l] = undefined
-        continue
+    function enemyId(e) {
+      switch (e.tag) {
+        case "VisibleEnemy": return e.contents.enemyName
+        default: return e.contents
       }
-      console.log(need)
-      const dom = uiFromTemplate("character")
-      const url = "img/characters/" + need + "/figure.png"
-      dom.style.backgroundImage = "url(\"" + url + "\")"
-      tiles[x][y].els[l].appendChild(dom)
-      cur[l] = { name: need, dom: dom }
+    }
+
+    function enemyDom(e) {
+      switch (e.tag) {
+        case "VisibleEnemy": return newEnemy(e.contents)
+        default:
+          const dom = uiFromTemplate("enemy")
+          const url = "img/enemies/" + e.contents + "/Type.jpg"
+          dom.style.backgroundImage = "url(\"" + url + "\")"
+          return dom
+      }
+    }
+
+    return (need) => {
+      console.log("Set enemies,",need)
+
+      const done = {}
+
+      for (let i = 0; i < need.length; ++i) {
+        const [e,n] = need[i]
+        const nm = enemyId(e)
+        done[nm] = true
+        let haveE = have[nm]
+        if (haveE === undefined) {
+          const dom = enemyDom(e)
+          haveE = newQuantityGrouped(dom)
+          have[nm] = haveE
+          hex.appendChild(haveE.dom)
+        }
+        haveE.set(n)
+      }
+
+      for (const nm in have) {
+        if (done[nm]) continue
+        have.dom.remove()
+        have[nm] = undefined
+      }
     }
   }
 
-  function setTile(x,y,t) {
+
+  function newShields(hex) {
+    let have = false
+    let dom  = null
+
+    return (need) => {
+      if (have) {
+        if (!need) dom.remove()
+      } else {
+        if (need) {
+          dom = undefined // XXX: draw shield
+          hex.appendChild(dom)
+        }
+      }
+      have = need
+    }
+  }
+
+  // XXX
+  function newRuins(hex) {
+    return (need) => {
+    }
+  }
+
+
+  function setContent(x,y,c) {
+    const gt  = tiles[x][y]
+    const cur = gt.content
+
+    for (let li = 0; li < hex_locs.length; ++li) {
+      const l = hex_locs[li]
+      let have   = cur[l]
+      const need = c[l]
+      const dom  = gt.els[l]
+
+      if (need === undefined) {
+        if (have === undefined) continue
+
+        // unlikely, tiles shouldn't disappear
+        dom.innerHTML = ""
+        have[l] = undefined
+        continue
+      }
+
+      if (have === undefined) {
+        have = { hRuins:   newRuins(dom)
+               , hShield:  newShields(dom)
+               , hEnemies: newEnemySet(dom)
+               }
+        cur[l] = have
+      }
+      have.hShield(need.hShield)
+      have.hRuins(need.hShield)
+      have.hEnemies(need.hEnemies)
+    }
+  }
+
+  function setTile(x,y,gt) {
+    const t       = gt.gameTile
+    const content = gt.gameTileContent
+
     let cols = tiles[x]
     if (cols === undefined) { cols = {}; tiles[x] = cols }
     let have = cols[y]
     if (have !== undefined) {
-      if (have.tile === t) return setContent(x,y,t.content)
+      if (have.tile.tileType === t.tileType &&
+          have.tile.tileName === t.tileName)
+          return setContent(x,y,t.content)
       have.dom.remove()
       cols[y] = undefined
     }
@@ -76,25 +163,18 @@ function newMap() {
     if (y_pos < 0) { glob_y = glob_y - y_pos }
     if (x_pos < 0 || y_pos < 0) shiftTiles()
 
-    setContent(x,y,t.content)
+    setContent(x,y,content)
   }
 
-  const ex1 = { tileType: "CountryTile", tileName: "A" }
-  for (let x = 0; x < 3; ++x) {
-    for (let y = 0; y < 3; ++y) {
-      const ex2 = { tileType: "CountryTile"
-                  , tileName: 1 + (x + y) % 9
-                  , content:
-                      { NW: "Arythea"
-                      , Center: "Goldyx"
-                      , SW: "Tovak"
-                      , E: "Norowas"
-                      }
-                  }
-      setTile(x,y,ex2)
+  function setMap(m) {
+    const n = m.length
+    for (let i = 0; i < n; ++i) {
+      const [[x,y],val] = m[i]
+      setTile(x,y,val)
     }
   }
 
   const obj = {}
+  obj.set = setMap
   return obj
 }

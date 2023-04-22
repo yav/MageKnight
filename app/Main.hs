@@ -33,19 +33,20 @@ main =
       withRNG_ rng
       do src  <- newSource 6
          mb <- setupLand (defaultLandSetup openMap3 5 5 [1])
+         let p = case ps of
+                   p1 : _ -> p1
+                   _      -> PlayerId "1"
          pure
            case mb of
              Failed msg -> Left (Text.unpack msg)
              Ok (la,_mon) ->
-               case ps of
-                 [p] -> Right State { playerId  = p
-                                    , _source   = src
-                                    , _sourceUsed = False
-                                    , _hand     = newHand deck
-                                    , _mana     = emptyManaPool
-                                    , _land     = la
-                                    }
-                 _   -> Left "need exactly 1 player"
+               Right State { playerId  = p
+                           , _source   = src
+                           , _sourceUsed = False
+                           , _hand     = newHand deck
+                           , _mana     = emptyManaPool
+                           , _land     = la
+                           }
   , appStart = gameLoop
   }
   where

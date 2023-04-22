@@ -20,8 +20,8 @@
   position: absolute;
   --mk-hex-w: calc(var(--tileSize_px) / 3);
   --mk-hex-h: calc(var(--tileSize_px) * 0.4);
-  width:  var(--mk-hex-w);
-  height: var(--mk-hex-h);
+  width:  var(--hexWidth_px);
+  height: var(--hexHeight_px);
   clip-path: polygon(0 25%, 50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%);
 );
 }
@@ -31,12 +31,12 @@
 }
 
 .tile .hex.Center {
-  left: calc(var(--tileSize_px) / 3);
+  left: var(--hexWidth_px);
   top:  calc(var(--tileSize_px) * 0.3);
 }
 
 .tile .hex.E {
-  left: calc(2 * var(--tileSize_px) / 3);
+  left: calc(2   * var(--hexWidth_px));
   top:  calc(0.3 * var(--tileSize_px));
 }
 
@@ -46,38 +46,36 @@
 }
 
 .tile .hex.NE {
-  left: calc(1.5 * var(--tileSize_px) / 3);
+  left: calc(1.5 * var(--hexWidth_px));
   top:  0;
 }
 
 .tile .hex.NW {
-  left: calc(0.5 * var(--tileSize_px) / 3);
+  left: calc(0.5 * var(--hexWidth_px));
   top:  0;
 }
 
 .tile .hex.SE {
-  left: calc(1.5 * var(--tileSize_px) / 3);
+  left: calc(1.5 * var(--hexWidth_px));
   top:  calc(0.6 * var(--tileSize_px));
 }
 
 .tile .hex.SW {
-  left: calc(0.5 * var(--tileSize_px) / 3);
+  left: calc(0.5 * var(--hexWidth_px));
   top:  calc(0.6 * var(--tileSize_px));
 }
 
 
 .character {
   position: absolute;
-  --mk-char-w: calc(var(--mk-hex-w) * 0.6);
-  --mk-char-h: calc(var(--mk-hex-h) * 0.6);
-  width: var(--mk-char-w);
-  height: var(--mk-char-h);
-  background-size: var(--mk-char-w) var(--mk-char-h);
-  left: calc( (var(--mk-hex-w) - var(--mk-char-w)) / 2);
+  width: var(--charWidth_px);
+  height: var(--charHeight_px);
+  background-size: var(--charWidth_px) var(--charHeight_px);
+  left: calc( (var(--hexWidth_px) - var(--charWidth_px)) / 2);
   bottom: 0;
   box-shadow: 0 0 5px 5px rgba(255,255,255,0.4);
   background-color: rgba(0,0,0,0.2);
-  border-radius: var(--mk-char-w);
+  border-radius: var(--charWidth_px);
 }
 
 

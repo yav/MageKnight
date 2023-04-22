@@ -1,11 +1,10 @@
 
 function newEnemy(e) {
-  const baseSize = 96
+  const baseSize = constant.enemySize
   const urlI = "img/enemies/" + e.enemyType + "/Type.jpg"
   const url = "img/enemies/" + e.enemyType + "/" + e.enemyName + ".jpg"
 
-  const dom = html.div("enemy")
-  html.setDim(dom,baseSize,baseSize)
+  const dom = uiFromTemplate("enemy")
   dom.style.backgroundImage = "url(\"" + url + "\")"
 
 
@@ -134,7 +133,5 @@ function newEnemy(e) {
   help.appendChild(titD)
 
   newTooltip(dom,help)
-
-  document.getElementById("rhs").appendChild(dom)
-
+  return dom
 }
