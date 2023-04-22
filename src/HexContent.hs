@@ -24,9 +24,12 @@ module HexContent
   , hexWithCity
   ) where
 
+import           GHC.Generics
 import           Data.Maybe ( fromMaybe )
 import           Data.Map(Map)
 import qualified Data.Map as Map
+
+import Data.Aeson qualified as JS
 
 import Common.Bag
 
@@ -106,7 +109,7 @@ hexRemoveRuins :: HexContent -> HexContent
 hexRemoveRuins HexContent { .. } = HexContent { hexRuins = Nothing, .. }
 
 -- | What needs to be completed to get a reward for the ruins.
-hexRuinsObjective :: HexContent -> [ Objectve ]
+hexRuinsObjective :: HexContent -> [ Objective ]
 hexRuinsObjective HexContent { .. } =
   case hexRuins of
     Nothing    -> []
@@ -193,5 +196,45 @@ hexWithCity color level pool
                , e 1 Underworld $ e 1 Mage $ e 3 Citizen []
                ]
   where e n t = (replicate n t ++)
+
+--------------------------------------------------------------------------------
+
+data RuinsView = HiddenRuins | VisibleRuins Ruins
+  deriving (Generic,JS.ToJSON)
+
+data EnemyView = HiddenEnemy EnemyType | VisibleEnemy Enemy
+  deriving (Eq,Ord,Generic,JS.ToJSON)
+
+data HexContentView = HexContentView
+  { hShield       :: Bool
+  , hEnemies      :: [ (EnemyView, Int) ]
+  , hRuins        :: Maybe RuinsView
+  }
+  deriving (Generic,JS.ToJSON)
+
+mkView :: HexContent -> HexContentView
+mkView hc = HexContentView
+  { hShield  = hexShield hc
+  , hEnemies = es
+  , hRuins  = mkRuins <$> hexRuins hc
+  }
+
+  where
+  es = Map.toList
+      $ Map.fromListWith (+)
+      [ (case vis of
+           Revealed -> VisibleEnemy e
+           Hidden   -> HiddenEnemy (enemyType e)
+                , n)
+               | ((vis,e),n) <- bagToNumList (hexEnemies hc) ]
+
+  mkRuins (vis,r) =
+    case vis of
+      Revealed -> VisibleRuins r
+      Hidden   -> HiddenRuins
+
+
+instance JS.ToJSON HexContent where
+  toJSON = JS.toJSON . mkView
 
 

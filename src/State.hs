@@ -9,6 +9,7 @@ import Common.Field(declareFields)
 import Hand
 import Source
 import ManaPool
+import Land
 
 data State = State
   { playerId    :: PlayerId
@@ -16,6 +17,7 @@ data State = State
   , _sourceUsed :: Bool
   , _hand       :: Hand
   , _mana       :: ManaPool
+  , _land       :: Land
   }
   deriving (Generic,ToJSON)
 

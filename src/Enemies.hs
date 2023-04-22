@@ -16,7 +16,21 @@ import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Aeson(ToJSON)
 
+import Common.Enum
+
 import Common(Element(..))
+
+--------------------------------------------------------------------------------
+data EnemyType  = Orc | Guardian | Mage | Underworld | Citizen | Draconum
+                  deriving (Eq,Ord,Show,Enum,Bounded)
+
+declareEnumText ''EnemyType
+
+allEnemyTypes :: [EnemyType]
+allEnemyTypes = [ minBound .. maxBound ]
+--------------------------------------------------------------------------------
+
+
 
 
 data Enemy = Enemy
@@ -35,14 +49,6 @@ instance Eq Enemy where
 instance Ord Enemy where
   compare x y = compare (enemyName x) (enemyName y)
 
-
---------------------------------------------------------------------------------
-data EnemyType  = Orc | Guardian | Mage | Underworld | Citizen | Draconum
-                  deriving (Eq,Ord,Show,Enum,Bounded,Generic,ToJSON)
-
-allEnemyTypes :: [EnemyType]
-allEnemyTypes = [ minBound .. maxBound ]
---------------------------------------------------------------------------------
 
 
 --------------------------------------------------------------------------------

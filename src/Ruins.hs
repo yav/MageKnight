@@ -1,19 +1,23 @@
 module Ruins
-  ( Objectve(..)
+  ( Objective(..)
   , Reward(..)
   , Ruins(..)
   , ruins
   ) where
 
 import Common.Bag
+import Common.Enum (declareEnumText)
+
+import GHC.Generics
+import Data.Aeson qualified as JS
 
 import Common
 import Enemies
 
 import Data.Text(Text)
 
-data Objectve = GiveMana BasicMana
-              | Fight EnemyType
+data Objective = GiveMana BasicMana
+               | Fight EnemyType
                 deriving (Eq,Ord,Show)
 
 data Reward   = RewardFame
@@ -24,11 +28,14 @@ data Reward   = RewardFame
               | RewardUnit
                 deriving (Eq,Ord,Show)
 
+declareEnumText ''Objective
+declareEnumText ''Reward
+
 data Ruins = Ruins
   { ruinsName :: Text
-  , ruinsIn   :: Bag Objectve
+  , ruinsIn   :: Bag Objective
   , ruinsOut  :: Bag Reward
-  } deriving Show
+  } deriving (Show, Generic, JS.ToJSON)
 
 instance Eq Ruins where
   x == y = ruinsName x == ruinsName y
@@ -39,7 +46,7 @@ instance Ord Ruins where
 infix 1 ===
 infix 2 -->
 
-(-->) :: [Objectve] -> [Reward] -> Ruins
+(-->) :: [Objective] -> [Reward] -> Ruins
 rIn --> rOut = Ruins { ruinsName = ""
                      , ruinsIn   = bagFromList rIn
                      , ruinsOut  = bagFromList rOut

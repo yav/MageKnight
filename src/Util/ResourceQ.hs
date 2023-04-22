@@ -7,28 +7,28 @@ module Util.ResourceQ
   , rqDiscard
   ) where
 
-import Util.Random
+import Common.RNGM
 
 data ResourceQ a = ResourceQ
   { qAvailable   :: [a]
   , qDiscarded   :: [a]
-  , qRandom      :: StdGen
+  , qRandom      :: RNG
   }
 
 
 rqEmpty :: Gen (ResourceQ a)
 rqEmpty =
-  do qRandom <- randStdGen
+  do qRandom <- splitRNG
      return ResourceQ { qAvailable = [], qDiscarded = [], .. }
 
 rqFromListRandom :: [a] -> Gen (ResourceQ a)
 rqFromListRandom qDiscarded =
-  do qRandom <- randStdGen
+  do qRandom <- splitRNG
      return ResourceQ { qAvailable = [], .. }
 
 rqFromListOrdered :: [a] -> Gen (ResourceQ a)
 rqFromListOrdered qAvailable =
-  do qRandom <- randStdGen
+  do qRandom <- splitRNG
      return ResourceQ { qDiscarded = [], .. }
 
 rqTake :: ResourceQ a -> Maybe (a, ResourceQ a)
@@ -37,7 +37,7 @@ rqTake ResourceQ { .. } =
     a : as -> Just (a, ResourceQ { qAvailable = as, .. })
     [] -> case qDiscarded of
             [] -> Nothing
-            _  -> Just $ let (a:as, g) = genRand qRandom (shuffle qDiscarded)
+            _  -> Just $ let (a:as, g) = runRNG qRandom (shuffle qDiscarded)
                          in (a, ResourceQ { qAvailable = as
                                           , qDiscarded = []
                                           , qRandom    = g })

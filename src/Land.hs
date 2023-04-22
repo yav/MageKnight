@@ -27,28 +27,31 @@ module Land
 
   ) where
 
-import Common.Basics(PlayerId)
-
-import  Terrain
-import  HexContent
-import  GameTile
-import  Enemies( Enemy(..), EnemyType(..), allEnemies, allEnemyTypes )
-import  Ruins(Ruins, ruins, Objectve(..))
-import  Common(Time(..), Visibility(..))
-
-import  Util.Random
-import  Util.ResourceQ
-import  Util.Perhaps
-
+import GHC.Generics
 import           Data.Maybe ( mapMaybe, fromMaybe, maybeToList )
-import           Data.List ( delete )
 import           Data.Map ( Map )
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import           Control.Monad( foldM, guard )
 
+import Data.Aeson(ToJSON,toJSON)
+
 import Common.Utils
+import Common.RNGM
+
+import  Util.ResourceQ
+import  Util.Perhaps
+
+
+
+import  Terrain
+import  HexContent
+import  GameTile
+import  Enemies( Enemy(..), EnemyType(..), allEnemies, allEnemyTypes )
+import  Ruins(Ruins, ruins)
+import  Common(Time(..), Visibility(..))
+
 
 -- | General setting for setting up the map.
 data LandSetup = LandSetup
@@ -484,4 +487,21 @@ searchLand p Land { .. } =
   [ Addr { .. } | (addrGlobal, t) <- Map.toList theMap
                 , addrLocal       <- gameTileSearch p t
   ]
+
+
+--------------------------------------------------------------------------------
+
+data LandView = LandView
+  { landMap   :: Map TileAddr GameTile
+  , landTime  :: Time
+  } deriving (Generic,ToJSON)
+
+mkLandView :: Land -> LandView
+mkLandView l = LandView
+  { landMap = theMap l
+  , landTime = timeOfDay l
+  }
+
+instance ToJSON Land where
+  toJSON = toJSON . mkLandView
 

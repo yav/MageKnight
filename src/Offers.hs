@@ -31,7 +31,7 @@ module Offers
   , disbandUnit
   ) where
 
-import Util.Random
+import Common.RNGM
 import Util.Q
 
 import Offer

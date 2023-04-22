@@ -1,16 +1,10 @@
 module Common where
 
-import GHC.Generics
-import Control.Applicative((<|>))
-import Control.Monad(guard)
 import Text.PrettyPrint
 import Data.Char(toLower)
 
 
-import Data.Aeson
-import Data.Aeson.Types
-
-import Common.Utils
+import Common.Enum
 
 data Usable     = Unused | Used
                   deriving (Show,Eq)
@@ -19,18 +13,16 @@ data Visibility = Revealed | Hidden
                   deriving (Eq,Ord,Show)
 
 data Element    = Physical | Fire | Ice | ColdFire
-                  deriving (Eq,Ord,Show,Generic,ToJSON)
-
+                  deriving (Eq,Ord,Show)
 
 data AttackType = Melee | Ranged | Siege
                   deriving (Eq,Ord,Show)
 
-
 data BasicMana  = Red | Green | Blue | White
-                  deriving (Eq,Ord,Show,Read,Generic,ToJSON,FromJSON)
+                  deriving (Eq,Ord,Show,Read)
 
 data Mana       = BasicMana BasicMana | Gold | Black
-                  deriving (Eq,Ord,Show,Read,Generic)
+                  deriving (Eq,Ord,Show,Read)
 
 data Time       = Day | Night
                   deriving (Eq,Ord,Show)
@@ -42,8 +34,6 @@ data DamageInfo = DamageInfo { damageElement    :: Element
                              , damageParalyzes  :: Bool
                              }
 
-
-
 anyBasicMana :: [ BasicMana ]
 anyBasicMana = [ Red, Green, Blue, White ]
 
@@ -52,8 +42,6 @@ anyMana = Gold : Black : map BasicMana anyBasicMana
 
 anyAttack :: [ AttackType ]
 anyAttack = [ Melee, Ranged, Siege ]
-
-
 
 ppElement :: Element -> Doc
 ppElement el =
@@ -80,26 +68,12 @@ ppTime t =
     Night -> text "night"
 
 --------------------------------------------------------------------------------
-instance ToJSONKey BasicMana where toJSONKey = jsDeriveKey
 
-instance ToJSONKey Mana where
-  toJSONKey = toJSONKeyText \m ->
-    case m of
-      BasicMana a -> showText a
-      _           -> showText m
-
-instance ToJSON Mana where
-  toJSON m =
-    case m of
-      BasicMana a -> toJSON a
-      _           -> toJSON (showText m)
-
-instance FromJSON Mana where
-  parseJSON v = (BasicMana <$> parseJSON v)
-             <|> check Gold
-             <|> check Black
-    where
-    check y =
-      withText "special mana" (\t -> guard (t == showText y) >> pure y) v
+declareEnumText ''Usable
+declareEnumText ''Element
+declareEnumText ''AttackType
+declareEnumText ''BasicMana
+declareEnumText ''Mana
+declareEnumText ''Time
 
 

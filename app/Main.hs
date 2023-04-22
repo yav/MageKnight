@@ -1,6 +1,7 @@
 module Main where
 
 import Data.Text(Text)
+import Data.Text qualified as Text
 
 import Common.Interact
 import Common.CallJS(jsHandlers)
@@ -9,6 +10,8 @@ import Common.Field
 import Common.Basics
 import AppTypes
 
+import Util.Perhaps
+
 import Common
 import Source
 import ManaPool
@@ -16,6 +19,8 @@ import Deed(wound,deedName,deedColor)
 import DeedDecks(makeDeckFor, spells)
 import Hand
 import Utils
+import Land
+import Terrain(openMap3)
 import Deed.Decks(playDeed)
 
 main :: IO ()
@@ -25,14 +30,22 @@ main =
   , appColors = [ "red" ]
   , appJS = $(jsHandlers [ ''Update, ''Input ])
   , appInitialState = \rng _opts ps ->
-      case ps of
-        [p] -> Right State { playerId  = p
-                           , _source   = withRNG_ rng (newSource 6)
-                           , _sourceUsed = False
-                           , _hand     = newHand deck
-                           , _mana     = emptyManaPool
-                           }
-        _   -> Left "need exactly 1 player"
+      withRNG_ rng
+      do src  <- newSource 6
+         mb <- setupLand (defaultLandSetup openMap3 5 5 [1])
+         pure
+           case mb of
+             Failed msg -> Left (Text.unpack msg)
+             Ok (la,_mon) ->
+               case ps of
+                 [p] -> Right State { playerId  = p
+                                    , _source   = src
+                                    , _sourceUsed = False
+                                    , _hand     = newHand deck
+                                    , _mana     = emptyManaPool
+                                    , _land     = la
+                                    }
+                 _   -> Left "need exactly 1 player"
   , appStart = gameLoop
   }
   where

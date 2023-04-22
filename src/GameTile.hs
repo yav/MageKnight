@@ -12,10 +12,11 @@ module GameTile
   ) where
 
 
+import GHC.Generics
 import           Data.Map ( Map )
 import qualified Data.Map as Map
+import Data.Aeson(ToJSON)
 
-import Common.Basics(PlayerId)
 import Terrain
 import HexContent
 
@@ -24,7 +25,7 @@ data GameTile = GameTile
   { gameTile        :: Tile
   , gameTileContent :: Map HexAddr HexContent
     -- ^ A missing entry, and `emptyHexContent` should be equivalent.
-  }
+  } deriving (Generic,ToJSON)
 
 -- | A place-holder tile.  This is used to indicate where we can explore next.
 gameTilePlaceHolder :: TileType -> GameTile
