@@ -50,8 +50,6 @@ function newMap() {
     }
 
     return (need) => {
-      console.log("Set enemies,",need)
-
       const done = {}
 
       for (let i = 0; i < need.length; ++i) {
@@ -133,6 +131,25 @@ function newMap() {
     }
   }
 
+  function hexHelp(help,info) {
+    uiHelpHeader(help,undefined,info.hexTerrain)
+    const ref = "img/rules/locations.jpg"
+    const bigw  = 5600
+    const bigh  = 7000
+    const s     = 6
+    const size  = bigw / s
+    const w     = bigw / s / 4
+    const h     = bigh / s / 7
+    function entry(x,y,hi) {
+      uiHelpEntry(help,ref,size,-x * w,-y * h, w, hi ? hi : h)
+    }
+    entry(1,0)
+
+    console.log(info.hexFeature)
+    switch (info.hexFeature) {
+    }
+  }
+
   function setTile(x,y,gt) {
     const t       = gt.gameTile
     const content = gt.gameTileContent
@@ -156,6 +173,17 @@ function newMap() {
     style.left = x_pos + "px"
     style.top  = y_pos + "px"
     domMap.appendChild(tile)
+
+    for (let i = 0; i < hex_locs.length; ++i) {
+      const l     = hex_locs[i]
+      const hex   = els[l]
+      const help  = els[l + "-help"]
+      hexHelp(help,t.tileTerrainMap[l])
+      hex.addEventListener("mouseenter", () => {
+        help.classList.remove("hidden")
+      })
+      hex.addEventListener("mouseleave", () => help.classList.add("hidden"))
+    }
 
     cols[y] = { tile: t, dom: tile, els: els, content: {} }
 

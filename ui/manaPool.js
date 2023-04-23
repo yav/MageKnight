@@ -18,6 +18,7 @@ function newManaPool () {
   }
 
   function set(v) {
+    console.log("set mana pool")
     const newM = v.mpMana
     const newS = v.mpSource
 

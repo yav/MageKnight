@@ -10,16 +10,25 @@
 }
 
 .tile {
-  width: var(--tileSize_px);
+  width:  var(--tileSize_px);
   height: var(--tileSize_px);
   background-size: var(--tileSize_px) var(--tileSize_px);
   position: absolute;
 }
 
-.tile .hex {
+.tile .location {
   position: absolute;
-  --mk-hex-w: calc(var(--tileSize_px) / 3);
-  --mk-hex-h: calc(var(--tileSize_px) * 0.4);
+  width: 0;
+  height: 0;
+  left: 0;
+  top: 0;
+  overflow: visible;
+}
+
+.tile .location .hex {
+  position: absolute;
+  left: 0;
+  top:  0;
   width:  var(--hexWidth_px);
   height: var(--hexHeight_px);
   clip-path: polygon(0 25%, 50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%);
@@ -27,40 +36,41 @@
 }
 
 .tile .hex:hover {
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0,0,0,0.2);
 }
 
-.tile .hex.Center {
+
+.tile .location.Center {
   left: var(--hexWidth_px);
   top:  calc(var(--tileSize_px) * 0.3);
 }
 
-.tile .hex.E {
+.tile .location.E {
   left: calc(2   * var(--hexWidth_px));
   top:  calc(0.3 * var(--tileSize_px));
 }
 
-.tile .hex.W {
+.tile .location.W {
   left: 0;
   top:  calc(0.3 * var(--tileSize_px));
 }
 
-.tile .hex.NE {
+.tile .location.NE {
   left: calc(1.5 * var(--hexWidth_px));
   top:  0;
 }
 
-.tile .hex.NW {
+.tile .location.NW {
   left: calc(0.5 * var(--hexWidth_px));
   top:  0;
 }
 
-.tile .hex.SE {
+.tile .location.SE {
   left: calc(1.5 * var(--hexWidth_px));
   top:  calc(0.6 * var(--tileSize_px));
 }
 
-.tile .hex.SW {
+.tile .location.SW {
   left: calc(0.5 * var(--hexWidth_px));
   top:  calc(0.6 * var(--tileSize_px));
 }
@@ -79,6 +89,43 @@
 }
 
 
+.tile .hex-help {
+  position: absolute;
+  left: var(--hexWidth_px);
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  background-color: white;
+  color: black;
+  border: 0.1em solid black;
+  border-radius: 0.5em;
+  box-shadow: 0.25em 0.25em 0.2em 0.2em rgba(0,0,0,0.5);
+}
+
+.tile .hex-help .name {
+  text-align: center;
+  font-weight: bold;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.tile .hex-help .name .icon {
+  border: solid black 0.1em;
+  border-radius: 1em;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 0.5em;
+}
+
+.tile .hex-help .name .label {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.tile .hex-help .item {
+  margin: 0.25em 0.5em 0.25em 0.5em;
+}
 
 
 
