@@ -137,17 +137,54 @@ function newMap() {
     const bigw  = 5600
     const bigh  = 7000
     const s     = 6
+
     const size  = bigw / s
     const w     = bigw / s / 4
     const h     = bigh / s / 7
-    function entry(x,y,hi) {
-      uiHelpEntry(help,ref,size,-x * w,-y * h, w, hi ? hi : h)
-    }
-    entry(1,0)
 
-    console.log(info.hexFeature)
-    switch (info.hexFeature) {
-    }
+    const mineH  = 1 / 2.7
+
+    const features =
+      { "Orc":              [ 0, 0 ]
+      , "Draconum":         [ 1, 0 ]
+      , "Monastery":        [ 2, 0 ]
+      , "Village":          [ 3, 0 ]
+
+      , "Walls":            [ 0, 1 ]
+      , "AncientRuins":     [ 1, 1 ]
+
+      , "MagicalGlade":     [ 2, 1 + mineH, h * (1 - mineH) ]
+
+      , "Mine.Red":         [ 2, 1, h * mineH ]
+      , "Mine.Green":       [ 2, 1, h * mineH ]
+      , "Mine.Blue":        [ 2, 1, h * mineH ]
+      , "Mine.White":       [ 2, 1, h * mineH ]
+      // Deep Mines + refugee camp
+
+      , "Dungeon":          [ 0, 2 ]
+      , "Tomb":             [ 1, 2 ]
+      , "MageTower":        [ 2, 2 ]
+      , "Keep":             [ 3, 2 ]
+
+      // Maze, Labyrinth
+      , "MonsterDen":       [ 2, 3 ]
+      , "SpawningGrounds":  [ 3, 3 ]
+
+      // 4: NPC
+
+      , "City.Green":       [ 0, 5 ]
+      , "City.White":       [ 1, 5 ]
+      , "City.Red":         [ 2, 5 ]
+      , "City.Blue":        [ 3, 5 ]
+
+      // XXX: [1,6]: city
+      }
+
+      const coord = features[info.hexFeature]
+      if (coord) {
+        const [x,y,hi] = coord
+        uiHelpEntry(help,ref,size,-x * w,-y * h, w, hi ? hi : h)
+      }
   }
 
   function setTile(x,y,gt) {
