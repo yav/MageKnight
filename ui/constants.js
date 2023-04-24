@@ -20,6 +20,7 @@ function setupConstants() {
   constant.charHeight      = constant.hexHeight * 0.6
 
   constant.enemySize       = constant.hexWidth * 0.8
+  constant.ruinsSize       = constant.hexWidth * 0.8
 
   const glob = document.documentElement.style
   for (c in constant) {

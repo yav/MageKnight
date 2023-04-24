@@ -124,9 +124,36 @@ function newMap() {
     }
   }
 
-  // XXX
   function newRuins(hex) {
+    let dom  = null
+    let have = null
+
     return (need) => {
+      if (need === null) {
+        if (have !== null) {
+          dom.remove()
+          dom  = null
+          have = null
+          return
+        } else return
+      }
+
+      if (have === null) {
+        dom = uiFromTemplate("ruins")
+        hex.appendChild(dom)
+      } else {
+        if (have.tag === need.tag) {
+          if (need.tag === "HiddenRuins") return
+          if (have.contents.ruinsName === need.contents.ruinsName) return
+        }
+      }
+
+      const url = "img/ruins/"
+                + (need.tag === "HiddenRuins" ?
+                                            "back" : need.contents.ruinsName)
+                + ".png"
+      dom.style.backgroundImage = "url(\"" + url + "\")"
+      have = need
     }
   }
 
@@ -158,7 +185,7 @@ function newMap() {
         cur[l] = have
       }
       have.hShield(need.hShield)
-      have.hRuins(need.hShield)
+      have.hRuins(need.hRuins)
       have.hEnemies(need.hEnemies)
     }
   }

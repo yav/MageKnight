@@ -19,6 +19,7 @@
 
 .tile .location {
   position: absolute;
+  pointer-events:auto;
   width: 0;
   height: 0;
   left: 0;
@@ -31,7 +32,6 @@
 }
 
 .tile .location .hex {
-  pointer-events:auto;
   position: absolute;
   left: 0;
   top:  0;
@@ -127,5 +127,14 @@
 }
 
 
-
+.ruins {
+  display: inline-block;
+  position: relative;
+  border: 0px;
+  background-size: var(--ruinsSize_px) var(--ruinsSize_px);
+  width:  var(--ruinsSize_px);
+  height: var(--ruinsSize_px);
+  left: calc( (var(--hexWidth_px) - var(--ruinsSize_px)) / 2 );
+  top:  calc( (var(--hexHeight_px) - var(--ruinsSize_px)) / 2 );
+}
 
