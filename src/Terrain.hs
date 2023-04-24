@@ -48,7 +48,7 @@ data Dir            = NE | E | SE | SW | W | NW
   deriving (Eq,Ord,Show,Read,Enum,Bounded)
 
 data HexAddr        = Center | Border Dir
-                      deriving (Eq,Ord,Show)
+                      deriving (Eq,Ord,Show,Read)
 
 declareEnumText ''Dir
 declareEnumText ''HexAddr
@@ -57,7 +57,7 @@ data HexNeighbour   = Local HexAddr | Foreign Int Int Dir
                       deriving (Eq,Ord,Show)
 
 data Addr           = Addr { addrGlobal :: TileAddr, addrLocal :: HexAddr }
-                      deriving (Eq,Ord,Show,Generic,FromJSON,ToJSON)
+                      deriving (Eq,Ord,Read,Show,Generic,FromJSON,ToJSON)
 
 data Terrain        = Plains | Hills | Forest | Wasteland | Desert | Swamp
                     | Lake | Mountain

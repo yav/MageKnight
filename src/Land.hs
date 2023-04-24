@@ -4,6 +4,8 @@ module Land
   , LandSetup(..), defaultLandSetup, setupLand
 
     -- * Exploration
+  , setPlayer
+  , getPlayerNeighbours
   , exploreAt
   , isRevealed
 
@@ -99,12 +101,14 @@ setupLand LandSetup { .. } =
      ruinsPool <- rqFromListRandom useRuins
      enemyPool <- initialEnemyPool useEnemies
 
+
      let land0 = Land { mapShape        = useShape
                       , theMap          = Map.empty
                       , unexploredTiles = startTile : questCountry ++ questCore
                       , backupTiles     = backupCountry ++ backupCore
                       , cityLevels      = useCityLevels
                       , timeOfDay       = useStartTime
+                      , playerLocation  = Addr (head startPositions) Center
                       , ..
                       }
      return (foldM reveal (land0,0) revealPos)
@@ -162,6 +166,9 @@ data Land = Land
 
   , timeOfDay       :: Time
     -- ^ Is it day or night?
+
+  , playerLocation  :: Addr
+    -- ^ Where is the player.
   }
 
 
@@ -271,81 +278,6 @@ data CombatInfo = CombatInfo
   , combatEnemeies :: [ (Enemy, EnemyLifeSpan) ]
   }
 
-
-{-
--- | Reveal all hidden enemies, remove them from map etc.
-startCombatAt :: PlayerId -> Addr -> Land -> Perhaps (CombatInfo, Land)
-startCombatAt pn a l =
-  do i <- perhaps "Invalid address." $ getHexInfo a l
-     (es1,l1) <- spawnCombatEnemies pn i l
-     -- we spawn first, that way we'll spawn the right number:
-     -- we don't want respawning locations to look empty.
-     ((t,es2),l2) <- perhaps "Invalid address." $ updateAddr' a  upd l1
-     return (CombatInfo { combatTerrain  = t
-                        , combatEnemeies = es1 ++ es2
-                        } , l2)
-  where
-  upd HexInfo { .. } =
-    let (es,c) = hexTakeEnemies hexContent
-    in ((hexLandInfo, zip es (repeat EnemyMultiCombat)), c)
-
-
-spawnCombatEnemies :: HexInfo -> Land ->
-                                      Perhaps ([(Enemy,EnemyLifeSpan)],Land)
-spawnCombatEnemies HexInfo { hexLandInfo = HexLandInfo { .. }, .. } l =
-    case hexFeature of
-      Nothing -> none
-      Just f ->
-        case f of
-
-          MagicalGlade        -> none
-          Mine _              -> none
-          Village             -> none
-          City _              -> none
-
-          Monastery
-            | isOwned         -> none
-            | otherwise       -> spawn EnemySingleCombat [Mage]
-
-          Keep | isOwned      -> none
-               | otherwise    -> EnemySingleCombat [Guardian]
-
-          MageTower           -> none
-
-          -- Dungeons and tombs always bring a new creature,
-          -- even when conquered.
-          Dungeon             -> spawn EnemySingleCombat [Underworld]
-          Tomb                -> spawn EnemySingleCombat [Draconum]
-
-          MonsterDen
-           | not (isOwned || hasEnemies) ->
-              spawn EnemyMultiCombat [Underworld]
-           | otherwise -> none
-
-          SpawningGrounds
-           | not isOwned ->
-             let enemyNum = length (hexActiveEnemies hexContent)
-                 new      = 2 - enemyNum
-             in spawn EnemyMultiCombat (replicate new Underworld)
-           | otherwise -> none
-
-          AncientRuins
-            | not isOwned && not hasEnemies ->
-               spawn EnemyMultiCombat
-                         [ e | Fight e <- hexRuinsObjective hexContent ]
-            | otherwise -> none
-
-          RampagingEnemy _ -> none
-  where
-  none         = return ([], l)
-  isOwned      = hexHasShield hexContent
-  ownedByOther = not (null (delete pn owners))
-  hasEnemies   = hexHasEnemies hexContent
-
-  spawn v ts   = do (es,l1) <- spawnCreatures ts l
-                    return (zip es (repeat v), l1)
--}
-
 -- | Spawn enemies of the required types.
 spawnCreatures :: [EnemyType] -> Land -> Perhaps ([Enemy], Land)
 spawnCreatures tys l =
@@ -392,7 +324,7 @@ getHexInfo Addr { .. } Land { .. } =
 
 -- | Get the feature of a tile at the given address.
 getFeatureAt :: Addr -> Land -> Maybe HexLandInfo
-getFeatureAt a l = fmap hexLandInfo (getHexInfo a l)
+getFeatureAt a l = hexLandInfo <$> getHexInfo a l
 
 -- | Get the revealed enemies at the given locaiton.
 -- The enemmies also remain on the map.
@@ -403,6 +335,18 @@ getRevealedEnemiesAt Addr { .. } Land { .. } =
      let HexInfo { .. } = gameTileInfo addrLocal gt
      return (hexActiveEnemies hexContent)
 
+setPlayer :: Addr -> Land -> Land
+setPlayer a l
+  | addrGlobal a `Map.member` theMap l =
+    (revealHiddenNeighbours a l) { playerLocation = a }
+  | otherwise = l
+
+getPlayerNeighbours :: Land -> [Addr]
+getPlayerNeighbours l =
+  [ a | a <- candidates, addrGlobal a `Map.member` theMap l  ]
+  where
+  loc        = playerLocation l
+  candidates = Set.toList (neighboursUpTo 1 loc)
 
 
 -- | Setup a new tile at the given position.
@@ -492,14 +436,16 @@ searchLand p Land { .. } =
 --------------------------------------------------------------------------------
 
 data LandView = LandView
-  { landMap   :: Map TileAddr GameTile
-  , landTime  :: Time
+  { landMap     :: Map TileAddr GameTile
+  , landTime    :: Time
+  , landPlayer  :: Addr
   } deriving (Generic,ToJSON)
 
 mkLandView :: Land -> LandView
 mkLandView l = LandView
-  { landMap = theMap l
-  , landTime = timeOfDay l
+  { landMap     = theMap l
+  , landTime    = timeOfDay l
+  , landPlayer  = playerLocation l
   }
 
 instance ToJSON Land where

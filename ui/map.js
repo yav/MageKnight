@@ -25,9 +25,42 @@ function newMap() {
     }
   }
 
+  function newPlayer() {
+    let dom = null
+    let loc = null
+    return (hero,newLoc) => {
+
+      if (newLoc === null) {
+        if (loc === null) return
+        dom.remove()
+        loc = null
+        return
+      }
+
+      if (loc === null) {
+        dom = uiFromTemplate('character')
+        const url = "img/characters/" + hero + "/figure.png"
+        dom.style.backgroundImage = "url(\"" + url + "\")"
+      }
+
+      const [newX,newY] = newLoc.addrGlobal
+      const newL        = newLoc.addrLocal
+
+      if (loc !== null) {
+        const [oldX,oldY] = loc.addrGlobal
+        const oldL        = loc.addrLocal
+        if (oldX === newX && oldY === newY && oldL === newL) return
+        else dom.remove()
+      }
+
+      tiles[newX][newY].els[newL].appendChild(dom)
+      loc = newLoc
+    }
+  }
+
+
   // XXX: Drawing of multiple enemies
   // Currently they'd end up on top of each other
-  // XXX: Tool tip should go with hex, not with enemy
   function newEnemySet(hex) {
     const have = {}
 
@@ -68,8 +101,7 @@ function newMap() {
 
       for (const nm in have) {
         if (done[nm]) continue
-        have.dom.remove()
-        have[nm] = undefined
+        have[nm].set(0)
       }
     }
   }
@@ -197,7 +229,7 @@ function newMap() {
     if (have !== undefined) {
       if (have.tile.tileType === t.tileType &&
           have.tile.tileName === t.tileName)
-          return setContent(x,y,t.content)
+          return setContent(x,y,content)
       have.dom.remove()
       cols[y] = undefined
     }
@@ -239,7 +271,19 @@ function newMap() {
     }
   }
 
+  function askHex(addr,q) {
+    const [x,y] = addr.addrGlobal
+    const tileRow = tiles[x]
+    if (tileRow === undefined) return
+    const tile = tileRow[y]
+    if (tile === undefined) return
+    const hex = tile.els[addr.addrLocal].getElementsByClassName("hex")[0]
+    uiExistingAnswer(hex,q)
+  }
+
   const obj = {}
   obj.set = setMap
+  obj.setPlayer = newPlayer()
+  obj.ask = askHex
   return obj
 }

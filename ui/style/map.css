@@ -10,6 +10,7 @@
 }
 
 .tile {
+  pointer-events: none;
   width:  var(--tileSize_px);
   height: var(--tileSize_px);
   background-size: var(--tileSize_px) var(--tileSize_px);
@@ -25,18 +26,18 @@
   overflow: visible;
 }
 
+.tile .location .hex.question {
+  background-color: rgba(0,0,0,0.2);
+}
+
 .tile .location .hex {
+  pointer-events:auto;
   position: absolute;
   left: 0;
   top:  0;
   width:  var(--hexWidth_px);
   height: var(--hexHeight_px);
   clip-path: polygon(0 25%, 50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%);
-);
-}
-
-.tile .hex:hover {
-  background-color: rgba(0,0,0,0.2);
 }
 
 
@@ -81,11 +82,9 @@
   width: var(--charWidth_px);
   height: var(--charHeight_px);
   background-size: var(--charWidth_px) var(--charHeight_px);
-  left: calc( (var(--hexWidth_px) - var(--charWidth_px)) / 2);
-  bottom: 0;
-  box-shadow: 0 0 5px 5px rgba(255,255,255,0.4);
-  background-color: rgba(0,0,0,0.2);
-  border-radius: var(--charWidth_px);
+  left: calc( (var(--hexWidth_px)  - var(--charWidth_px)) / 2);
+  top:  calc(var(--hexHeight_px) - var(--charHeight_px));
+  z-index: 3;
 }
 
 

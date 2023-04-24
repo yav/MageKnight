@@ -9,6 +9,8 @@ function uiQuestion(q) {
     AskSelectedSideways: () => gui.hand.askSideways(q),
     AskSelectedAdvanced: () => gui.hand.askAdvanced(q),
 
+    AskLoc: (a) => gui.map.ask(a,q),
+
     ActionButton: (msg) => uiActionButton(msg,q),
 
     TestReroll: () => uiButton("Reroll",q),

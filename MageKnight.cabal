@@ -24,6 +24,7 @@ library
 
     State,
     Input,
+    Hero,
     Deed,
     DeedDecks,
     Hand,

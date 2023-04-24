@@ -17,6 +17,7 @@ import Data.Maybe (mapMaybe)
 import Data.List (find, (\\))
 
 import Common
+import Hero
 import Deed
 
 
@@ -147,17 +148,16 @@ allDeeds = wound : basicActions ++ advancedActions ++ spells ++ artifacts
 makeCustomDeck :: [DeedName] -> [Deed]
 makeCustomDeck = mapMaybe (\x -> find ((x ==) . deedName) allDeeds)
 
-makeDeckFor :: Text -> [Deed]
+makeDeckFor :: Hero -> [Deed]
 makeDeckFor name =
   makeCustomDeck
     case name of
-      "Arythea"   -> arytheaDeck
-      "Tovak"     -> tovakDeck
-      "goldyx"    -> goldyxDeck
-      "Norowas"   -> norowasDeck
-      "Wolfhawk"  -> wolfhawkDeck
-      "Krang"     -> krangDeck
-      _           -> []
+      Arythea   -> arytheaDeck
+      Tovak     -> tovakDeck
+      Goldyx    -> goldyxDeck
+      Norowas   -> norowasDeck
+      Wolfhawk  -> wolfhawkDeck
+      Krang     -> krangDeck
 
 -- | A started deck with no special cards.
 basicDeck :: [(DeedName,DeedName)] -> [ DeedName ]

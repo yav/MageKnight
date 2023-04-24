@@ -41,10 +41,12 @@ function uiButton(lab,q) {
 
 // Perform a partial update
 function uiUpdate(state) {
+  console.log("update")
   gui.source.set(state._source)
   gui.hand.set(state._hand)
   gui.manaPool.set(state._mana)
   gui.map.set(state._land.landMap)
+  gui.map.setPlayer(state.playerHero, state._land.landPlayer)
 }
 
 

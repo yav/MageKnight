@@ -20,6 +20,7 @@ import DeedDecks(makeDeckFor, spells)
 import Hand
 import Utils
 import Land
+import Hero
 import Terrain(openMap3)
 import Deed.Decks(playDeed)
 
@@ -38,17 +39,19 @@ main =
              ([],_) -> Left "need a player"
              (_,Failed msg) -> Left (Text.unpack msg)
              (p:_, Ok (la,_mon)) ->
-               Right State { playerId  = p
-                           , _source   = src
-                           , _sourceUsed = False
-                           , _hand     = newHand deck
-                           , _mana     = emptyManaPool
-                           , _land     = la
+               Right State { playerId     = p
+                           , playerHero   = hero
+                           , _source      = src
+                           , _sourceUsed  = False
+                           , _hand        = newHand deck
+                           , _mana        = emptyManaPool
+                           , _land        = la
                            }
   , appStart = gameLoop
   }
   where
-  deck = wound : take 3 spells ++ take 5 (makeDeckFor "Arythea")
+  hero = Arythea
+  deck = wound : take 3 spells ++ take 5 (makeDeckFor hero)
 
 
 type TopInputOptions = State -> [ InputOption () ]
@@ -162,6 +165,13 @@ getManaPoolOptions s =
         $ setField mana (convertMana Gold (BasicMana b) manaPool) s
 
 
+getMoveOptions :: TopInputOptions
+getMoveOptions s =
+  [ topOpt s (AskLoc addr) "Move here"
+  $ setAndContinue (updField land (setPlayer addr) s)
+  | addr <- getPlayerNeighbours (getField land s)
+  ]
+
 
 gameLoop :: Interact ()
 gameLoop =
@@ -173,6 +183,7 @@ gameLoop =
           , getSelectedCardOptions
           , getUseSourceInputOptions
           , getManaPoolOptions
+          , getMoveOptions
           ]
        , opt <- opts s
        ]

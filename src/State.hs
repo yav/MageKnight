@@ -10,14 +10,16 @@ import Hand
 import Source
 import ManaPool
 import Land
+import Hero
 
 data State = State
-  { playerId    :: PlayerId
-  , _source     :: Source
-  , _sourceUsed :: Bool
-  , _hand       :: Hand
-  , _mana       :: ManaPool
-  , _land       :: Land
+  { playerId      :: PlayerId
+  , playerHero    :: Hero
+  , _source       :: Source
+  , _sourceUsed   :: Bool
+  , _hand         :: Hand
+  , _mana         :: ManaPool
+  , _land         :: Land
   }
   deriving (Generic,ToJSON)
 
