@@ -16,7 +16,9 @@ data Input = Source Mana      -- ^ Mana in the source
            | AskSelectedSideways
            | AskSelectedAdvanced
 
-           | AskLoc Addr
+           | AskLoc Addr (Maybe TileType)
+             -- ^ If Just ty, then tile is off board
+             -- and we want to explore it
 
            | ActionButton Text
 

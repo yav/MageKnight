@@ -74,6 +74,7 @@ data Feature        = MagicalGlade | Mine BasicMana
                       deriving (Eq,Show)
 
 data TileType       = BasicTile | CoreTile
+                      deriving (Eq,Ord,Show,Read)
 
 
 declareEnumText ''Terrain

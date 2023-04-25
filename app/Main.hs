@@ -21,7 +21,7 @@ import Hand
 import Utils
 import Land
 import Hero
-import Terrain(openMap3)
+import Terrain(addrGlobal,openMap3)
 import Deed.Decks(playDeed)
 
 main :: IO ()
@@ -167,9 +167,21 @@ getManaPoolOptions s =
 
 getMoveOptions :: TopInputOptions
 getMoveOptions s =
-  [ topOpt s (AskLoc addr) "Move here"
-  $ setAndContinue (updField land (setPlayer addr) s)
-  | addr <- getPlayerNeighbours (getField land s)
+  [ topOpt s (AskLoc addr explo) lab
+  $ setAndContinue
+  $ updField land
+    (\la ->
+    case explo of
+      Nothing -> setPlayer addr la
+      Just _  ->
+        case exploreAt (addrGlobal addr) la of
+          Ok (l1,newMons) -> l1
+          Failed {} -> la
+    ) s
+  | (addr,explo) <- getPlayerNeighbours (getField land s)
+  , let lab = case explo of
+                Nothing -> "Move here"
+                Just _  -> "Explore here"
   ]
 
 

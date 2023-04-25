@@ -310,9 +310,10 @@ discardEnemy e Land { .. } =
 -- If successful, returns an updated land, and the number of
 -- monasteries that were revealed, so that the units offer can be updated.
 -- Fails if the address is explored, or there is no suitable land to put there.
-exploreAt :: Addr -> TileAddr -> Land -> Perhaps (Land, Int)
-exploreAt loc newTilePos l =
-  do (l1,m) <- initialTile False newTilePos l
+exploreAt :: TileAddr -> Land -> Perhaps (Land, Int)
+exploreAt newTilePos l =
+  do let loc = playerLocation l
+     (l1,m) <- initialTile False newTilePos l
      return (revealHiddenNeighbours loc l1, m)
 
 
@@ -341,12 +342,33 @@ setPlayer a l
     (revealHiddenNeighbours a l) { playerLocation = a }
   | otherwise = l
 
-getPlayerNeighbours :: Land -> [Addr]
+getPlayerNeighbours :: Land -> [(Addr, Maybe TileType)]
 getPlayerNeighbours l =
-  [ a | a <- candidates, addrGlobal a `Map.member` theMap l  ]
+  [ (a, ex) | a <- candidates
+  , let g = addrGlobal a
+  , ex <- if known g then [Nothing]
+                     else case canExplore g of
+                            Nothing -> []
+                            it      -> [it]
+  ]
   where
   loc        = playerLocation l
   candidates = Set.toList (neighboursUpTo 1 loc)
+
+  explo = case (unexploredTiles l, backupTiles l) of
+            ([],[])    -> Nothing
+            (t : _, _) -> Just (tileType t, False)
+            (_, t : _) -> Just (tileType t, True)
+
+  known g = g `Map.member` theMap l
+
+  valid = validPlacement (mapShape l) known
+
+  canExplore g =
+    do (ty,isBak) <- explo
+       guard (valid ty isBak g)
+       pure ty
+
 
 
 -- | Setup a new tile at the given position.

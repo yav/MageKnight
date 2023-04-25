@@ -9,7 +9,7 @@ function uiQuestion(q) {
     AskSelectedSideways: () => gui.hand.askSideways(q),
     AskSelectedAdvanced: () => gui.hand.askAdvanced(q),
 
-    AskLoc: (a) => gui.map.ask(a,q),
+    AskLoc: (a,explore) => gui.map.ask(a,explore,q),
 
     ActionButton: (msg) => uiActionButton(msg,q),
 

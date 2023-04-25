@@ -298,7 +298,8 @@ function newMap() {
     }
   }
 
-  function askHex(addr,q) {
+  function askHex(addr,explore,q) {
+    // XXX: explore
     const [x,y] = addr.addrGlobal
     const tileRow = tiles[x]
     if (tileRow === undefined) return
