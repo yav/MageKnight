@@ -20,11 +20,15 @@
 .tile .location {
   position: absolute;
   pointer-events:auto;
-  width: 0;
-  height: 0;
+  width: var(--hexWidth_px);
+  height: var(--hexHeight_px);
   left: 0;
   top: 0;
   overflow: visible;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 }
 
 .tile .location .hex.question {
@@ -78,12 +82,9 @@
 
 
 .character {
-  position: absolute;
   width: var(--charWidth_px);
   height: var(--charHeight_px);
   background-size: var(--charWidth_px) var(--charHeight_px);
-  left: calc( (var(--hexWidth_px)  - var(--charWidth_px)) / 2);
-  top:  calc(var(--hexHeight_px) - var(--charHeight_px));
   z-index: 3;
 }
 
@@ -134,7 +135,5 @@
   background-size: var(--ruinsWidth_px) var(--ruinsHeight_px);
   width:  var(--ruinsWidth_px);
   height: var(--ruinsHeight_px);
-  left: calc( (var(--hexWidth_px) - var(--ruinsWidth_px)) / 2 );
-  top:  calc( (var(--hexHeight_px) - var(--ruinsHeight_px)) / 2 );
 }
 

@@ -145,7 +145,8 @@ hexWithCity :: BasicMana -> Int -> EnemyPool -> (HexContent, EnemyPool)
 hexWithCity color level pool
   | level < 1  = hexWithCity color 1  pool
   | level > 11 = hexWithCity color 11 pool
-  | otherwise = foldr (hexAddEnemyFromPool Hidden) (hexEmpty,pool) $ (!! level)
+  | otherwise = foldr (hexAddEnemyFromPool Hidden) (hexEmpty,pool)
+                                                              $ (!! (level-1))
   $ case color of
       White -> [ e 0 Guardian $ e 1 Citizen []
                , e 1 Guardian $ e 1 Citizen []

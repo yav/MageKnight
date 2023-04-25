@@ -21,7 +21,7 @@ import Hand
 import Utils
 import Land
 import Hero
-import Terrain(addrGlobal,openMap3)
+import Terrain(addrGlobal,MapShape(..))
 import Deed.Decks(playDeed)
 
 main :: IO ()
@@ -33,7 +33,7 @@ main =
   , appInitialState = \rng _opts ps ->
       withRNG_ rng
       do src  <- newSource 6
-         mb <- setupLand (defaultLandSetup openMap3 5 5 [1])
+         mb <- setupLand (defaultLandSetup Wedge 9 2 [11,11,11,11])
          pure
            case (ps,mb) of
              ([],_) -> Left "need a player"

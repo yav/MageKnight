@@ -13,15 +13,17 @@ function setupConstants() {
   constant.buttonHeight    = 32
   constant.buttonWidth     = 64
 
-  constant.tileSize        = 300
+  const mapScale = 2
+
+  constant.tileSize        = mapScale * 300
   constant.hexWidth        = constant.tileSize / 3
   constant.hexHeight       = constant.tileSize  * 0.4
-  constant.charWidth       = constant.hexWidth  * 0.6
-  constant.charHeight      = constant.hexHeight * 0.6
+  constant.charWidth       = constant.hexWidth  * 0.4
+  constant.charHeight      = constant.hexHeight * 0.4
 
-  constant.enemySize       = constant.hexWidth * 0.8
-  constant.ruinsWidth      = constant.hexWidth * 0.8
-  constant.ruinsHeight     = constant.hexWidth * 0.9
+  constant.enemySize       = constant.hexWidth * 0.4
+  constant.ruinsWidth      = constant.hexWidth * 0.35
+  constant.ruinsHeight     = constant.hexWidth * 0.4
 
   const glob = document.documentElement.style
   for (c in constant) {
