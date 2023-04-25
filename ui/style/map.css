@@ -131,10 +131,10 @@
   display: inline-block;
   position: relative;
   border: 0px;
-  background-size: var(--ruinsSize_px) var(--ruinsSize_px);
-  width:  var(--ruinsSize_px);
-  height: var(--ruinsSize_px);
-  left: calc( (var(--hexWidth_px) - var(--ruinsSize_px)) / 2 );
-  top:  calc( (var(--hexHeight_px) - var(--ruinsSize_px)) / 2 );
+  background-size: var(--ruinsWidth_px) var(--ruinsHeight_px);
+  width:  var(--ruinsWidth_px);
+  height: var(--ruinsHeight_px);
+  left: calc( (var(--hexWidth_px) - var(--ruinsWidth_px)) / 2 );
+  top:  calc( (var(--hexHeight_px) - var(--ruinsHeight_px)) / 2 );
 }
 
