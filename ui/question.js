@@ -55,7 +55,8 @@ function uiExistingAnswer(dom,q) {
   uiAddQuestionCleanup(() => {
     dom.classList.remove("question")
     dom.removeEventListener("click",onClick)
-    dom.setAttribute("title", tit)
+    if (tit) dom.setAttribute("title", tit)
+         else dom.removeAttribute("title")
   })
 }
 
