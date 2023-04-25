@@ -259,14 +259,12 @@ revealHiddenNeighbours a Land { .. } =
 revealHidden :: Addr -> Land -> Land
 revealHidden a l = updateAddr a (\h -> upd h (hexContent h)) l
   where
-  during d f = if timeOfDay l == d then f else id
-
   upd HexInfo { hexLandInfo = HexLandInfo { .. } } =
     case hexTerrain of
       _ -> case hexFeature of
              Just AncientRuins -> hexReveal
-             Just MageTower    -> during Day hexReveal
-             Just Keep         -> during Day hexReveal
+             Just MageTower    -> hexReveal
+             Just Keep         -> hexReveal
              Just (City _)     -> hexReveal
              _                 -> id
 
@@ -339,7 +337,7 @@ getRevealedEnemiesAt Addr { .. } Land { .. } =
 setPlayer :: Addr -> Land -> Land
 setPlayer a l
   | addrGlobal a `Map.member` theMap l =
-    (revealHiddenNeighbours a l) { playerLocation = a }
+    (revealHidden a (revealHiddenNeighbours a l)) { playerLocation = a }
   | otherwise = l
 
 getPlayerNeighbours :: Land -> [(Addr, Maybe TileType)]
