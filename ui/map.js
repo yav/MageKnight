@@ -6,6 +6,7 @@ function newMap() {
   let glob_y = 0
 
   const tiles = {}
+  let explore_tiles = {}
 
   function tileLoc(x,y) {
     const x_pos = glob_x + constant.tileSize * (x * 4/6 - y * 1/6)
@@ -299,8 +300,36 @@ function newMap() {
   }
 
   function askHex(addr,explore,q) {
-    // XXX: explore
     const [x,y] = addr.addrGlobal
+
+    if (explore) {
+
+      let tileRow = explore_tiles[x]
+      if (tileRow === undefined) {
+        tileRow = {}
+        explore_tiles[x] = tileRow
+      }
+
+      let tile = tileRow[y]
+      if (tile === undefined) {
+        const [t,els] = uiFromTemplateNested("map-tile")
+        tile = { dom: t, els: els }
+        tileRow[y] = tile
+        const [x_pos,y_pos] = tileLoc(x,y)
+        const url = "img/map-tiles/" + explore + "/placeholder.png"
+        const style = t.style
+        style.backgroundImage = "url(\"" + url + "\")"
+        style.left = x_pos + "px"
+        style.top  = y_pos + "px"
+        domMap.appendChild(t)
+      }
+
+      const hex = tile.els[addr.addrLocal].getElementsByClassName("hex")[0]
+      uiExistingAnswer(hex,q)
+      uiAddQuestionCleanup(() => { tile.dom.remove(); explore_tiles = {} })
+      return
+    }
+
     const tileRow = tiles[x]
     if (tileRow === undefined) return
     const tile = tileRow[y]
