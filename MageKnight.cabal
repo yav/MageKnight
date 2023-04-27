@@ -6,7 +6,8 @@ maintainer:          iavor.diatchki@gmail.com
 category:            Game
 build-type:          Simple
 
-common Common
+executable MageKnight
+
   GHC-options: -Wall
   default-language:    Haskell2010
   default-extensions:
@@ -18,10 +19,14 @@ common Common
     TypeFamilies,
     TemplateHaskell
 
-library
-  import: Common
   hs-source-dirs: src
-  exposed-modules:
+  main-is: Main.hs
+
+  other-modules:
+    Utils,
+    Deed.Action,
+    Deed.Basic,
+    Deed.Decks,
 
     State,
     Input,
@@ -59,11 +64,12 @@ library
 
     AppTypes
 
+
   build-depends:
     base,
+    containers,
     bytestring,
     text,
-    containers,
     aeson,
     vector,
     random,
@@ -74,24 +80,5 @@ library
     filepath,
     KOI-utils,
     KOI-interact
-
-executable MageKnight
-  import: Common
-  hs-source-dirs: app
-  main-is: Main.hs
-  other-modules:
-    Utils,
-    Deed.Action,
-    Deed.Basic,
-    Deed.Decks
-  build-depends:
-    base,
-    containers,
-    bytestring,
-    text,
-    KOI-utils,
-    KOI-interact,
-    MageKnight
-
 
 
