@@ -3,15 +3,16 @@ module Main where
 import Data.Text(Text)
 import Data.Text qualified as Text
 
-import Common.Interact
-import Common.CallJS(jsHandlers)
-import Common.RNGM
-import Common.Field
-import Common.Basics
+import KOI.CallJS(jsHandlers)
+import KOI.RNGM
+import KOI.Field
+import KOI.Basics
 import AppTypes
 
 import Util.Perhaps
 
+import State
+import Input
 import Common
 import Source
 import ManaPool
@@ -27,7 +28,8 @@ import Deed.Decks(playDeed)
 main :: IO ()
 main =
   startApp App
-  { appOptions = []
+  { appId = MK
+  , appOptions = []
   , appColors = [ "red" ]
   , appJS = $(jsHandlers [ ''Update, ''Input ])
   , appInitialState = \rng _opts ps ->

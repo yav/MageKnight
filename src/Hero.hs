@@ -1,6 +1,6 @@
 module Hero where
 
-import Common.Enum
+import KOI.Enum
 
 data Hero =
     Arythea

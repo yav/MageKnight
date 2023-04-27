@@ -1,0 +1,3 @@
+[submodule "KOI"]
+	path = KOI
+	url = git@github.com:yav/KOI.git

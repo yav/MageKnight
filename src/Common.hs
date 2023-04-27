@@ -4,7 +4,7 @@ import Text.PrettyPrint
 import Data.Char(toLower)
 
 
-import Common.Enum
+import KOI.Enum
 
 data Usable     = Unused | Used
                   deriving (Show,Eq)

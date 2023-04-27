@@ -1,33 +1,25 @@
-module AppTypes
-  ( module AppTypes
-  , module State
-  , module Input
-  ) where
+module AppTypes (MK(..), Update(..), Interact, module KOI.Interact) where
 
-import Common.Basics(PlayerId)
+import KOI.Interact hiding (Interact)
+import KOI.Interact qualified as I
 
 import State
 import Input
 
+data MK = MK
 
---------------------------------------------------------------------------------
--- No interesting updates or multiple players
+type Interact = I.Interact MK
 
--- This is a data because jsHandlers only supports data
+instance Component MK where
+  type AppState MK = State
+  type AppStateView MK = State
+  type AppUpdate MK = Update
+  type AppUpdateView MK = State
+  type AppInput MK = Input
+
+  doUpdate _ (SetState s) _ = s
+  playerView _ _ = id
+  playerUpdateView c p (SetState s) = playerView c p s
+  finalState _ _ = False
+
 data Update = SetState State
-
-doUpdate   :: Update -> State -> State
-doUpdate (SetState s) _ = s
-
-type StateView = State
-
-playerView :: PlayerId -> State -> StateView
-playerView _ = id
-
-
-type UpdateView = StateView
-
-playerUpdateView :: PlayerId -> Update -> UpdateView
-playerUpdateView p (SetState s) = playerView p s
-
-

@@ -15,6 +15,7 @@ common Common
     DeriveGeneric, DeriveAnyClass,
     OverloadedStrings,
     FlexibleInstances,
+    TypeFamilies,
     TemplateHaskell
 
 library
@@ -71,7 +72,8 @@ library
     snap-core,
     snap-server,
     filepath,
-    common-utils
+    KOI-utils,
+    KOI-interact
 
 executable MageKnight
   import: Common
@@ -87,8 +89,8 @@ executable MageKnight
     containers,
     bytestring,
     text,
-    common-utils,
-    common-interact,
+    KOI-utils,
+    KOI-interact,
     MageKnight
 
 

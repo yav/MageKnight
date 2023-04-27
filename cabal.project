@@ -1,4 +1,4 @@
 packages:
   .
-  ../web-games/common-utils
-  ../web-games/common-interact
+  KOI/utils
+  KOI/interact

@@ -5,16 +5,17 @@ module Ruins
   , ruins
   ) where
 
-import Common.Bag
-import Common.Enum (declareEnumText)
-
+import Data.Text(Text)
 import GHC.Generics
 import Data.Aeson qualified as JS
+
+import KOI.Bag
+import KOI.Enum (declareEnumText)
+
 
 import Common
 import Enemies
 
-import Data.Text(Text)
 
 data Objective = GiveMana BasicMana
                | Fight EnemyType

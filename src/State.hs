@@ -3,8 +3,8 @@ module State where
 import GHC.Generics(Generic)
 import Data.Aeson(ToJSON)
 
-import Common.Basics(PlayerId)
-import Common.Field(declareFields)
+import KOI.Basics(PlayerId)
+import KOI.Field(declareFields)
 
 import Hand
 import Source

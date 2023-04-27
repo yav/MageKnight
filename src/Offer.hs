@@ -20,7 +20,7 @@ module Offer
 
   ) where
 
-import Common.RNGM
+import KOI.RNGM
 import Util.ResourceQ
 
 data Offer a = Offer

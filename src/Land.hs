@@ -39,8 +39,8 @@ import           Control.Monad( foldM, guard )
 
 import Data.Aeson(ToJSON,toJSON)
 
-import Common.Utils
-import Common.RNGM
+import KOI.Utils
+import KOI.RNGM
 
 import  Util.ResourceQ
 import  Util.Perhaps

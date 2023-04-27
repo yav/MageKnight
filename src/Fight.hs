@@ -5,7 +5,7 @@ import Data.Map qualified as Map
 import Data.Set(Set)
 import Data.Set qualified as Set
 
-import Common.Bag
+import KOI.Bag
 
 import Enemies
 

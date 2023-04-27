@@ -3,8 +3,8 @@ module Deed.Action where
 import Data.Text(Text)
 import Data.Map(Map)
 import Data.Map qualified as Map
-import Common.Interact(Interact,getState)
 
+import AppTypes
 import State
 
 data DeedAction = DeedAction

@@ -7,7 +7,7 @@ module Util.ResourceQ
   , rqDiscard
   ) where
 
-import Common.RNGM
+import KOI.RNGM
 
 data ResourceQ a = ResourceQ
   { qAvailable   :: [a]

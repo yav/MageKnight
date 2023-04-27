@@ -2,8 +2,7 @@ module Deed.Basic (allBasic) where
 
 import Data.Text qualified as Text
 
-import Common.Field
-import Common.Interact
+import KOI.Field
 
 import Common
 import State

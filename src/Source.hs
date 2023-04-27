@@ -18,8 +18,8 @@ import GHC.Generics
 import Data.Maybe(fromMaybe)
 import Control.Monad (replicateM)
 
-import Common.Bag
-import Common.RNGM
+import KOI.Bag
+import KOI.RNGM
 import Data.Aeson(ToJSON)
 
 import Common

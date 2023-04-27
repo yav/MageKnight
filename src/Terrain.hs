@@ -33,12 +33,12 @@ import Data.Set ( Set )
 import Data.Set qualified as Set
 import Data.Map ( Map )
 import Data.Map qualified as Map
+import Data.Aeson (FromJSON,ToJSON)
 
-import Common.Enum
+import KOI.Enum
 
 import Common
 import Enemies(EnemyType(Orc,Draconum))
-import Data.Aeson (FromJSON,ToJSON)
 
 
 

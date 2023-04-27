@@ -16,7 +16,7 @@ import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Aeson(ToJSON)
 
-import Common.Enum
+import KOI.Enum
 
 import Common(Element(..))
 

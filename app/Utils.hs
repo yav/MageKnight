@@ -1,12 +1,12 @@
 module Utils where
 
 import Data.Text(Text)
-import Common.Basics
-import Common.Interact
+import KOI.Basics
 
-import Input
 import AppTypes
+import Input
 
+sync :: Interact ()
 sync =
   do s <- getState
      update (SetState s)

@@ -12,7 +12,8 @@ import GHC.Generics
 import Control.Applicative((<|>))
 import Data.Maybe(fromMaybe)
 import Data.Aeson
-import Common.Bag
+
+import KOI.Bag
 
 import Common
 

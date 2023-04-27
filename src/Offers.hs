@@ -31,7 +31,7 @@ module Offers
   , disbandUnit
   ) where
 
-import Common.RNGM
+import KOI.RNGM
 import Util.Q
 
 import Offer

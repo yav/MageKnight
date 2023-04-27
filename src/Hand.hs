@@ -3,7 +3,7 @@ module Hand where
 import GHC.Generics
 import Data.Aeson
 
-import Common.Field
+import KOI.Field
 
 import Deed
 
