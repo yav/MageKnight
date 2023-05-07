@@ -9,7 +9,8 @@ function setupConstants() {
   constant.smallCardWidth  = 0.7 * constant.cardWidth
   constant.smallCardHeight = 0.08 * constant.cardHeight
 
-  constant.dieSize         = 32
+  constant.dieSize         = 48
+
   constant.buttonHeight    = 32
   constant.buttonWidth     = 64
 
