@@ -1,10 +1,34 @@
--- * Do "before turn" stuff
--- * check to see if you have a turn, if not, done
--- * check for end round (if not already ending):
---    may end if deed deck empty
---    must end if deck deck and hand empty
---    if end round, then done.
--- * Otherwise start turn:
---    * Rest or regular
---    * During either must play or discard at least one card
---      (excepton, hand empty, but have deed deck)
+module Turn where
+
+import Control.Monad(unless)
+import AppTypes
+
+
+doTurn :: Interact ()
+doTurn =
+  do doPreTurn
+     end <- checkEndRound
+     if end
+        then pure ()
+        else
+          do -- playing cards start here so set phase
+             rested <- checkRest
+             unless rested regularTurn
+             endTurn
+
+
+-- village, tctics (mostly night?), skills
+doPreTurn :: Interact ()
+doPreTurn = pure ()
+
+checkEndRound :: Interact Bool
+checkEndRound = pure False
+
+checkRest :: Interact Bool
+checkRest = pure False
+
+regularTurn :: Interact ()
+regularTurn = pure ()
+
+endTurn :: Interact ()
+endTurn = pure ()

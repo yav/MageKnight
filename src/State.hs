@@ -12,6 +12,15 @@ import ManaPool
 import Land
 import Hero
 
+data Phase =
+    PreMovePhase
+  | MovePhase
+  | ActionPhase ActionPhase
+    deriving (Generic,ToJSON)
+
+data ActionPhase = ActionPhaseXXX
+    deriving (Generic,ToJSON)
+
 data State = State
   { playerId      :: PlayerId
   , playerHero    :: Hero
@@ -20,12 +29,12 @@ data State = State
   , _hand         :: Hand
   , _mana         :: ManaPool
   , _land         :: Land
+  , _movement     :: !Int
+  , _phase        :: Phase
   }
   deriving (Generic,ToJSON)
 
 declareFields ''State
 
-finalState :: State -> Bool
-finalState = const False
 
 

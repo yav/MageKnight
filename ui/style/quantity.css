@@ -12,7 +12,7 @@
   font-size: calc(var(--dieSize_px) / 4);
   text-align: center;
   z-index: 2;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0,0,0,1);
   color: white;
   border-radius: calc(var(--dieSize_px) / 20);
 }

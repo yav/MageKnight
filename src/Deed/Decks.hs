@@ -1,13 +1,11 @@
 module Deed.Decks (playDeed) where
 
 import Data.Text(Text)
-import KOI.Interact hiding (Interact)
 
 import Hand(SelectedMode(..))
 
 import Deed.Action
 import Deed.Basic(allBasic)
-import AppTypes
 
 
 playDeed :: SelectedMode -> Text -> Interact()

@@ -48,12 +48,14 @@ main =
                            , _hand        = newHand deck
                            , _mana        = emptyManaPool
                            , _land        = la
+                           , _movement    = 0
+                           , _phase       = MovePhase
                            }
   , appStart = gameLoop
   }
   where
   hero = Arythea
-  deck = wound : take 3 spells ++ take 5 (makeDeckFor hero)
+  deck = wound : makeDeckFor hero
 
 
 type TopInputOptions = State -> [ InputOption () ]

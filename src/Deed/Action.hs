@@ -1,11 +1,18 @@
-module Deed.Action where
+module Deed.Action
+  ( module Deed.Action
+  , module X
+  ) where
 
 import Data.Text(Text)
 import Data.Map(Map)
 import Data.Map qualified as Map
 
-import AppTypes
-import State
+import KOI.Field                    as X
+
+import Common                       as X
+import AppTypes                     as X
+import State                        as X
+import Input                        as X
 
 data DeedAction = DeedAction
   { actBasic :: Interact ()
@@ -38,3 +45,9 @@ deedNotImplemented txt = DeedAction
  -- XXX: say something, when we have logging
 notImplemented :: Text -> Interact ()
 notImplemented _ = pure ()
+
+gainMove :: Int -> Interact ()
+gainMove n =
+  do updateThe_ movement (n +)
+
+

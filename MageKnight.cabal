@@ -26,6 +26,7 @@ executable MageKnight
     Utils,
     Deed.Action,
     Deed.Basic,
+    Deed.ManaPull,
     Deed.Decks,
 
     State,
@@ -37,6 +38,8 @@ executable MageKnight
 
     Source,
     ManaPool,
+
+    Turn,
 
     Units,
     Skill,
