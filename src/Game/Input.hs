@@ -1,10 +1,10 @@
-module Input where
+module Game.Input where
 
 import GHC.Generics(Generic)
 import Data.Text(Text)
 import Data.Aeson(ToJSON,FromJSON)
 
-import Common
+import Mana.Type
 import Terrain.Type
 
 data Input = Source Mana      -- ^ Mana in the source

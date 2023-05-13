@@ -8,33 +8,37 @@ import Data.Map(Map)
 import Data.Map qualified as Map
 
 import KOI.Field                    as X
+import KOI.Enum
 
 import Common                       as X
-import AppTypes                     as X
-import State                        as X
-import Input                        as X
+import Game.KOI                     as X
+import Game.State                   as X
+import Game.Input                   as X
+
+import Deed.Type
 
 data DeedAction = DeedAction
   { actBasic :: Interact ()
   , actPower :: Interact ()
   }
 
-type Deeds = Map Text DeedAction
+type Deeds = Map DeedName DeedAction
 type DeedDef = State -> Interact ()
 
-defDeeds :: [(Text,DeedAction)] -> Deeds
+defDeeds :: [(DeedName,DeedAction)] -> Deeds
 defDeeds = Map.fromList
 
 unionDeeds :: [Deeds] -> Deeds
 unionDeeds = Map.unions
 
-defDeed :: Text -> DeedDef -> DeedDef -> (Text, DeedAction)
+defDeed :: DeedName -> DeedDef -> DeedDef -> (DeedName, DeedAction)
 defDeed k a b = (k, DeedAction { actBasic = mk a, actPower = mk b })
   where
   mk f = getState >>= f
 
-getAction :: Text -> Deeds -> DeedAction
-getAction nm = Map.findWithDefault (deedNotImplemented nm) nm
+getAction :: DeedName -> Deeds -> DeedAction
+getAction nm =
+  Map.findWithDefault (deedNotImplemented (enumToText nm)) nm
 
 deedNotImplemented :: Text -> DeedAction
 deedNotImplemented txt = DeedAction

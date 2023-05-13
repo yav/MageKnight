@@ -38,7 +38,7 @@ import Offer
 
 import Units
 import Skill
-import DeedDecks ( Deed,advancedActions, spells, artifacts)
+import Deed.Type ( Deed,advancedActions, spells, artifacts)
 
 
 

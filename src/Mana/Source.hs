@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Source
+module Mana.Source
   ( Source
   , newSource
   , refillSource
@@ -22,7 +22,7 @@ import KOI.Bag
 import KOI.RNGM
 import Data.Aeson(ToJSON)
 
-import Common
+import Mana.Type
 
 -- | The source of pure mana
 data Source = Source

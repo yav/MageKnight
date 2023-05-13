@@ -35,6 +35,7 @@ import KOI.Bag
 
 import Util.ResourceQ
 import Common
+import Mana.Type
 import Enemies
 import Ruins
 

@@ -3,8 +3,9 @@ module Deed.ManaPull where
 import Data.Text qualified as Text
 
 import Deed.Action
-import ManaPool
-import Source
+import Mana.Type
+import Mana.Pool
+import Mana.Source
 
 basicManaPull :: DeedDef
 basicManaPull s =

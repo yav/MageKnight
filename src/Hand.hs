@@ -5,7 +5,7 @@ import Data.Aeson
 
 import KOI.Field
 
-import Deed
+import Deed.Type
 
 data Hand = Hand
   { _handCards    :: [Deed]
@@ -46,7 +46,7 @@ handSelectMode m h =
 handPlayable :: Hand -> [Int]
 handPlayable =
     map fst
-  . filter ((/= "Wound") . deedName . snd)
+  . filter ((/= WoundName) . deedName . snd)
   . zip [0..]
   . getField handCards
 

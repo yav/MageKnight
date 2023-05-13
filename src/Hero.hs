@@ -1,6 +1,8 @@
 module Hero where
 
 import KOI.Enum
+import Deed.Name
+import Deed.Type
 
 data Hero =
     Arythea
@@ -14,5 +16,45 @@ data Hero =
 declareEnumText ''Hero
 
 
+makeDeckFor :: Hero -> [Deed]
+makeDeckFor name =
+  makeCustomDeck
+    case name of
+
+      Arythea   ->
+        basicDeck
+          [ (Rage,      Battle_Versatility)
+          , (Mana_Draw, Mana_Pull)
+          ]
+
+      Tovak ->
+        basicDeck
+          [ (Determination, Cold_Toughness)
+          , (Improvisation, Instinct)
+          ]
+
+      Goldyx ->
+        basicDeck
+          [ (Concentration, Will_Focus)
+          , (Crystallize,   Crystal_Joy)
+          ]
+
+      Norowas ->
+        basicDeck
+          [ (Promise,     Noble_Manners)
+          , (Tranquility, Rejuvenate)
+          ]
+
+      Wolfhawk ->
+        basicDeck
+          [ (Swiftness, Swift_Reflexes)
+          , (Stamina,   Tirelessness)
+          ]
+
+      Krang ->
+        basicDeck
+          [ (March,    Savage_Harvesting)
+          , (Threaten, Ruthless_Coercion)
+          ]
 
 

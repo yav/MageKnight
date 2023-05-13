@@ -1,10 +1,10 @@
-module AppTypes (MK(..), Update(..), Interact, module KOI.Interact) where
+module Game.KOI (MK(..), Update(..), Interact, module KOI.Interact) where
 
 import KOI.Interact hiding (Interact)
 import KOI.Interact qualified as I
 
-import State
-import Input
+import Game.State
+import Game.Input
 
 data MK = MK
 

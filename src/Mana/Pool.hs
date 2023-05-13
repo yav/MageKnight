@@ -1,4 +1,4 @@
-module ManaPool
+module Mana.Pool
   ( ManaPool
   , emptyManaPool
   , addSourceMana, addMana
@@ -15,7 +15,7 @@ import Data.Aeson
 
 import KOI.Bag
 
-import Common
+import Mana.Type
 
 
 data ManaPool = ManaPool

@@ -7,17 +7,17 @@ import KOI.CallJS(jsHandlers)
 import KOI.RNGM
 import KOI.Field
 import KOI.Basics
-import AppTypes
 
 import Util.Perhaps
 
-import State
-import Input
-import Common
-import Source
-import ManaPool
-import Deed(wound,deedName,deedColor)
-import DeedDecks(makeDeckFor, spells)
+import Game.KOI
+import Game.State
+import Game.Input
+
+import Mana.Type
+import Mana.Source
+import Mana.Pool
+import Deed.Type(wound,deedName,deedColor)
 import Hand
 import Utils
 import Terrain.Map

@@ -3,8 +3,8 @@ module Utils where
 import Data.Text(Text)
 import KOI.Basics
 
-import AppTypes
-import Input
+import Game.KOI
+import Game.Input
 
 type InputOption a = (WithPlayer Input, Text, Interact a)
 

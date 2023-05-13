@@ -1,7 +1,7 @@
-module Turn where
+module Game.Turn where
 
 import Control.Monad(unless)
-import AppTypes
+import Game.KOI
 
 
 doTurn :: Interact ()

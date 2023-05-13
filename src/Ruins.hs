@@ -13,7 +13,7 @@ import KOI.Bag
 import KOI.Enum (declareEnumText)
 
 
-import Common
+import Mana.Type
 import Enemies
 
 

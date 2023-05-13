@@ -1,4 +1,4 @@
-module State where
+module Game.State where
 
 import GHC.Generics(Generic)
 import Data.Aeson(ToJSON)
@@ -7,8 +7,8 @@ import KOI.Basics(PlayerId)
 import KOI.Field(declareFields)
 
 import Hand
-import Source
-import ManaPool
+import Mana.Source
+import Mana.Pool
 import Terrain.Map
 import Hero
 

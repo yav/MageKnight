@@ -23,23 +23,27 @@ executable MageKnight
   main-is: Main.hs
 
   other-modules:
+    Game.KOI,
+    Game.State,
+    Game.Input,
+    Game.Turn,
+
     Utils,
+
+    Deed.Name,
+    Deed.Type,
     Deed.Action,
     Deed.Basic,
     Deed.ManaPull,
     Deed.Decks,
 
-    State,
-    Input,
     Hero,
-    Deed,
-    DeedDecks,
+
     Hand,
 
-    Source,
-    ManaPool,
-
-    Turn,
+    Mana.Type,
+    Mana.Source,
+    Mana.Pool,
 
     Units,
     Skill,
@@ -65,7 +69,6 @@ executable MageKnight
     Util.Misc,
     Util.Perhaps,
 
-    AppTypes
 
 
   build-depends:

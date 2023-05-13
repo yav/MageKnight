@@ -1,7 +1,6 @@
 module Common where
 
 import Text.PrettyPrint
-import Data.Char(toLower)
 
 
 import KOI.Enum
@@ -18,12 +17,6 @@ data Element    = Physical | Fire | Ice | ColdFire
 data AttackType = Melee | Ranged | Siege
                   deriving (Eq,Ord,Show)
 
-data BasicMana  = Red | Green | Blue | White
-                  deriving (Eq,Ord,Show,Read)
-
-data Mana       = BasicMana BasicMana | Gold | Black
-                  deriving (Eq,Ord,Show,Read)
-
 data Time       = Day | Night
                   deriving (Eq,Ord,Show)
 
@@ -33,12 +26,6 @@ data DamageInfo = DamageInfo { damageElement    :: Element
                              , damagePoisons    :: Bool
                              , damageParalyzes  :: Bool
                              }
-
-anyBasicMana :: [ BasicMana ]
-anyBasicMana = [ Red, Green, Blue, White ]
-
-anyMana :: [ Mana ]
-anyMana = Gold : Black : map BasicMana anyBasicMana
 
 anyAttack :: [ AttackType ]
 anyAttack = [ Melee, Ranged, Siege ]
@@ -51,16 +38,6 @@ ppElement el =
     Ice       -> text "ice"
     ColdFire  -> text "cold fire"
 
-ppBasicMana :: BasicMana -> Doc
-ppBasicMana = text . map toLower . show
-
-ppMana :: Mana -> Doc
-ppMana m =
-  case m of
-    BasicMana b -> ppBasicMana b
-    Gold        -> text "gold"
-    Black       -> text "black"
-
 ppTime :: Time -> Doc
 ppTime t =
   case t of
@@ -72,8 +49,6 @@ ppTime t =
 declareEnumText ''Usable
 declareEnumText ''Element
 declareEnumText ''AttackType
-declareEnumText ''BasicMana
-declareEnumText ''Mana
 declareEnumText ''Time
 
 

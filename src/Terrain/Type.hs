@@ -38,6 +38,7 @@ import Data.Aeson (FromJSON,ToJSON)
 import KOI.Enum
 
 import Common
+import Mana.Type
 import Enemies(EnemyType(Orc,Draconum))
 
 
