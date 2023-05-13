@@ -1,4 +1,4 @@
-module HexContent
+module Terrain.Hex
   ( -- * Basics
     HexContent
   , hexEmpty

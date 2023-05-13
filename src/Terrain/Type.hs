@@ -1,4 +1,4 @@
-module Terrain
+module Terrain.Type
   ( -- * Addressing
     Addr(..), TileAddr,
 

@@ -1,4 +1,4 @@
-module Land
+module Terrain.Map
   ( -- * Setting up the land
     Land
   , LandSetup(..), defaultLandSetup, setupLand
@@ -9,7 +9,7 @@ module Land
   , exploreAt
   , isRevealed
 
-  , provoked
+  , startsBattle
 
     -- * Time
   , setTime
@@ -47,9 +47,10 @@ import  Util.Perhaps
 
 
 
-import  Terrain
-import  HexContent
-import  GameTile
+import  Terrain.Type
+import  Terrain.Hex
+import  Terrain.Tile
+
 import  Enemies( Enemy(..), EnemyType(..), allEnemies, allEnemyTypes )
 import  Ruins(Ruins, ruins)
 import  Common(Time(..), Visibility(..))
@@ -392,12 +393,11 @@ updateAddr' Addr { .. } f Land { .. } =
 
 -- | Compute which addresses start wars, if we move from one location
 -- to another normally (i.e., "walking").
-provoked :: Land -> Addr -> Addr -> [(Addr,[Enemy])]
-provoked Land { .. } from to =
-  maybeToList (hasWar isDangerous to) ++
-  ( mapMaybe (hasWar isRampaging)
-  $ Set.toList
-  $ Set.intersection (neighboursOf from) (neighboursOf to))
+startsBattle :: Land -> Addr -> Addr -> [(Addr,[Enemy])]
+startsBattle Land { .. } fromS toS =
+  maybeToList (hasWar isDangerous toS) ++
+  mapMaybe (hasWar isRampaging)
+    (Set.toList (Set.intersection (neighboursOf fromS) (neighboursOf toS)))
   where
   neighboursOf x = Set.fromList [ neighbour x d | d <- allDirections ]
 
@@ -414,8 +414,6 @@ provoked Land { .. } from to =
                    HexLandInfo { hexFeature = Just (RampagingEnemy _) }
                } = True
   isRampaging _ = False
-
-  -- XXX: Not dealing with other players
 
   isDangerous HexInfo { hexLandInfo = HexLandInfo { .. } } =
       case hexFeature of

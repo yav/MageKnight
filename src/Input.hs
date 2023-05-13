@@ -5,7 +5,7 @@ import Data.Text(Text)
 import Data.Aeson(ToJSON,FromJSON)
 
 import Common
-import Terrain
+import Terrain.Type
 
 data Input = Source Mana      -- ^ Mana in the source
            | AskMana Mana     -- ^ Just mana color

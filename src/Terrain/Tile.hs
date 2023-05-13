@@ -1,5 +1,5 @@
 -- | An active game tile.
-module GameTile
+module Terrain.Tile
   ( GameTile
   , gameTilePlaceHolder
   , emptyGameTile
@@ -17,8 +17,8 @@ import           Data.Map ( Map )
 import qualified Data.Map as Map
 import Data.Aeson(ToJSON)
 
-import Terrain
-import HexContent
+import Terrain.Type
+import Terrain.Hex
 
 -- | An active game tile.  Keeps track of what's on each hex.
 data GameTile = GameTile

@@ -20,9 +20,9 @@ import Deed(wound,deedName,deedColor)
 import DeedDecks(makeDeckFor, spells)
 import Hand
 import Utils
-import Land
+import Terrain.Map
+import Terrain.Type(addrGlobal,MapShape(..))
 import Hero
-import Terrain(addrGlobal,MapShape(..))
 import Deed.Decks(playDeed)
 
 main :: IO ()

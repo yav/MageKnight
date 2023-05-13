@@ -47,13 +47,13 @@ executable MageKnight
     Enemies,
     Ruins,
 
-    Land,
-    GameTile,
-    HexContent,
-    Terrain,
+    Terrain.Map,
+    Terrain.Tile,
+    Terrain.Hex,
+    Terrain.Type,
 
     Tactic,
-    Fight,
+    Battle,
 
     Common,
     Offer,

@@ -1,4 +1,4 @@
-module Fight where
+module Battle where
 
 import Data.Map(Map)
 import Data.Map qualified as Map

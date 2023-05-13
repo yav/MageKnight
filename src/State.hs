@@ -9,7 +9,7 @@ import KOI.Field(declareFields)
 import Hand
 import Source
 import ManaPool
-import Land
+import Terrain.Map
 import Hero
 
 data Phase =
