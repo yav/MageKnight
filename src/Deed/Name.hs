@@ -1,7 +1,21 @@
 module Deed.Name where
 
+import Data.List((\\))
 import KOI.Enum
 {- HLINT ignore "Use camelCase" -}
+
+-- | A started deck with no special cards.
+basicDeck :: [(ActionName,ActionName)] -> [ DeedName ]
+basicDeck changes = map ActionName (add ++ (basic \\ rm))
+  where
+  (rm,add) = unzip changes
+  basic    = [ Stamina, Stamina, Determination, Crystallize
+             , March, March, Concentration, Tranquility
+             , Rage, Rage, Improvisation, Threaten
+             , Swiftness, Swiftness, Promise, Mana_Draw
+             ]
+
+
 
 data DeedName =
     WoundName
@@ -44,7 +58,7 @@ data ActionName =
    | Battle_Versatility
    | Ruthless_Coercion
    | Instinct
-    deriving (Eq,Ord)
+    deriving (Eq,Ord,Enum,Bounded)
 
 
 data AdvancedActionName =
@@ -96,59 +110,39 @@ data AdvancedActionName =
   | Counterattack
   | Ritual_Attack
   | Blood_of_Ancients
-    deriving (Eq,Ord)
+    deriving (Eq,Ord,Enum,Bounded)
 
 
 data SpellName =
 
   -- Green
     Cure
-  | Disease
   | Meditation
-  | Trance
   | Tremor
-  | Earthquake
   | Underground_Travel
-  | Underground_Attack
   | Restoration
-  | Rebirth
 
   -- Red
   | Demolish
-  | Disintegrate
   | Burning_Shield
-  | Exploding_Shield
   | Fireball
-  | Firestorm
   | Flame_Wall
-  | Flame_Wave
   | Offering
-  | Sacrifice
 
   -- Blue
   | Chill
-  | Lethal_Chill
-  | Mistw_Form
-  | Veil_of_Mist
+  | Mist_Form
   | Snowstorm
-  | Blizzard
   | Space_Bending
-  | Time_Bending
   | Mana_Bolt
-  | Mana_Thunderbolt
 
   -- White
   | Expose
-  | Mass_Expose
   | Call_to_Arms
-  | Call_to_Glory
   | Charm
-  | Possess
   | Whirlwind
-  | Tornado
   | Wings_of_Wind
-  | Wings_of_Night
-    deriving (Eq,Ord)
+    deriving (Eq,Ord,Enum,Bounded)
 
 
 data ArtifactName =

@@ -18,7 +18,7 @@ declareEnumText ''Hero
 
 makeDeckFor :: Hero -> [Deed]
 makeDeckFor name =
-  makeCustomDeck
+  map deed
     case name of
 
       Arythea   ->
