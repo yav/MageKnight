@@ -46,7 +46,7 @@ handSelectMode m h =
 handPlayable :: Hand -> [Int]
 handPlayable =
     map fst
-  . filter ((/= WoundName) . deedName . snd)
+  . filter ((/= Wound) . snd)
   . zip [0..]
   . getField handCards
 

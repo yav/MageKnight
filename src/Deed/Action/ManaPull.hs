@@ -1,4 +1,4 @@
-module Deed.ManaPull where
+module Deed.Action.ManaPull where
 
 import Data.Text qualified as Text
 

@@ -38,7 +38,7 @@ import Offer
 
 import Units
 import Skill
-import Deed.Type ( Deed,advancedActions, spells, artifacts)
+import Deed.Type ( Deed(..), allDeeds )
 
 
 
@@ -174,16 +174,16 @@ defaultOfferSetup :: Int {- ^ Number of players -} ->
                      OfferSetup
 defaultOfferSetup playerNum = OfferSetup
   { useSpellNum = 3
-  , useSpells   = spells
+  , useSpells   = allDeeds Spell
 
   , useAdvancedActionNum = 3
-  , useAdvancedActions  = advancedActions
+  , useAdvancedActions  = allDeeds AdvancedAction
 
   , useUnitNum      = playerNum + 2
   , useRegularUnits = regularUnits
   , useEliteUnits   = eliteUnits
 
-  , useArtifacts    = artifacts
+  , useArtifacts    = allDeeds Artifact
 
   }
 

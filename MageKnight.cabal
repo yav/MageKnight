@@ -30,12 +30,11 @@ executable MageKnight
 
     Utils,
 
-    Deed.Name,
     Deed.Type,
+    Deed.Color,
     Deed.Action,
-    Deed.Basic,
-    Deed.ManaPull,
-    Deed.Decks,
+    Deed.Play,
+    Deed.Action.ManaPull,
 
     Hero,
 

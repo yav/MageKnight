@@ -17,28 +17,18 @@ import Game.Input                   as X
 
 import Deed.Type
 
+
 data DeedAction = DeedAction
   { actBasic :: Interact ()
   , actPower :: Interact ()
   }
 
-type Deeds = Map DeedName DeedAction
 type DeedDef = State -> Interact ()
 
-defDeeds :: [(DeedName,DeedAction)] -> Deeds
-defDeeds = Map.fromList
-
-unionDeeds :: [Deeds] -> Deeds
-unionDeeds = Map.unions
-
-defDeed :: DeedName -> DeedDef -> DeedDef -> (DeedName, DeedAction)
-defDeed k a b = (k, DeedAction { actBasic = mk a, actPower = mk b })
+defDeed :: DeedDef -> DeedDef -> DeedAction
+defDeed a b = DeedAction { actBasic = mk a, actPower = mk b }
   where
   mk f = getState >>= f
-
-getAction :: DeedName -> Deeds -> DeedAction
-getAction nm =
-  Map.findWithDefault (deedNotImplemented (enumToText nm)) nm
 
 deedNotImplemented :: Text -> DeedAction
 deedNotImplemented txt = DeedAction

@@ -1,7 +1,6 @@
 module Hero where
 
 import KOI.Enum
-import Deed.Name
 import Deed.Type
 
 data Hero =
@@ -18,43 +17,42 @@ declareEnumText ''Hero
 
 makeDeckFor :: Hero -> [Deed]
 makeDeckFor name =
-  map deed
-    case name of
+  case name of
 
-      Arythea   ->
-        basicDeck
-          [ (Rage,      Battle_Versatility)
-          , (Mana_Draw, Mana_Pull)
-          ]
+    Arythea   ->
+      basicDeck
+        [ (Rage,      Battle_Versatility)
+        , (Mana_Draw, Mana_Pull)
+        ]
 
-      Tovak ->
-        basicDeck
-          [ (Determination, Cold_Toughness)
-          , (Improvisation, Instinct)
-          ]
+    Tovak ->
+      basicDeck
+        [ (Determination, Cold_Toughness)
+        , (Improvisation, Instinct)
+        ]
 
-      Goldyx ->
-        basicDeck
-          [ (Concentration, Will_Focus)
-          , (Crystallize,   Crystal_Joy)
-          ]
+    Goldyx ->
+      basicDeck
+        [ (Concentration, Will_Focus)
+        , (Crystallize,   Crystal_Joy)
+        ]
 
-      Norowas ->
-        basicDeck
-          [ (Promise,     Noble_Manners)
-          , (Tranquility, Rejuvenate)
-          ]
+    Norowas ->
+      basicDeck
+        [ (Promise,     Noble_Manners)
+        , (Tranquility, Rejuvenate)
+        ]
 
-      Wolfhawk ->
-        basicDeck
-          [ (Swiftness, Swift_Reflexes)
-          , (Stamina,   Tirelessness)
-          ]
+    Wolfhawk ->
+      basicDeck
+        [ (Swiftness, Swift_Reflexes)
+        , (Stamina,   Tirelessness)
+        ]
 
-      Krang ->
-        basicDeck
-          [ (March,    Savage_Harvesting)
-          , (Threaten, Ruthless_Coercion)
-          ]
+    Krang ->
+      basicDeck
+        [ (March,    Savage_Harvesting)
+        , (Threaten, Ruthless_Coercion)
+        ]
 
 

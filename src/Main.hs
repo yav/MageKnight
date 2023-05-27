@@ -17,13 +17,14 @@ import Game.Input
 import Mana.Type
 import Mana.Source
 import Mana.Pool
-import Deed.Type(wound,deedName,deedColor)
+import Deed.Color(deedColor)
 import Hand
 import Utils
 import Terrain.Map
 import Terrain.Type(addrGlobal,MapShape(..))
 import Hero
-import Deed.Decks(playDeed)
+import Deed.Type
+import Deed.Play(playDeed)
 
 main :: IO ()
 main =
@@ -55,7 +56,7 @@ main =
   }
   where
   hero = Arythea
-  deck = wound : makeDeckFor hero
+  deck = Wound : makeDeckFor hero
 
 
 type TopInputOptions = State -> [ InputOption () ]
@@ -129,7 +130,7 @@ getSelectedCardOptions s =
       ]
       ++
       [ topOpt s (ActionButton "Play") "Play card"
-        do playDeed mode (deedName deed)
+        do playDeed mode deed
            updateThe_ hand (setField handSelected Nothing)
            sync
            gameLoop

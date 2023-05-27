@@ -131,7 +131,7 @@ function newCards() {
 
     , Wound:
         { cols: 1, ho: 0.22, vo: [11.4]
-        , cards: ["WoundName"]
+        , cards: ["Wound"]
         }
     }
     const cardLoc = {}
@@ -150,16 +150,16 @@ function newCards() {
     for (const ty in dims) {
       const cards = dims[ty].cards
       for (let i = 0; i < cards.length; ++i) {
-        if (cards[i] === deed.deedName) return ty
+        if (cards[i] === deed) return ty
       }
     }
   }
 
   function drawDeed(deed) {
-    const name    = deed.deedName
-    console.log(name)
-    const [r,c]   = cardLoc[name]
+    console.log(deed)
+    const [r,c]   = cardLoc[deed]
     const cardTy  = getDeedType(deed)
+    console.log("type",cardTy)
     const info    = dims[cardTy]
 
     function small() {

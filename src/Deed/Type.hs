@@ -1,209 +1,162 @@
-module Deed.Type
-  ( Deed (..)
+module Deed.Type where
 
-  , wound
-  , basicActions
-  , advancedActions
-  , spells
-  , artifacts
+import Data.List((\\))
+import KOI.Enum
+{- HLINT ignore "Use camelCase" -}
 
-  , deed
-  , actionDeed
-  , advancedActionDeed
-  , spellDeed
-  , artifactDeed
+allDeeds :: (Enum a, Bounded a) => (a -> Deed) -> [Deed]
+allDeeds f = map f [ minBound .. maxBound ]
 
-  , module Deed.Name
-  ) where
-
-import GHC.Generics
-import Data.Text(Text)
-import Data.Aeson(ToJSON)
-
-import Mana.Type
-import Deed.Name
-
-data Deed = Deed
-  { deedName      :: DeedName
-  , deedNamePower :: Maybe Text     -- ^ For spells
-  , deedColor     :: [BasicMana]
-  } deriving (Generic,ToJSON)
-
-instance Eq Deed where
-  x == y = deedName x == deedName y
-
-instance Ord Deed where
-  compare x y = compare (deedName x) (deedName y)
-
-
-deed :: DeedName -> Deed
-deed name =
-  case name of
-    WoundName            -> wound
-    ActionName a         -> actionDeed a
-    AdvancedActionName a -> advancedActionDeed a
-    SpellName a          -> spellDeed a
-    ArtifactName a       -> artifactDeed a
-
--- | Make a wound.
-wound :: Deed
-wound =
-  Deed { deedName      = WoundName
-       , deedNamePower = Nothing
-       , deedColor     = []
-       }
-
--- | Make a basic action.
-actionDeed :: ActionName -> Deed
-actionDeed name =
-  Deed { deedNamePower = Nothing
-       , deedColor     = [color]
-       , deedName      = ActionName name
-       }
+-- | A started deck with no special cards.
+basicDeck :: [(BasicAction,BasicAction)] -> [ Deed ]
+basicDeck changes = map BasicAction (add ++ (basic \\ rm))
   where
-  color =
-    case name of
-      March             ->  Green
-      Tranquility       ->  Green
-      Concentration     ->  Green
-      Savage_Harvesting ->  Green
-      Rejuvenate        ->  Green
-      Will_Focus        ->  Green
+  (rm,add) = unzip changes
+  basic    = [ Stamina, Stamina, Determination, Crystallize
+             , March, March, Concentration, Tranquility
+             , Rage, Rage, Improvisation, Threaten
+             , Swiftness, Swiftness, Promise, Mana_Draw
+             ]
 
-      Swiftness ->  White
-      Promise ->  White
-      Mana_Draw ->  White
-      Swift_Reflexes ->  White
-      Noble_Manners ->  White
-      Mana_Pull ->  White
+--------------------------------------------------------------------------------
 
-      Stamina ->  Blue
-      Crystallize ->  Blue
-      Determination ->  Blue
-      Tirelessness ->  Blue
-      Crystal_Joy ->  Blue
-      Cold_Toughness ->  Blue
- 
-      Rage ->  Red
-      Threaten ->  Red
-      Improvisation ->  Red
-      Battle_Versatility ->  Red
-      Ruthless_Coercion ->  Red
-      Instinct ->  Red
+data Deed =
+    Wound
+  | BasicAction BasicAction
+  | AdvancedAction AdvancedAction
+  | Spell Spell
+  | Artifact Artifact
+    deriving (Eq,Ord)
 
+data BasicAction =
 
+   -- Green
+     March
+   | Tranquility
+   | Concentration
+   | Savage_Harvesting
+   | Rejuvenate
+   | Will_Focus
 
--- | Make an advanced action.
-advancedActionDeed :: AdvancedActionName -> Deed
-advancedActionDeed name =
-  Deed { deedNamePower = Nothing
-       , deedColor     = [color]
-       , deedName      = AdvancedActionName name
-       }
-  where
-  color =
-    case name of
+   -- White
+   | Swiftness
+   | Promise
+   | Mana_Draw
+   | Swift_Reflexes
+   | Noble_Manners
+   | Mana_Pull
 
-      Crushing_Bolt -> Green
-      Refreshing_Walk -> Green
-      Path_Finding -> Green
-      Regeneration -> Green
-      In_Need -> Green
-      Ambush -> Green
-      Training -> Green
-      Stout_Resolve -> Green
-      Force_of_Nature -> Green
-      Mountain_Lore -> Green
+   -- Blue
+   | Stamina
+   | Crystallize
+   | Determination
+   | Tirelessness
+   | Crystal_Joy
+   | Cold_Toughness
 
-      Swift_Bolt -> White
-      Agility -> White
-      Song_of_Wind -> White
-      Heroic_Tale -> White
-      Diplomacy -> White
-      Mana_Storm -> White
-      Learning -> White
-      Chivalry -> White
-      Peaceful_Moment -> White
-      Dodge_and_Weave -> White
-
-      Ice_Bolt -> Blue
-      Ice_Shield -> Blue
-      Frost_Bridge -> Blue
-      Pure_Magic -> Blue
-      Steady_Tempo -> Blue
-      Crystal_Mastery -> Blue
-      Magic_Talent -> Blue
-      Shield_Bash -> Blue
-      Temporal_Portal -> Blue
-      Spell_Forge -> Blue
-
-      Fire_Bolt -> Red
-      Blood_Rage -> Red
-      Intimidate -> Red
-      Blood_Ritual -> Red
-      Into_the_Heat -> Red
-      Decompose -> Red
-      Maximal_Effect -> Red
-      Counterattack -> Red
-      Ritual_Attack -> Red
-      Blood_of_Ancients -> Red
+   -- Red
+   | Rage
+   | Threaten
+   | Improvisation
+   | Battle_Versatility
+   | Ruthless_Coercion
+   | Instinct
+    deriving (Eq,Ord,Enum,Bounded)
 
 
--- | Make a spell. XXX: Remove secondary spell ids
-spellDeed :: SpellName -> Deed
-spellDeed name =
-  case name of
-   Cure                -> mk Green Cure                "Disease"
-   Meditation          -> mk Green Meditation          "Trance"
-   Tremor              -> mk Green Tremor              "Earthquake"
-   Underground_Travel  -> mk Green Underground_Travel  "Underground_Attack"
-   Restoration         -> mk Green Restoration         "Rebirth"
+data AdvancedAction =
 
-   Demolish            -> mk White Demolish            "Disintegrate"
-   Burning_Shield      -> mk White Burning_Shield      "Exploding_Shield"
-   Fireball            -> mk White Fireball            "Firestorm"
-   Flame_Wall          -> mk White Flame_Wall          "Flame_Wave"
-   Offering            -> mk White Offering            "Sacrifice"
+  -- Green
+    Crushing_Bolt
+  | Refreshing_Walk
+  | Path_Finding
+  | Regeneration
+  | In_Need
+  | Ambush
+  | Training
+  | Stout_Resolve
+  | Force_of_Nature
+  | Mountain_Lore
 
-   Chill               -> mk Blue Chill                "Lethal_Chill"
-   Mist_Form           -> mk Blue Mist_Form            "Veil_of_Mist"
-   Snowstorm           -> mk Blue Snowstorm            "Blizzard"
-   Space_Bending       -> mk Blue Space_Bending        "Time_Bending"
-   Mana_Bolt           -> mk Blue Mana_Bolt            "Mana_Thunderbolt"
+  -- White
+  | Swift_Bolt
+  | Agility
+  | Song_of_Wind
+  | Heroic_Tale
+  | Diplomacy
+  | Mana_Storm
+  | Learning
+  | Chivalry
+  | Peaceful_Moment
+  | Dodge_and_Weave
 
-   Expose              -> mk Red Expose                "Mass_Expose"
-   Call_to_Arms        -> mk Red Call_to_Arms          "Call_to_Glory"
-   Charm               -> mk Red Charm                 "Possess"
-   Whirlwind           -> mk Red Whirlwind             "Tornado"
-   Wings_of_Wind       -> mk Red Wings_of_Wind         "Wings_of_Night"
-  where
-  mk color name1 name2 =
-    Deed { deedNamePower = Just name2
-         , deedColor     = [color]
-         , deedName      = SpellName name1
-         }
+  -- Blue
+  | Ice_Bolt
+  | Ice_Shield
+  | Frost_Bridge
+  | Pure_Magic
+  | Steady_Tempo
+  | Crystal_Mastery
+  | Magic_Talent
+  | Shield_Bash
+  | Temporal_Portal
+  | Spell_Forge
+
+  -- Red
+  | Fire_Bolt
+  | Blood_Rage
+  | Intimidate
+  | Blood_Ritual
+  | Into_the_Heat
+  | Decompose
+  | Maximal_Effect
+  | Counterattack
+  | Ritual_Attack
+  | Blood_of_Ancients
+    deriving (Eq,Ord,Enum,Bounded)
 
 
--- | Make an artifact.
-artifactDeed :: ArtifactName -> Deed
-artifactDeed name =
-  Deed { deedNamePower = Nothing
-       , deedColor     = []
-       , deedName      = ArtifactName name
-       }
+data Spell =
+
+  -- Green
+    Cure
+  | Meditation
+  | Tremor
+  | Underground_Travel
+  | Restoration
+
+  -- Red
+  | Demolish
+  | Burning_Shield
+  | Fireball
+  | Flame_Wall
+  | Offering
+
+  -- Blue
+  | Chill
+  | Mist_Form
+  | Snowstorm
+  | Space_Bending
+  | Mana_Bolt
+
+  -- White
+  | Expose
+  | Call_to_Arms
+  | Charm
+  | Whirlwind
+  | Wings_of_Wind
+    deriving (Eq,Ord,Enum,Bounded)
 
 
-basicActions :: [Deed]
-basicActions = map actionDeed [ minBound .. maxBound ]
+data Artifact =
+  XXXArtifact
+  deriving (Eq,Ord,Enum,Bounded)
 
-advancedActions :: [Deed]
-advancedActions = map advancedActionDeed [ minBound .. maxBound ]
 
-spells :: [Deed]
-spells = map spellDeed [ minBound .. maxBound ]
-
-artifacts :: [Deed]
-artifacts = [] -- XXX
-
+declareEnumText ''BasicAction
+declareEnumText ''AdvancedAction
+declareEnumText ''Spell
+declareEnumText ''Artifact
+declareEnumText ''Deed
 
 
