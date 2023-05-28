@@ -11,6 +11,7 @@ import Mana.Source
 import Mana.Pool
 import Terrain.Map
 import Hero
+import Combat
 
 data Phase =
     PreMovePhase
@@ -18,7 +19,7 @@ data Phase =
   | ActionPhase ActionPhase
     deriving (Generic,ToJSON)
 
-data ActionPhase = ActionPhaseXXX
+data ActionPhase = Combat CombatPhase
     deriving (Generic,ToJSON)
 
 data State = State

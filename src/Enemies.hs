@@ -6,11 +6,14 @@ module Enemies
   , EnemyAbility(..)
   , EnemyAttack(..)
 
+  , enemyIsElusive
+
   , allEnemies
   , orcs, guardians, mages, underworld, citizens, draconum
   ) where
 
 import GHC.Generics(Generic)
+import Data.Maybe(listToMaybe)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text (Text)
@@ -50,6 +53,9 @@ instance Ord Enemy where
   compare x y = compare (enemyName x) (enemyName y)
 
 
+enemyIsElusive :: Enemy -> Maybe Int
+enemyIsElusive e =
+  listToMaybe [ x | Elusive x <- Set.toList (enemyAbilities e) ]
 
 --------------------------------------------------------------------------------
 data EnemyAbility =

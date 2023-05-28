@@ -4,18 +4,13 @@ module Deed.Action
   ) where
 
 import Data.Text(Text)
-import Data.Map(Map)
-import Data.Map qualified as Map
 
 import KOI.Field                    as X
-import KOI.Enum
 
 import Common                       as X
 import Game.KOI                     as X
 import Game.State                   as X
 import Game.Input                   as X
-
-import Deed.Type
 
 
 data DeedAction = DeedAction
