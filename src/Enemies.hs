@@ -7,6 +7,7 @@ module Enemies
   , EnemyAttack(..)
 
   , enemyIsElusive
+  , enemyElementalResistances
 
   , allEnemies
   , orcs, guardians, mages, underworld, citizens, draconum
@@ -57,6 +58,15 @@ enemyIsElusive :: Enemy -> Maybe Int
 enemyIsElusive e =
   listToMaybe [ x | Elusive x <- Set.toList (enemyAbilities e) ]
 
+-- | Get elemental resistances for an enemy.  Adds cold-fire if resitant
+-- to both fire and ice
+enemyElementalResistances :: Enemy -> Set Element
+enemyElementalResistances en
+  | Fire `Set.member` rs && Ice `Set.member` rs = ColdFire `Set.insert` rs
+  | otherwise = rs
+  where
+  rs = Set.fromList [ el | Resists el <- Set.toList (enemyAbilities en) ]
+
 --------------------------------------------------------------------------------
 data EnemyAbility =
 
@@ -69,7 +79,7 @@ data EnemyAbility =
   | Resists Element -- ^ "ColdFire" does not appear as a separate resiatnce;
                     --   instead, an enemy would have fire and ice reistance.
   | ResistArcane    -- ^ Can only be attacked/block no special stuff
-  | Cumbersome      -- ^ May use move as block
+  | Cumbersome      -- ^ May use move to decrease attack
   | Swift           -- ^ Needs twice the usual block
 
     -- damage

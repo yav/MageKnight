@@ -11,10 +11,10 @@ import Utils
 combatOptions :: State -> [ InputOption () ]
 combatOptions s =
   case getField phase s of
-    ActionPhase combatPhase ->
+    ActionPhase (Combat combatPhase) ->
       case combatPhase of
         Attacking a -> undefined
-        Blocking  b -> undefinde
+        Blocking  b -> undefined
         AssigningDamage d -> undefined
     _ -> []
 
