@@ -1,4 +1,6 @@
-module Combat where
+module Combat
+  ( CombatPhase(..)
+  ) where
 
 import GHC.Generics
 import Data.List(partition)
@@ -21,10 +23,9 @@ type GroupId    = Int
 type EnemyId    = Int
 
 -- | The overall state of the battle
-data Battle = Battle
+data BattleContext = BattleContext
   { _battleEnemies        :: Map EnemyId ActiveEnemy
   , _battleFortifiedSites :: Set SiteId
-  , _battlePhase          :: CombatPhase
   }
 
 --  | A single participant in a battle
@@ -52,17 +53,20 @@ data CombatPhase =
 -- | Ranged or normal attack
 data AttackPhase = AttackPhase
   { isRangedPhase   :: Bool           -- ^ True if we are in the ranged phase
+  , _attackContext  :: BattleContext  -- ^ General info about the battle
   , _attackGroup    :: Set EnemyId    -- ^ Who we are attacking (inv: alive)
   , _attackDamage   :: Bag Element    -- ^ Cumulative damage
   }
 
 data BlockPhase = BlockPhase
   { _blockingEnemy :: Maybe EnemyId     -- ^ Who are we blocking: (inv: alive)
+  , _blockContext  :: BattleContext     -- ^ General info about the battle
   , _blockAmount   :: Bag Element       -- ^ Amount of block
   }
 
 data DamagePhase = DamagePhase
   { _unassignedDamage :: [Damage]
+  , _damageContext    :: BattleContext
   }
 
 data Damage = Damage
@@ -71,14 +75,14 @@ data Damage = Damage
 
 
 
-declareFields ''Battle
+declareFields ''BattleContext
 declareFields ''ActiveEnemy
 declareFields ''AttackPhase
 declareFields ''BlockPhase
 declareFields ''DamagePhase
 
 -- | Get the fortifications for an enemy.
-enemyCurrentFortifications :: Battle -> ActiveEnemy -> Int
+enemyCurrentFortifications :: BattleContext -> ActiveEnemy -> Int
 enemyCurrentFortifications btl en
   | Unfortified `Set.member` abilities = 0
   | otherwise                          = fromSite + fromAbility
@@ -100,7 +104,7 @@ enemyCurrentArmor ae
   where
   armor = getField enemyEffectiveArmor ae
 
-liveEnemies :: Battle -> Set EnemyId
+liveEnemies :: BattleContext -> Set EnemyId
 liveEnemies =
   Map.keysSet . Map.filter (getField enemyAlive) . getField battleEnemies
 
@@ -109,7 +113,12 @@ data EndBattle = EndBattle
   , undefeatedEnemies :: Map SiteId [Enemy]
   }
 
-
+combatContext :: CombatPhase -> BattleContext
+combatContext ph =
+  case ph of
+    Attacking ap -> getField attackContext ap
+    Blocking  bp -> getField blockContext bp
+    AssigningDamage d -> getField damageContext d
 
 
 --------------------------------------------------------------------------------
@@ -121,14 +130,15 @@ data BattleSite = BattleSite
   }
 
 -- | Start a battle
-startBattle :: [BattleSite] -> Battle
-startBattle sites =
-  Battle
-    { _battleEnemies        = allBattleEnemies
-    , _battleFortifiedSites = allFortifiedSites
-    , _battlePhase          = Attacking (startAttackPhase True)
-    }
+startBattle :: [BattleSite] -> CombatPhase
+startBattle sites = Attacking (startAttackPhase True ctxt)
   where
+  ctxt =
+    BattleContext
+      { _battleEnemies        = allBattleEnemies
+      , _battleFortifiedSites = allFortifiedSites
+      }
+
   (allBattleEnemies,allFortifiedSites) =
     foldr addSite (Map.empty,Set.empty) sites
 
@@ -143,8 +153,6 @@ startBattle sites =
 
   addEnemy siteId enemy enemies =
     Map.insert (Map.size enemies) (activateEnemy siteId Nothing enemy) enemies
-
-
 
 activateEnemy :: SiteId -> Maybe EnemyId -> Enemy -> ActiveEnemy
 activateEnemy siteId summoner enemy =
@@ -166,30 +174,36 @@ activateEnemy siteId summoner enemy =
           }
     }
 
+--------------------------------------------------------------------------------
+
+
+
 
 --------------------------------------------------------------------------------
 
-startAttackPhase :: Bool -> AttackPhase
-startAttackPhase rng =
+startAttackPhase :: Bool -> BattleContext -> AttackPhase
+startAttackPhase rng ctxt =
   AttackPhase
-    { isRangedPhase = rng
-    , _attackGroup  = Set.empty
-    , _attackDamage = bagEmpty
+    { isRangedPhase   = rng
+    , _attackGroup    = Set.empty
+    , _attackContext  = ctxt
+    , _attackDamage   = bagEmpty
     }
 
-attackEnemies :: Battle -> AttackPhase -> [ActiveEnemy]
-attackEnemies ba ap =
+attackEnemies :: AttackPhase -> [ActiveEnemy]
+attackEnemies ap =
   [ e
   | eid    <- Set.toList (getField attackGroup ap)
   , Just e <- [Map.lookup eid (getField battleEnemies ba)]
   ]
+  where ba = getField attackContext ap
 
-attackEnemyArmorAndResitance :: Battle -> AttackPhase -> (Int, Set Element)
-attackEnemyArmorAndResitance ba ap =
+attackEnemyArmorAndResitance :: AttackPhase -> (Int, Set Element)
+attackEnemyArmorAndResitance ap =
   ( sum (map enemyCurrentArmor es)
   , Set.unions (map (enemyElementalResistances . enemyToken) es)
   )
-  where es = attackEnemies ba ap
+  where es = attackEnemies ap
 
 attackValue :: Set Element -> Bag Element -> Int
 attackValue resists damage =
@@ -197,16 +211,16 @@ attackValue resists damage =
       |(el,n) <- bagToNumList damage
       ]
 
-attackWon :: Battle -> AttackPhase -> Bool
-attackWon ba ap = attackValue resists (getField attackDamage ap) >= armor
+attackWon :: AttackPhase -> Bool
+attackWon ap = attackValue resists (getField attackDamage ap) >= armor
   where
-  (armor,resists) = attackEnemyArmorAndResitance ba ap
+  (armor,resists) = attackEnemyArmorAndResitance ap
 
 --------------------------------------------------------------------------------
 
 -- | How much we need to block.   Assumes no summoner.
-blockNeeded :: Battle -> BlockPhase -> (Int, Element)
-blockNeeded battle bp =
+blockNeeded :: BlockPhase -> (Int, Element)
+blockNeeded bp =
   fromMaybe (0,Physical)
   do eid <- getField blockingEnemy bp
      ae  <- Map.lookup eid (getField battleEnemies battle)
@@ -215,6 +229,8 @@ blockNeeded battle bp =
        if Swift `Set.member` enemyAbilities (enemyToken ae)
          then (2 * amt, el)
          else (amt, el)
+  where
+  battle = getField blockContext bp
 
 blockValue :: Element -> Bag Element -> Int
 blockValue attackElement blockHave =
@@ -229,14 +245,16 @@ blockValue attackElement blockHave =
       ColdFire  -> el == ColdFire
       Physical  -> True
 
+
+
 --------------------------------------------------------------------------------
 
-instance ToJSON Battle where
+instance ToJSON CombatPhase where
   toJSON = toJSON . battleView
 
-battleView :: Battle -> BattleView
-battleView ba =
-  case getField battlePhase ba of
+battleView :: CombatPhase -> BattleView
+battleView phase =
+  case phase of
     AssigningDamage dmg ->
       BattleView
         { viewEnemiesUnselected = live
@@ -254,7 +272,7 @@ battleView ba =
             else AttackView us them
         }
       where
-      (them, resist) = attackEnemyArmorAndResitance ba ap
+      (them, resist) = attackEnemyArmorAndResitance ap
       us = attackValue resist (getField attackDamage ap)
       (sel,unsel) = partition match live
       match (eid,_) = eid `Set.member` getField attackGroup ap
@@ -268,11 +286,12 @@ battleView ba =
       where
       (sel,unsel)       = partition match live
       match (eid,_)     = Just eid == getField blockingEnemy bp
-      (need, attackEl)  = blockNeeded ba bp
+      (need, attackEl)  = blockNeeded bp
       have              = blockValue attackEl (getField blockAmount bp)
- 
+
 
   where
+  ba = combatContext phase
   live =
     [ (x, e)
     | (x,e) <- Map.toList (getField battleEnemies ba)
