@@ -31,6 +31,7 @@ data State = State
   , _mana         :: ManaPool
   , _land         :: Land
   , _movement     :: !Int
+  , _heal         :: !Int
   , _phase        :: Phase
   }
   deriving (Generic,ToJSON)

@@ -5,6 +5,7 @@ import Hand
 import Deed.Type
 import Deed.Action
 import Deed.Action.ManaPull
+import Deed.Action.Tranquility
 
 
 playDeed :: SelectedMode -> Deed -> Interact()
@@ -33,7 +34,7 @@ instance HasDeedAction BasicAction where
     case deed of
 
       March -> defDeed (const (gainMove 2)) (const (gainMove 4))
-      Tranquility -> deedNotImplemented "basicDeed"
+      Tranquility -> defDeed (doTranqulity 1) (doTranqulity 2)
       Concentration -> deedNotImplemented "basicDeed"
       Savage_Harvesting -> deedNotImplemented "basicDeed"
       Rejuvenate -> deedNotImplemented "basicDeed"

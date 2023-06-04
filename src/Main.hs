@@ -50,6 +50,7 @@ main =
                            , _mana        = emptyManaPool
                            , _land        = la
                            , _movement    = 0
+                           , _heal        = 0
                            , _phase       = MovePhase
                            }
   , appStart = gameLoop

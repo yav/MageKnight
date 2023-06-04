@@ -39,4 +39,10 @@ gainMove :: Int -> Interact ()
 gainMove n =
   do updateThe_ movement (n +)
 
+gainHeal :: Int -> Interact ()
+gainHeal n =
+  do updateThe_ heal (n +)
+
+drawCards :: Int -> Interact ()
+drawCards = undefined -- XXX
 

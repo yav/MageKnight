@@ -26,7 +26,7 @@ data Deed =
   | AdvancedAction AdvancedAction
   | Spell Spell
   | Artifact Artifact
-    deriving (Eq,Ord)
+    deriving (Eq,Ord,Read,Show)
 
 data BasicAction =
 
@@ -61,7 +61,7 @@ data BasicAction =
    | Battle_Versatility
    | Ruthless_Coercion
    | Instinct
-    deriving (Eq,Ord,Enum,Bounded)
+    deriving (Eq,Ord,Show,Read,Enum,Bounded)
 
 
 data AdvancedAction =
@@ -113,7 +113,7 @@ data AdvancedAction =
   | Counterattack
   | Ritual_Attack
   | Blood_of_Ancients
-    deriving (Eq,Ord,Enum,Bounded)
+    deriving (Eq,Ord,Show,Read,Enum,Bounded)
 
 
 data Spell =
@@ -145,12 +145,12 @@ data Spell =
   | Charm
   | Whirlwind
   | Wings_of_Wind
-    deriving (Eq,Ord,Enum,Bounded)
+    deriving (Eq,Ord,Show,Read,Enum,Bounded)
 
 
 data Artifact =
   XXXArtifact
-  deriving (Eq,Ord,Enum,Bounded)
+  deriving (Eq,Ord,Show,Read,Enum,Bounded)
 
 
 declareEnumText ''BasicAction

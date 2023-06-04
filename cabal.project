@@ -2,3 +2,5 @@ packages:
   .
   KOI/utils
   KOI/interact
+
+documentation: true
