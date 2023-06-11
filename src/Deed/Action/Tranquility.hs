@@ -1,7 +1,5 @@
 module Deed.Action.Tranquility where
 
-import KOI.Basics
-
 import Game.State
 import Game.Input
 import Deed.Type
@@ -11,16 +9,16 @@ doTranqulity :: Int -> State -> Interact ()
 doTranqulity n s = askInputsMaybe_ "Tranquility" (optHeal ++ optDraw)
   where
   opt i help act =
-    (playerId s :-> AskDeed (BasicAction Tranquility) i, help, act)
+    defOpt s (AskDeed (BasicAction Tranquility) i) help act
 
 
   optHeal =
-    [ opt "Heal" "Heal" (gainHeal n)
+    [ opt "Heal" ("Gain" <+> pp n <+> "healing points.") (gainHeal n)
     | case getField phase s of
         ActionPhase (CombatAction {}) -> False
         _ -> True
     ]
 
   optDraw =
-    [ opt "Draw" "Draw" (drawCards n) ]
+    [ opt "Draw" ("Draw" <+> pp n <+> "cards.") (drawCards n) ]
 

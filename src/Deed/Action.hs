@@ -5,9 +5,13 @@ module Deed.Action
 
 import Data.Text(Text)
 
+import KOI.PP                       as X
 import KOI.Field                    as X
+import KOI.Basics                   as X
 
 import Common                       as X
+import Mana.Type                    as X
+import Mana.Pool
 import Game.KOI                     as X
 import Game.State                   as X
 import Game.Input                   as X
@@ -19,6 +23,10 @@ data DeedAction = DeedAction
   }
 
 type DeedDef = State -> Interact ()
+
+defOpt ::
+  State -> Input -> Doc -> Interact a -> (WithPlayer Input, Text, Interact a)
+defOpt s i t k = (playerId s :-> i, toText t, k)
 
 defDeed :: DeedDef -> DeedDef -> DeedAction
 defDeed a b = DeedAction { actBasic = mk a, actPower = mk b }
@@ -42,6 +50,11 @@ gainMove n =
 gainHeal :: Int -> Interact ()
 gainHeal n =
   do updateThe_ heal (n +)
+
+gainMana :: Mana -> Interact ()
+gainMana m =
+  do updateThe_ mana (addMana m)
+
 
 drawCards :: Int -> Interact ()
 drawCards = undefined -- XXX

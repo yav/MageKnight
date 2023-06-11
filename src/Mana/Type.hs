@@ -1,9 +1,9 @@
 module Mana.Type where
 
-import Text.PrettyPrint
 import Data.Char(toLower)
 
 import KOI.Enum
+import KOI.PP
 
 data BasicMana  = Red | Green | Blue | White
                   deriving (Eq,Ord,Show,Read)
@@ -17,15 +17,15 @@ anyBasicMana = [ Red, Green, Blue, White ]
 anyMana :: [ Mana ]
 anyMana = Gold : Black : map BasicMana anyBasicMana
 
-ppBasicMana :: BasicMana -> Doc
-ppBasicMana = text . map toLower . show
+instance PP BasicMana where
+  pp = pp . map toLower . show
 
-ppMana :: Mana -> Doc
-ppMana m =
-  case m of
-    BasicMana b -> ppBasicMana b
-    Gold        -> text "gold"
-    Black       -> text "black"
+instance PP Mana where
+  pp m =
+    case m of
+      BasicMana b -> pp b
+      Gold        -> "gold"
+      Black       -> "black"
 
 --------------------------------------------------------------------------------
 
