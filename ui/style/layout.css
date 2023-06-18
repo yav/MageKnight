@@ -1,65 +1,82 @@
+* {
+  box-sizing: border-box;
+}
 
 html, body {
-  margin:   0;
-  padding:  0;
-  width:    100%;
-  height:   100%;
-  overflow: hidden;
-  font-size: 12px;
-  user-select: none;
+  margin:       0;
+  padding:      0;
+  width:        100%;
+  height:       100%;
+  overflow:     hidden;
+  font-size:    12px;
+  user-select:  none;
 }
 
 body {
-  display: flex;
-  flex-direction: row;
-  background-color: #333;
+  display:          flex;
+  flex-direction:   row;
 }
+
+#panel {
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: space-around;
+  height: 100%;
+  width: calc(var(--cardWidth) * 2px);
+  background-size: cover;
+}
+
 
 /* -------------------------------------------------- */
 .lhs {
-  height: 100%;
-  width:  calc(var(--cardWidth) * 0.9px);
+  display:        flex;
+  flex-direction: column;
+  height:         100%;
+  width:          calc(var(--cardWidth) * 0.9px);
 }
 
 #hand {
-  width: 100%;
-  height: calc(100% - var(--buttonHeight_px));
-
   display: flex;
+
+  flex-grow: 1;
   flex-direction: column;
   flex-wrap: nowrap;
   justify-content: flex-start;
   align-items: center;
   gap: 5px;
 
-  overflow-x: hidden;
   background-color: rgba(0,0,0,0.5);
+
+  overflow-x: hidden;
 }
 
 #card-piles {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  width: 100%;
+  justify-content: space-around;
   height: var(--buttonHeight_px);
-  box-sizing: border-box;
-
 }
 
 /* -------------------------------------------------- */
 .mid {
-  display: flex;
+  display:        flex;
   flex-direction: column;
-  height: 100%;
-  width: var(--cardHeight_px);
+  height:         100%;
+  width:          var(--cardHeight_px);
+}
+
+#question-box {
+  text-align: center;
+  background-color: rgba(0,0,0,0.5);
+  color: white;
+  margin-top: 1em;
+  margin-bottom: 1em;
 }
 
 .card-view {
-  position: relative;
-  width:  100%;
-  height: var(--cardHeight_px);
-  background-color: rgba(0,0,0,0.5);
-  overflow: scroll;
+  position:         relative;
+  height:           var(--cardHeight_px);
+  overflow:         scroll;
 }
 
 .card-view .preview {
@@ -82,39 +99,21 @@ body {
 }
 
 #resources {
-  width: 100%;
-  background-color: purple;
-  height: calc(100% - var(--cardHeight_px) - var(--dieSize_px) - var(--buttonHeight_px));
-  border-left: 2px solid blue;
-  box-sizing: border-box;
+  flex-grow: 1;
+  display: flex;
+  justify-content: space-around;
 }
-
 
 .button-bar {
-  border-left: 2px solid blue;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: space-around;
   height:  var(--buttonHeight_px);
-  box-sizing: border-box;
-}
-
-.button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width:   var(--buttonWidth_px);
-  height:  var(--buttonHeight_px);
-  text-align: center;
-  background-color: orange;
-  border: 1px solid black;
-  box-sizing: border-box;
 }
 
 /* -------------------------------------------------- */
 .rhs {
-  position: relative;
-  background-color: yellow;
+  position:         relative;
   width: 100%;
   height: 100%;
 }

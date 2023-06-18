@@ -1,10 +1,8 @@
 .source {
-  display: flex;
+  display:        flex;
   flex-direction: row;
-  align-items: center;
+  align-items:      center;
   justify-content: center;
-  width: 100%;
-  background-color: #003;
 }
 
 #sourceUsed .die {
@@ -20,11 +18,10 @@
 }
 
 .die {
-  box-sizing: border-box;
   width:            var(--dieSize_px);
   height:           var(--dieSize_px);
   border-radius:    calc(var(--dieSize) * 0.1px);
-  background-size:  var(--dieSize_px) var(--dieSize_px)
+  background-size:  var(--dieSize_px) var(--dieSize_px);
 }
 
 .die.Red   { background-image: url(../img/mana/red.png); }

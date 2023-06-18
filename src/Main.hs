@@ -56,7 +56,7 @@ main =
   , appStart = gameLoop
   }
   where
-  hero = Arythea
+  hero = Goldyx
   deck = Wound : makeDeckFor hero
 
 

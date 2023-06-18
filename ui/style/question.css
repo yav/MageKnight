@@ -1,25 +1,26 @@
-#question-box {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  overflow: scroll;
-  background-color: green;
-  width: 100%;
-}
-
 .question {
   cursor: pointer;
-  outline: 2px solid white;
-  /*
-  animation: 2s infinite alternate question-border;
+  animation: 1s infinite alternate question-border;
   animation-timing-function: ease-in-out;
-  */
 }
+
+.button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width:   var(--buttonWidth_px);
+  height:  var(--buttonHeight_px);
+  text-align: center;
+  background-color: orange;
+  border: 1px solid white;
+  box-sizing: border-box;
+}
+
+
 
 @keyframes question-border {
   from {
-    box-shadow: 0 0 3px 3px rgba(0,0,0,0.3);
+    box-shadow: 0 0 3px 3px rgba(255,255,255,0.5);
   }
   to {
     box-shadow: 0 0 3px 3px rgba(255,255,255,0.3);

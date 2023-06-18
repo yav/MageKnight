@@ -30,30 +30,32 @@
 <script src="main.js"></script>
 </head>
 <body id="main" onload="main()">
-<div class="lhs">
-  <div id="hand"></div>
-  <div id="card-piles">
-    <div id="draw-pile" class="button">Draw</div>
-    <div id="discard-pile" class="button">Discard</div>
+<div id="panel">
+  <div class="lhs">
+    <div id="hand"></div>
+    <div id="card-piles">
+      <div id="draw-pile" class="button">Draw</div>
+      <div id="discard-pile" class="button">Discard</div>
+    </div>
   </div>
-</div>
-<div class="mid">
-  <div id="card-view" class="card-view">
-    <div id="card-preview"  class="preview"></div>
-    <div id="card-selected" class="selected"></div>
-  </div>
-  <div class="source">
-    <div id="sourceMana"   class="group" title="Available Mana"></div>
-    <div id="sourceFixed"  class="group" title="Used mana (fixed)"></div>
-    <div id="sourceUsed"   class="group" title="Used manad (reroll)"></div>
-  </div>
-  <div id="resources">
-    <div id="manaPool"></div>
-  </div>
-  <div id="common-buttons" class="button-bar">
-    <div id="undo-button"  class="button question" onclick="uiUndo()">Undo</div>
+  <div class="mid">
+    <div id="card-view" class="card-view">
+      <div id="card-preview"  class="preview"></div>
+      <div id="card-selected" class="selected"></div>
+    </div>
+    <div class="source">
+      <div id="sourceMana"   class="group" title="Available Mana"></div>
+      <div id="sourceFixed"  class="group" title="Used mana (fixed)"></div>
+      <div id="sourceUsed"   class="group" title="Used manad (reroll)"></div>
+    </div>
     <div id="question-box"></div>
-    <div id="multi-button" class="hidden button">...</div>
+    <div id="resources">
+      <div id="manaPool"></div>
+    </div>
+    <div id="common-buttons" class="button-bar">
+      <div id="undo-button"  class="button question" onclick="uiUndo()">Undo</div>
+      <div id="multi-button" class="hidden button">...</div>
+    </div>
   </div>
 </div>
 <div class="rhs">

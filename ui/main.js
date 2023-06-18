@@ -13,11 +13,13 @@ function main() {
 
 // Redraw the whole state
 function uiRedraw(state) {
-  console.log("uiRedraw")
 
   if (!initialized) {
     gui = {}
     gui.question_cleanup = []
+
+    document.getElementById("panel").style.backgroundImage =
+      "url(\"../img/characters/" + state.game.playerHero + "/art.png\""
 
     gui.cards     = newCards()
     gui.hand      = newHand()
@@ -25,7 +27,7 @@ function uiRedraw(state) {
     gui.manaPool  = newManaPool()
     gui.map       = newMap()
     gui.resources = newResources()
-    initialized = true
+    initialized   = true
   }
 
 
@@ -35,6 +37,7 @@ function uiRedraw(state) {
 
 // Perform a partial update
 function uiUpdate(state) {
+
   gui.source.set(state._source)
   gui.hand.set(state._hand)
   gui.manaPool.set(state._mana)

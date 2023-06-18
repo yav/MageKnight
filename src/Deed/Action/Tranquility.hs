@@ -8,7 +8,7 @@ doTranqulity :: Int -> State -> Interact ()
 doTranqulity n s = askInputsMaybe_ "Choose Tranquility action:"
                                                     (optHeal ++ optDraw)
   where
-  opt i help act = defOpt s (AskText (toText ("[Tranquility]" <+> i))) help act
+  opt i help act = defOpt s (AskText (toText i)) help act
 
   optHeal =
     [ opt "Heal" ("Gain" <+> pp n <+> "healing points.") (gainHeal n)

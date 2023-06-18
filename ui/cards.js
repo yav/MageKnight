@@ -139,7 +139,6 @@ function newCards() {
       const inf = dims[ty]
       const cs = inf.cards
       const cols = inf.cols
-      console.log(cs)
       for (let i = 0; i < cs.length; ++i) {
         const r = Math.floor(i / cols)
         cardLoc[cs[i]] = [ r, i - r * cols ]
