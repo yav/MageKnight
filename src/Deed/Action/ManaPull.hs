@@ -3,7 +3,6 @@ module Deed.Action.ManaPull where
 import Data.Text qualified as Text
 
 import Deed.Action
-import Mana.Type
 import Mana.Pool
 import Mana.Source
 

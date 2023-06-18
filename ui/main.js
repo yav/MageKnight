@@ -33,13 +33,6 @@ function uiRedraw(state) {
   uiQuestions(state.questions)
 }
 
-function uiButton(lab,q) {
-  const dom = html.div("button question")
-  dom.textContent = lab
-  uiNewAnswer(dom,q)
-}
-
-
 // Perform a partial update
 function uiUpdate(state) {
   gui.source.set(state._source)

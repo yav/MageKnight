@@ -156,10 +156,8 @@ function newCards() {
   }
 
   function drawDeed(deed) {
-    console.log(deed)
     const [r,c]   = cardLoc[deed]
     const cardTy  = getDeedType(deed)
-    console.log("type",cardTy)
     const info    = dims[cardTy]
 
     function small() {

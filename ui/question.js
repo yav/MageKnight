@@ -1,21 +1,25 @@
 // Various things that can be used to answer the question.
 function uiQuestion(q) {
-  hsInput({
-    Source: (m) => { gui.source.ask(m,q)},
-    AskMana: (m) => gui.source.askMana(m,q),
-    AskManaPool: (m) => gui.manaPool.askMana(m,q),
+  const cases =
+    {
+        Source: (m) => gui.source.ask(m,q),
+        AskMana: (m) => gui.source.askMana(m,q),
+        AskManaPool: (m) => gui.manaPool.askMana(m,q),
 
-    AskHand: (m) => gui.hand.ask(m,q),
-    AskSelectedSideways: () => gui.hand.askSideways(q),
-    AskSelectedAdvanced: () => gui.hand.askAdvanced(q),
+        AskHand: (m) => gui.hand.ask(m,q),
+        AskSelectedSideways: () => gui.hand.askSideways(q),
+        AskSelectedAdvanced: () => gui.hand.askAdvanced(q),
 
-    AskLoc: (a,explore) => gui.map.ask(a,explore,q),
+        AskLoc: (a,explore) => gui.map.ask(a,explore,q),
 
-    ActionButton: (msg) => uiActionButton(msg,q),
 
-    TestReroll: () => uiButton("Reroll",q),
-    TestFixed: () => uiButton("Test fixed",q),
-  })(q.chChoice)
+        ActionButton: (msg) => uiActionButton(msg,q),
+        AskText: (t) => uiButton(t,q),
+        TestReroll: () => uiButton("Reroll",q),
+        TestFixed: () => uiButton("Test fixed",q),
+      }
+
+  hsInput(cases)(q.chChoice)
 }
 
 
@@ -72,5 +76,12 @@ function uiActionButton(msg,q) {
   uiExistingAnswer(dom,q)
   uiAddQuestionCleanup(() => dom.classList.add("hidden"))
 }
+
+function uiButton(lab,q) {
+  const dom = html.div("button question")
+  dom.textContent = lab
+  uiNewAnswer(dom,q)
+}
+
 
 

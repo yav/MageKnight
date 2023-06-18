@@ -6,7 +6,6 @@ import Data.Aeson(ToJSON,FromJSON)
 
 import Mana.Type
 import Terrain.Type
-import Deed.Type
 
 data Input = Source Mana      -- ^ Mana in the source
            | AskMana Mana     -- ^ Just mana color
@@ -21,7 +20,7 @@ data Input = Source Mana      -- ^ Mana in the source
              -- ^ If Just ty, then tile is off board
              -- and we want to explore it
 
-           | AskDeed Deed Text
+           | AskText Text
            | ActionButton Text
 
            | TestReroll
