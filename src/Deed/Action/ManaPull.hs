@@ -1,29 +1,29 @@
 module Deed.Action.ManaPull where
 
-import Data.Text qualified as Text
-
 import Deed.Action
 import Mana.Pool
 import Mana.Source
 
 basicManaPull :: DeedDef
 basicManaPull s =
-  do mb <- chooseMaybe pid "Extra die" [ (Source m, "Mana Pull") | m <- avail ]
-     case mb of
-       Just (Source m) ->
-         do mv <- case m of
-                    Black ->
-                      inpMana <$>
-                      choose pid "Mana Pull (black)"
-                         [ (AskMana tm, "Use as") | tm <- anyMana ]
-                    _ -> pure m
-            update
-              $ SetState
-              $ setField source (takeMana m sourceVal)
-              $ setField mana   (addSourceMana mv manaVal)
-                s
-       _ -> pure ()
+  askInputsMaybe_ "Mana Pull: Choose additional die to use."
+    [ defOpt s (Source m) ("Use an additional" <+> pp m <+> "die.")
+      do mv <- case m of
+                 Black ->
+                   inpMana <$>
+                   choose pid "Mana Pull: Choose mana for black die."
+                     [ ( AskMana tm
+                       , toText ("Use black die for" <+> pp tm <+> "mana."))
+                     | tm <- anyMana ]
+                 _ -> pure m
+         update
+           $ SetState
+           $ setField source (takeMana m sourceVal)
+           $ setField mana   (addSourceMana mv manaVal)
+             s
 
+    | m <- avail
+    ]
   where
   pid       = playerId s
   sourceVal = getField source s
@@ -38,26 +38,25 @@ powerManaPull = count 1
   count dieNum s
     | dieNum > 2 = pure ()
     | otherwise =
-      do mb <- chooseMaybe pid msg [ (Source m, "Set and use") | m <- avail ]
-         case mb of
-           Nothing -> count 3 s
-           Just mi ->
-             do let m = inpMana mi
-                tgt <- inpMana <$>
-                       choose pid "Set to"
-                          [ (AskMana t,"Set to") | t <- anyMana, t /= Gold ]
-                update
-                  $ SetState
-                  $ setField source (takeAndConvertMana m tgt sourceVal)
-                  $ setField mana   (addMana tgt manaVal) s
-                count (dieNum + 1) =<< getState
+      askInputsMaybe_ (toText ("Mana Pull: Choose die" <+> pp dieNum <.> "/2."))
+        [ defOpt s (Source m)
+          ("Set and use" <+> pp m <+> "die.")
+          do tgt <- inpMana <$>
+                    choose pid (toText ("Mana Pull: New color for"
+                                              <+> pp m <+> "die."))
+                      [ (AskMana t,toText ("Set to" <+> pp t))
+                      | t <- anyMana, t /= Gold ]
+             update
+               $ SetState
+               $ setField source (takeAndConvertMana m tgt sourceVal)
+               $ setField mana   (addMana tgt manaVal) s
+             count (dieNum + 1) =<< getState
+        | m <- avail
+        ]
       where
       pid       = playerId s
       sourceVal = getField source s
       manaVal   = getField mana s
       avail     = availableMana sourceVal
-      msg       = "Mana Pull (" <> Text.pack (show dieNum) <> "/2)"
-
-
 
 
