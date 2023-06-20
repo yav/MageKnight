@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="style/quantity.css">
 <link rel="stylesheet" href="style/cards.css">
 <link rel="stylesheet" href="style/resources.css">
+<link rel="stylesheet" href="style/combat.css">
 <script src="common-js/connect.js"></script>
 <script src="common-js/html.js"></script>
 <script src="dynamic.js"></script>
@@ -22,6 +23,7 @@
 <script src="manaPool.js"></script>
 <script src="enemy.js"></script>
 <script src="map.js"></script>
+<script src="combat.js"></script>
 <script src="cards.js"></script>
 <script src="hand.js"></script>
 <script src="question.js"></script>
@@ -60,6 +62,13 @@
 </div>
 <div class="rhs">
   <div id="map"></div>
+  <div id="combat">
+    <div id="combat-phase"></div>
+    <div id="combat-enemies-selected"></div>
+    <div id="combat-deeds"></div>
+    <div id="combat-enemies-not-selected"></div>
+    <div id="combat-wounds"></div>
+  </div>
 </div>
 
 <!-- Templates.  These are not displayed directly but rather cloned -->
@@ -67,6 +76,7 @@
 
   <div id="quantity-grouped" class="quantity grouped"
     ><div id="counter" class="counter"></div></div>
+  <div id="quantity-text" class="quantity-text"></div>
 
   <div id="die"  class="die"></div>
   <div id="mana" class="mana"></div>

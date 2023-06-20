@@ -25,6 +25,8 @@ import Terrain.Type(addrGlobal,MapShape(..))
 import Hero
 import Deed.Type
 import Deed.Play(playDeed)
+import Combat
+import Enemies(orcs,guardians)
 
 main :: IO ()
 main =
@@ -51,13 +53,22 @@ main =
                            , _land        = la
                            , _movement    = 0
                            , _heal        = 0
-                           , _phase       = MovePhase
+                           , _phase       = ActionPhase (CombatAction (com la))
                            }
   , appStart = gameLoop
   }
   where
   hero = Arythea
   deck = Wound : makeDeckFor hero
+  com la =
+    startCombat
+          [ BattleSite
+              { siteId = playerLocation la
+              , siteFortified = False
+              , siteEnemies = take 1 orcs ++ take 1 guardians
+              }
+          ]
+
 
 
 type TopInputOptions = State -> [ InputOption () ]

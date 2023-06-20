@@ -18,3 +18,5 @@ combatOptions s =
         AssigningDamage d -> undefined
     _ -> []
 
+
+

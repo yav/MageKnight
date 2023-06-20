@@ -2,6 +2,8 @@ module Combat
   ( Combat(..)
   , combatPhase
   , CombatPhase(..)
+  , startCombat
+  , BattleSite(..)
   ) where
 
 import GHC.Generics
@@ -60,7 +62,7 @@ data OneAttack = OneAttack
   { isRangedAttack  :: Bool           -- ^ True if we are in the ranged phase
   , _attackGroup    :: Set EnemyId    -- ^ Who we are attacking
   , _attackDamage   :: Bag Element    -- ^ Cumulative damage
-  , _attakDeeds     :: [Deed]
+  , _attackDeeds    :: [Deed]
   }
 
 data OneBlock = OneBlock
@@ -75,7 +77,7 @@ data DamagePhase = DamagePhase
 
 data Damage = Damage
   { isPoison, isParalyzing, isAssasination :: Bool
-  } deriving (Eq,Ord, Generic,ToJSON)
+  } deriving (Eq,Ord,Generic,ToJSON)
 
 
 
@@ -185,7 +187,7 @@ startAttackPhase rng =
     { isRangedAttack  = rng
     , _attackGroup    = Set.empty
     , _attackDamage   = bagEmpty
-    , _attakDeeds     = []
+    , _attackDeeds    = []
     }
 
 attackEnemies :: Combat -> OneAttack -> [ActiveEnemy]
@@ -247,6 +249,7 @@ blockValue attackElement blockHave =
 data BattleView = BattleView
   { viewEnemiesUnselected :: [(EnemyId,ActiveEnemy)]
   , viewEnemiesSelected   :: [(EnemyId,ActiveEnemy)]
+  , viewDeeds             :: [Deed]
   , viewBattlePhase       :: BattlePhaseView
   } deriving (Generic,ToJSON)
 
@@ -269,6 +272,7 @@ combatView combat =
       BattleView
         { viewEnemiesUnselected = live
         , viewEnemiesSelected = []
+        , viewDeeds = []
         , viewBattlePhase = DamageView (getField unassignedDamage dmg)
         }
 
@@ -276,6 +280,7 @@ combatView combat =
       BattleView
         { viewEnemiesUnselected = unsel
         , viewEnemiesSelected = sel
+        , viewDeeds = getField attackDeeds ap
         , viewBattlePhase =
           if isRangedAttack ap
             then RangedAttackView us them
@@ -291,6 +296,7 @@ combatView combat =
       BattleView
         { viewEnemiesUnselected = unsel
         , viewEnemiesSelected = sel
+        , viewDeeds = getField blockDeeds bp
         , viewBattlePhase = BlockView have need
         }
       where
@@ -298,7 +304,6 @@ combatView combat =
       match (eid,_)     = Just eid == getField blockingEnemy bp
       (need, attackEl)  = blockNeeded combat bp
       have              = blockValue attackEl (getField blockAmount bp)
-
 
   where
   live =

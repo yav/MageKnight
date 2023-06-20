@@ -1,0 +1,17 @@
+#combat {
+  position:         absolute;
+  right:            0;
+  top:              0;
+  min-width:        200px;
+  min-height:       200px;
+  background-color: rgba(0,128,0,0.75);
+  border-bottom-left-radius:  1em;
+  z-index: 3;
+}
+
+#combat-phase {
+  text-align:       center;
+  background-color: red;
+}
+
+

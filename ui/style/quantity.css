@@ -1,3 +1,7 @@
+.quantity-text {
+  display: inline-block;
+}
+
 .quantity.grouped {
   position: relative;
   display:  inline-block;

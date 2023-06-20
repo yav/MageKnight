@@ -26,6 +26,8 @@ function uiRedraw(state) {
     gui.source    = newSource()
     gui.manaPool  = newManaPool()
     gui.map       = newMap()
+    gui.phase     = newPhase()
+    gui.combat    = newCombat()
     gui.resources = newResources()
     initialized   = true
   }
@@ -39,11 +41,13 @@ function uiRedraw(state) {
 function uiUpdate(state) {
 
   gui.source.set(state._source)
+  gui.phase.set(state._phase)
   gui.hand.set(state._hand)
   gui.manaPool.set(state._mana)
   gui.map.set(state._land.landMap)
   gui.map.setPlayer(state.playerHero, state._land.landPlayer)
   gui.resources(state)
+
 }
 
 

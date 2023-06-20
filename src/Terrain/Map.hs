@@ -5,6 +5,7 @@ module Terrain.Map
 
     -- * Exploration
   , setPlayer
+  , playerLocation
   , getPlayerNeighbours
   , exploreAt
   , isRevealed

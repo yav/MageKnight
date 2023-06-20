@@ -19,7 +19,9 @@ data Phase =
   | ActionPhase ActionPhase
     deriving (Generic,ToJSON)
 
-data ActionPhase = CombatAction Combat
+data ActionPhase =
+    CombatAction Combat
+  | InteractAction
     deriving (Generic,ToJSON)
 
 data State = State
