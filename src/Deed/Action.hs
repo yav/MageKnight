@@ -4,6 +4,8 @@ module Deed.Action
   ) where
 
 import Data.Text(Text)
+import Data.Set qualified as Set
+import Data.Map qualified as Map
 
 import KOI.PP                       as X
 import KOI.Field                    as X
@@ -15,6 +17,7 @@ import Mana.Pool
 import Game.KOI                     as X
 import Game.State                   as X
 import Game.Input                   as X
+import Combat                       as X
 
 
 data DeedAction = DeedAction
@@ -55,7 +58,32 @@ gainMana :: Mana -> Interact ()
 gainMana m =
   do updateThe_ mana (addMana m)
 
-
 drawCards :: Int -> Interact ()
 drawCards = undefined -- XXX
+
+selectAttackTargets :: Interact ()
+selectAttackTargets =
+  do s <- getState
+     case getField phase s of
+       ActionPhase (CombatAction combat)
+         | Attacking attack <- getField combatPhase combat
+         , Set.null (getField attackGroup attack) ->
+           case [ eid | (eid,e) <- Map.toList (getField combatEnemies combat)
+                      , getField enemyAlive e ] of
+             [ eid ] -> doSet s combat [eid]
+             -- XXX:
+       _ -> pure ()
+
+  where
+  doSet s c g =
+    update
+      $ SetState
+      $ setField phase
+          ( ActionPhase
+          $ CombatAction
+          $ updateAttackPhase (setField attackGroup (Set.fromList g)) c
+          )
+        s
+
+
 

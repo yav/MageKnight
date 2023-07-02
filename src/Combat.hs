@@ -1,10 +1,4 @@
-module Combat
-  ( Combat(..)
-  , combatPhase
-  , CombatPhase(..)
-  , startCombat
-  , BattleSite(..)
-  ) where
+module Combat where
 
 import GHC.Generics
 import Data.List(partition)
@@ -86,6 +80,32 @@ declareFields ''ActiveEnemy
 declareFields ''OneAttack
 declareFields ''OneBlock
 declareFields ''DamagePhase
+
+updateAttackPhase :: (OneAttack -> OneAttack) -> Combat -> Combat
+updateAttackPhase f =
+  updField combatPhase \ph ->
+    case ph of
+      Attacking a -> Attacking (f a)
+      ph          -> ph
+
+updateBlockPhase :: (OneBlock -> OneBlock) -> Combat -> Combat
+updateBlockPhase f =
+  updField combatPhase \ph ->
+    case ph of
+      Blocking a -> Blocking (f a)
+      ph         -> ph
+
+updateDamagePhase :: (DamagePhase -> DamagePhase) -> Combat -> Combat
+updateDamagePhase f =
+  updField combatPhase \ph ->
+    case ph of
+      AssigningDamage d -> AssigningDamage (f d)
+      ph                -> ph
+
+
+
+
+
 
 -- | Get the fortifications for an enemy.
 enemyCurrentFortifications :: Combat -> ActiveEnemy -> Int
@@ -174,7 +194,12 @@ activateEnemy siteId summoner enemy =
           }
     }
 
+
+
 --------------------------------------------------------------------------------
+
+
+
 
 
 

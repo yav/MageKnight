@@ -1,7 +1,15 @@
+#resources {
+  display: flex;
+  flex-wrap: wrap;
+  flex-grow: 1;
+  justify-content: space-around;
+}
+
+
+
 .move-resource {
   width: var(--dieSize_px);
   height: var(--dieSize_px);
   background-color: red;
   background-image: url("../img/icons/move.svg");
-
 }

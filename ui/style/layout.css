@@ -98,12 +98,6 @@ body {
   align-items: center;
 }
 
-#resources {
-  flex-grow: 1;
-  display: flex;
-  justify-content: space-around;
-}
-
 .button-bar {
   display: flex;
   flex-direction: row;
