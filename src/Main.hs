@@ -2,10 +2,10 @@ module Main where
 
 import Data.Text(Text)
 import Data.Text qualified as Text
+import Optics
 
 import KOI.CallJS(jsHandlers)
 import KOI.RNGM
-import KOI.Field
 import KOI.Basics
 
 import Util.Perhaps
@@ -86,22 +86,22 @@ getUseSourceInputOptions :: TopInputOptions
 getUseSourceInputOptions s =
   [ topOpt s (Source m) "Use mana from the source" $
     setAndContinue
-      $ setField source (takeMana m sourceVal)
-      $ setField sourceUsed True
-      $ setField mana (addSourceMana m pool)
+      $ set source (takeMana m sourceVal)
+      $ set sourceUsed True
+      $ set mana (addSourceMana m pool)
         s
-  | not (getField sourceUsed s)
+  | not (view sourceUsed s)
   , m <- available
   ] ++
   [ topOpt s TestReroll "Reroll"
   $ setAndContinue
-      $ setField source (refillSource sourceVal)
-      $ setField mana emptyManaPool
-      $ setField sourceUsed False s
+      $ set source (refillSource sourceVal)
+      $ set mana emptyManaPool
+      $ set sourceUsed False s
   ]
   where
-  pool         = getField mana s
-  sourceVal    = getField source s
+  pool         = view mana s
+  sourceVal    = view source s
   available    = availableMana sourceVal
 
 
@@ -109,11 +109,11 @@ getUseSourceInputOptions s =
 
 getSelectedCardOptions :: TopInputOptions
 getSelectedCardOptions s =
-  case getField handSelected handVal of
+  case view handSelected handVal of
     Nothing -> []
     Just selected ->
-      let deed   = getField selectedDeed selected
-          mode   = getField selectedMode selected
+      let deed   = view selectedDeed selected
+          mode   = view selectedMode selected
           colors = [ c | c <- map BasicMana (deedColor deed)
                        , hasMana 1 c pool ]
       in
@@ -125,9 +125,8 @@ getSelectedCardOptions s =
            setAndContinue
              case mb of
                Just (AskMana m) ->
-                 setField hand
-                     (handSelectMode SelectedAdvanced handVal) $
-                 setField mana (removeMana m pool) s
+                 set hand (handSelectMode SelectedAdvanced handVal) $
+                 set mana (removeMana m pool) s
                _ -> s
 
       | mode /= SelectedAdvanced
@@ -136,34 +135,34 @@ getSelectedCardOptions s =
       ++
       [ topOpt s AskSelectedSideways "Turn sideways"
       $ setAndContinue
-      $ setField hand (handSelectMode SelectedSideways handVal)
+      $ set hand (handSelectMode SelectedSideways handVal)
       $ s
       | mode == SelectedBasic
       ]
       ++
       [ topOpt s (ActionButton "Play") "Play card"
         do playDeed mode deed
-           updateThe_ hand (setField handSelected Nothing)
+           updateThe_ hand (set handSelected Nothing)
            sync
            gameLoop
       ]
   where
-  handVal   = getField hand s
-  pool      = getField mana s
+  handVal   = view hand s
+  pool      = view mana s
 
 
 getPlayCardOptions :: TopInputOptions
 getPlayCardOptions s =
-  case getField handSelected handVal of
+  case view handSelected handVal of
     Just {} -> []
     Nothing -> [ ( playerId s :-> AskHand i
                  , "Select card"
-                 , setAndContinue (setField hand (handSelect i handVal) s)
+                 , setAndContinue (set hand (handSelect i handVal) s)
                  )
                | i <- handPlayable handVal
                ]
   where
-  handVal = getField hand s
+  handVal = view hand s
 
 
 getManaPoolOptions :: TopInputOptions
@@ -175,18 +174,18 @@ getManaPoolOptions s =
   ]
 
   where
-  manaPool = getField mana s
+  manaPool = view mana s
   cvtTo b  =
     topOpt s (AskMana (BasicMana b)) "Convert to this color"
       $ setAndContinue
-        $ setField mana (convertMana Gold (BasicMana b) manaPool) s
+        $ set mana (convertMana Gold (BasicMana b) manaPool) s
 
 
 getMoveOptions :: TopInputOptions
 getMoveOptions s =
   [ topOpt s (AskLoc addr explo) lab
   $ setAndContinue
-  $ updField land
+  $ over land
     (\la ->
     case explo of
       Nothing -> setPlayer addr la
@@ -195,7 +194,7 @@ getMoveOptions s =
           Ok (l1,newMons) -> l1
           Failed {} -> la
     ) s
-  | (addr,explo) <- getPlayerNeighbours (getField land s)
+  | (addr,explo) <- getPlayerNeighbours (view land s)
   , let lab = case explo of
                 Nothing -> "Move here"
                 Just _  -> "Explore here"

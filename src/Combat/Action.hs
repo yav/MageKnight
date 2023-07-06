@@ -1,8 +1,8 @@
 module Combat.Action where
 
-import KOI.Field
+import Optics
 
-import Game.KOI
+import Game.KOI hiding (view)
 import Game.State
 import Combat
 import Utils
@@ -10,9 +10,9 @@ import Utils
 
 combatOptions :: State -> [ InputOption () ]
 combatOptions s =
-  case getField phase s of
+  case view phase s of
     ActionPhase (CombatAction combat) ->
-      case getField combatPhase combat of
+      case view combatPhase combat of
         Attacking a -> attackingOptions s a
         Blocking  b -> undefined
         AssigningDamage d -> undefined

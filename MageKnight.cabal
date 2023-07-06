@@ -87,6 +87,7 @@ executable MageKnight
     snap-core,
     snap-server,
     filepath,
+    optics,
     KOI-utils,
     KOI-interact
 

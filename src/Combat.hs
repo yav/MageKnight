@@ -8,9 +8,9 @@ import Data.Map qualified as Map
 import Data.Set(Set)
 import Data.Set qualified as Set
 import Data.Aeson(ToJSON(..))
+import Optics
 
 import KOI.Bag
-import KOI.Field
 
 import Common
 import Terrain.Type(Addr)
@@ -75,29 +75,29 @@ data Damage = Damage
 
 
 
-declareFields ''Combat
-declareFields ''ActiveEnemy
-declareFields ''OneAttack
-declareFields ''OneBlock
-declareFields ''DamagePhase
+makeLenses ''Combat
+makeLenses ''ActiveEnemy
+makeLenses ''OneAttack
+makeLenses ''OneBlock
+makeLenses ''DamagePhase
 
 updateAttackPhase :: (OneAttack -> OneAttack) -> Combat -> Combat
 updateAttackPhase f =
-  updField combatPhase \ph ->
+  over combatPhase \ph ->
     case ph of
       Attacking a -> Attacking (f a)
       ph          -> ph
 
 updateBlockPhase :: (OneBlock -> OneBlock) -> Combat -> Combat
 updateBlockPhase f =
-  updField combatPhase \ph ->
+  over combatPhase \ph ->
     case ph of
       Blocking a -> Blocking (f a)
       ph         -> ph
 
 updateDamagePhase :: (DamagePhase -> DamagePhase) -> Combat -> Combat
 updateDamagePhase f =
-  updField combatPhase \ph ->
+  over combatPhase \ph ->
     case ph of
       AssigningDamage d -> AssigningDamage (f d)
       ph                -> ph
@@ -116,7 +116,7 @@ enemyCurrentFortifications combat en
   abilities = enemyAbilities (enemyToken en)
 
   fromSite
-    | enemySite en `Set.member` getField combatFortifiedSites combat = 1
+    | enemySite en `Set.member` view combatFortifiedSites combat = 1
     | otherwise                                                      = 0
 
   fromAbility
@@ -125,14 +125,14 @@ enemyCurrentFortifications combat en
 
 enemyCurrentArmor :: ActiveEnemy -> Int
 enemyCurrentArmor ae
-  | getField enemyIsFullyBlocked ae = armorIfBlocked armor
+  | view enemyIsFullyBlocked ae = armorIfBlocked armor
   | otherwise                       = armorDefault armor
   where
-  armor = getField enemyEffectiveArmor ae
+  armor = view enemyEffectiveArmor ae
 
 liveEnemies :: Combat -> Set EnemyId
 liveEnemies =
-  Map.keysSet . Map.filter (getField enemyAlive) . getField combatEnemies
+  Map.keysSet . Map.filter (view enemyAlive) . view combatEnemies
 
 data EndBattle = EndBattle
   { defatedEnemeis :: [Enemy]
@@ -218,8 +218,8 @@ startAttackPhase rng =
 attackEnemies :: Combat -> OneAttack -> [ActiveEnemy]
 attackEnemies ba at =
   [ e
-  | eid      <- Set.toList (getField attackGroup at)
-  , Just e   <- [Map.lookup eid (getField combatEnemies ba)]
+  | eid      <- Set.toList (view attackGroup at)
+  , Just e   <- [Map.lookup eid (view combatEnemies ba)]
   ]
 
 attackEnemyArmorAndResitance :: Combat -> OneAttack -> (Int, Set Element)
@@ -236,7 +236,7 @@ attackValue resists damage =
       ]
 
 attackWon :: Combat -> OneAttack -> Bool
-attackWon ba ap = attackValue resists (getField attackDamage ap) >= armor
+attackWon ba ap = attackValue resists (view attackDamage ap) >= armor
   where
   (armor,resists) = attackEnemyArmorAndResitance ba ap
 
@@ -246,9 +246,9 @@ attackWon ba ap = attackValue resists (getField attackDamage ap) >= armor
 blockNeeded :: Combat -> OneBlock -> (Int, Element)
 blockNeeded combat bp =
   fromMaybe (0,Physical)
-  do eid <- getField blockingEnemy bp
-     ae  <- Map.lookup eid (getField combatEnemies combat)
-     AttacksWith el amt : _ <- pure (getField enemyEffectiveAttack ae)
+  do eid <- view blockingEnemy bp
+     ae  <- Map.lookup eid (view combatEnemies combat)
+     AttacksWith el amt : _ <- pure (view enemyEffectiveAttack ae)
      pure
        if Swift `Set.member` enemyAbilities (enemyToken ae)
          then (2 * amt, el)
@@ -292,20 +292,20 @@ instance ToJSON Combat where
 
 combatView :: Combat -> BattleView
 combatView combat =
-  case getField combatPhase combat of
+  case view combatPhase combat of
     AssigningDamage dmg ->
       BattleView
         { viewEnemiesUnselected = live
         , viewEnemiesSelected = []
         , viewDeeds = []
-        , viewBattlePhase = DamageView (getField unassignedDamage dmg)
+        , viewBattlePhase = DamageView (view unassignedDamage dmg)
         }
 
     Attacking ap ->
       BattleView
         { viewEnemiesUnselected = unsel
         , viewEnemiesSelected = sel
-        , viewDeeds = getField attackDeeds ap
+        , viewDeeds = view attackDeeds ap
         , viewBattlePhase =
           if isRangedAttack ap
             then RangedAttackView us them
@@ -313,28 +313,28 @@ combatView combat =
         }
       where
       (them, resist) = attackEnemyArmorAndResitance combat ap
-      us = attackValue resist (getField attackDamage ap)
+      us = attackValue resist (view attackDamage ap)
       (sel,unsel) = partition match live
-      match (eid,_) = eid `Set.member` getField attackGroup ap
+      match (eid,_) = eid `Set.member` view attackGroup ap
 
     Blocking bp ->
       BattleView
         { viewEnemiesUnselected = unsel
         , viewEnemiesSelected = sel
-        , viewDeeds = getField blockDeeds bp
+        , viewDeeds = view blockDeeds bp
         , viewBattlePhase = BlockView have need
         }
       where
       (sel,unsel)       = partition match live
-      match (eid,_)     = Just eid == getField blockingEnemy bp
+      match (eid,_)     = Just eid == view blockingEnemy bp
       (need, attackEl)  = blockNeeded combat bp
-      have              = blockValue attackEl (getField blockAmount bp)
+      have              = blockValue attackEl (view blockAmount bp)
 
   where
   live =
     [ (x, e)
-    | (x,e) <- Map.toList (getField combatEnemies combat)
-    , getField enemyAlive e
+    | (x,e) <- Map.toList (view combatEnemies combat)
+    , view enemyAlive e
     ]
 
 

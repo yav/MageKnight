@@ -2,8 +2,7 @@ module Hand where
 
 import GHC.Generics
 import Data.Aeson
-
-import KOI.Field
+import Optics
 
 import Deed.Type
 
@@ -23,32 +22,33 @@ data SelectedMode =
   | SelectedSideways
     deriving (Eq, Generic, ToJSON)
 
-declareFields ''Hand
-declareFields ''SelectedDeed
+makeLenses ''Hand
+makeLenses ''SelectedDeed
+
 
 newHand :: [Deed] -> Hand
 newHand ds = Hand { _handCards = ds, _handSelected = Nothing }
 
 handSelect :: Int -> Hand -> Hand
 handSelect i h =
-  case splitAt i (getField handCards h) of
+  case splitAt i (view handCards h) of
     (as, d : bs) ->
-      setField handSelected (Just (newSelected d)) $
-      setField handCards (as ++ bs) h
+      set handSelected (Just (newSelected d)) $
+      set handCards (as ++ bs) h
     _ -> h
 
 handSelectMode :: SelectedMode -> Hand -> Hand
 handSelectMode m h =
-  case getField handSelected h of
+  case view handSelected h of
     Nothing -> h
-    Just s -> setField handSelected (Just $ setField selectedMode m s) h
+    Just s -> set handSelected (Just $ set selectedMode m s) h
 
 handPlayable :: Hand -> [Int]
 handPlayable =
     map fst
   . filter ((/= Wound) . snd)
   . zip [0..]
-  . getField handCards
+  . view handCards
 
 newSelected :: Deed -> SelectedDeed
 newSelected d = SelectedDeed

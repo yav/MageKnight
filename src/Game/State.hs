@@ -2,9 +2,9 @@ module Game.State where
 
 import GHC.Generics(Generic)
 import Data.Aeson(ToJSON)
+import Optics
 
 import KOI.Basics(PlayerId)
-import KOI.Field(declareFields)
 
 import Hand
 import Mana.Source
@@ -38,7 +38,7 @@ data State = State
   }
   deriving (Generic,ToJSON)
 
-declareFields ''State
+makeLenses ''State
 
 
 

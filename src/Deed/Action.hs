@@ -6,15 +6,15 @@ module Deed.Action
 import Data.Text(Text)
 import Data.Set qualified as Set
 import Data.Map qualified as Map
+import Optics
 
 import KOI.PP                       as X
-import KOI.Field                    as X
 import KOI.Basics                   as X
 
 import Common                       as X
 import Mana.Type                    as X
 import Mana.Pool
-import Game.KOI                     as X
+import Game.KOI                     as X hiding (view)
 import Game.State                   as X
 import Game.Input                   as X
 import Combat                       as X
@@ -61,15 +61,17 @@ gainMana m =
 drawCards :: Int -> Interact ()
 drawCards = undefined -- XXX
 
+-- | Select attack targets.  Does nothing if we already have a selection.
+-- Automatically selects the enemy if there is only one available.
 selectAttackTargets :: Interact ()
 selectAttackTargets =
   do s <- getState
-     case getField phase s of
+     case view phase s of
        ActionPhase (CombatAction combat)
-         | Attacking attack <- getField combatPhase combat
-         , Set.null (getField attackGroup attack) ->
-           case [ eid | (eid,e) <- Map.toList (getField combatEnemies combat)
-                      , getField enemyAlive e ] of
+         | Attacking attack <- view combatPhase combat
+         , Set.null (view attackGroup attack) ->
+           case [ eid | (eid,e) <- Map.toList (view combatEnemies combat)
+                      , view enemyAlive e ] of
              [ eid ] -> doSet s combat [eid]
              -- XXX:
        _ -> pure ()
@@ -78,10 +80,10 @@ selectAttackTargets =
   doSet s c g =
     update
       $ SetState
-      $ setField phase
+      $ set phase
           ( ActionPhase
           $ CombatAction
-          $ updateAttackPhase (setField attackGroup (Set.fromList g)) c
+          $ updateAttackPhase (set attackGroup (Set.fromList g)) c
           )
         s
 

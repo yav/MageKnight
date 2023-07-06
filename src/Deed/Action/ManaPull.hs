@@ -1,5 +1,7 @@
 module Deed.Action.ManaPull where
 
+import Optics
+
 import Deed.Action
 import Mana.Pool
 import Mana.Source
@@ -18,16 +20,16 @@ basicManaPull s =
                  _ -> pure m
          update
            $ SetState
-           $ setField source (takeMana m sourceVal)
-           $ setField mana   (addSourceMana mv manaVal)
+           $ set source (takeMana m sourceVal)
+           $ set mana   (addSourceMana mv manaVal)
              s
 
     | m <- avail
     ]
   where
   pid       = playerId s
-  sourceVal = getField source s
-  manaVal   = getField mana s
+  sourceVal = view source s
+  manaVal   = view mana s
   avail     = availableMana sourceVal
 
 
@@ -48,15 +50,15 @@ powerManaPull = count 1
                       | t <- anyMana, t /= Gold ]
              update
                $ SetState
-               $ setField source (takeAndConvertMana m tgt sourceVal)
-               $ setField mana   (addMana tgt manaVal) s
+               $ set source (takeAndConvertMana m tgt sourceVal)
+               $ set mana   (addMana tgt manaVal) s
              count (dieNum + 1) =<< getState
         | m <- avail
         ]
       where
       pid       = playerId s
-      sourceVal = getField source s
-      manaVal   = getField mana s
+      sourceVal = view source s
+      manaVal   = view mana s
       avail     = availableMana sourceVal
 
 
