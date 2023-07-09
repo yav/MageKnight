@@ -80,32 +80,7 @@ makeLenses ''ActiveEnemy
 makeLenses ''OneAttack
 makeLenses ''OneBlock
 makeLenses ''DamagePhase
-
-updateAttackPhase :: (OneAttack -> OneAttack) -> Combat -> Combat
-updateAttackPhase f =
-  over combatPhase \ph ->
-    case ph of
-      Attacking a -> Attacking (f a)
-      ph          -> ph
-
-updateBlockPhase :: (OneBlock -> OneBlock) -> Combat -> Combat
-updateBlockPhase f =
-  over combatPhase \ph ->
-    case ph of
-      Blocking a -> Blocking (f a)
-      ph         -> ph
-
-updateDamagePhase :: (DamagePhase -> DamagePhase) -> Combat -> Combat
-updateDamagePhase f =
-  over combatPhase \ph ->
-    case ph of
-      AssigningDamage d -> AssigningDamage (f d)
-      ph                -> ph
-
-
-
-
-
+makePrisms ''CombatPhase
 
 -- | Get the fortifications for an enemy.
 enemyCurrentFortifications :: Combat -> ActiveEnemy -> Int

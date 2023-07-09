@@ -14,7 +14,7 @@ import KOI.Basics                   as X
 import Common                       as X
 import Mana.Type                    as X
 import Mana.Pool
-import Game.KOI                     as X hiding (view)
+import Game.KOI                     as X
 import Game.State                   as X
 import Game.Input                   as X
 import Combat                       as X
@@ -66,26 +66,22 @@ drawCards = undefined -- XXX
 selectAttackTargets :: Interact ()
 selectAttackTargets =
   do s <- getState
-     case view phase s of
-       ActionPhase (CombatAction combat)
-         | Attacking attack <- view combatPhase combat
-         , Set.null (view attackGroup attack) ->
-           case [ eid | (eid,e) <- Map.toList (view combatEnemies combat)
-                      , view enemyAlive e ] of
-             [ eid ] -> doSet s combat [eid]
+     case preview locCombat s of
+       Just combat
+         | Just grp <- preview locGroup combat, Set.null grp ->
+         case [ eid | (eid,e) <- Map.toList (view combatEnemies combat)
+              , view enemyAlive e ] of
+           [ eid ] -> doSet [eid]
              -- XXX:
        _ -> pure ()
 
   where
-  doSet s c g =
-    update
-      $ SetState
-      $ set phase
-          ( ActionPhase
-          $ CombatAction
-          $ updateAttackPhase (set attackGroup (Set.fromList g)) c
-          )
-        s
+  locCombat = phase % _ActionPhase % _CombatAction    -- in State
+  locGroup  = combatPhase % _Attacking % attackGroup
+
+  doSet xs =
+    do s <- getState
+       update (SetState (set (locCombat % locGroup) (Set.fromList xs) s))
 
 
 

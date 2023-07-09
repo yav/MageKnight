@@ -39,6 +39,8 @@ data State = State
   deriving (Generic,ToJSON)
 
 makeLenses ''State
+makePrisms ''Phase
+makePrisms ''ActionPhase
 
 
 

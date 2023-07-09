@@ -2,7 +2,6 @@ module Combat.Action where
 
 import Optics
 
-import Game.KOI hiding (view)
 import Game.State
 import Combat
 import Utils
