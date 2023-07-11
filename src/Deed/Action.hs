@@ -6,6 +6,7 @@ module Deed.Action
 import Data.Text(Text)
 import Data.Set qualified as Set
 import Data.Map qualified as Map
+import Data.List qualified as List
 import Optics
 
 import KOI.PP                       as X
@@ -63,25 +64,37 @@ drawCards = undefined -- XXX
 
 -- | Select attack targets.  Does nothing if we already have a selection.
 -- Automatically selects the enemy if there is only one available.
-selectAttackTargets :: Interact ()
-selectAttackTargets =
+selectAttackTargets :: Text -> Interact ()
+selectAttackTargets what =
   do s <- getState
      case preview locCombat s of
        Just combat
-         | Just grp <- preview locGroup combat, Set.null grp ->
-         case [ eid | (eid,e) <- Map.toList (view combatEnemies combat)
-              , view enemyAlive e ] of
-           [ eid ] -> doSet [eid]
-             -- XXX:
+         | Just grp <- preview locGroup combat, Set.null grp
+         , let candidates =
+                 [ eid | (eid,e) <- Map.toList (view combatEnemies combat)
+                       , view enemyAlive e ]  ->
+          case candidates of
+            [ eid ] -> doSet s [eid]
+            _       -> selectTgts s [] candidates
        _ -> pure ()
 
   where
   locCombat = phase % _ActionPhase % _CombatAction    -- in State
   locGroup  = combatPhase % _Attacking % attackGroup
 
-  doSet xs =
-    do s <- getState
-       update (SetState (set (locCombat % locGroup) (Set.fromList xs) s))
+  selectTgts s selected available
+    | null available = doSet s selected
+    | otherwise =
+      askInputs ("Select " <> what <> " target.") $
+      [ defOpt s (ActionButton "Done") "End target selection"
+        (doSet s selected)
+      | not (null selected) ] ++
+      [ defOpt s (AskEnemy eid) "Target this enemy."
+        (selectTgts s (eid : selected) (List.delete eid available))
+      | eid <- available ]
+
+  doSet s xs =
+    update (SetState (set (locCombat % locGroup) (Set.fromList xs) s))
 
 
 
