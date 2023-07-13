@@ -6,6 +6,7 @@ import Deed.Type
 import Deed.Action
 import Deed.Action.ManaPull
 import Deed.Action.Tranquility
+import Deed.Action.Rage
 
 
 playDeed :: SelectedMode -> Deed -> Interact()
@@ -54,7 +55,7 @@ instance HasDeedAction BasicAction where
       Crystal_Joy -> deedNotImplemented "basicDeed"
       Cold_Toughness -> deedNotImplemented "basicDeed"
 
-      Rage -> deedNotImplemented "basicDeed"
+      Rage -> defDeed rageBasic ragePower
       Threaten -> deedNotImplemented "basicDeed"
       Improvisation -> deedNotImplemented "basicDeed"
       Battle_Versatility -> deedNotImplemented "basicDeed"

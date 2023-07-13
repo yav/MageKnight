@@ -37,6 +37,7 @@ executable MageKnight
     Deed.Action.ManaPull,
     Deed.Action.Tranquility,
     Deed.Action.Concentration,
+    Deed.Action.Rage,
 
     Combat,
     Combat.Action,

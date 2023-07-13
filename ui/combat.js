@@ -58,13 +58,14 @@ function newCombat() {
     }
   }
 
+  const allEnemies = {}
 
   function drawActiveEnemy(container,e) {
     const dom = newEnemy(e.enemyToken)
     container.appendChild(dom)
     let cur = e.enemyToken.enemyName
 
-    return (val) => {
+    function set(val) {
       if (val === undefined) {
         dom.remove()
         return
@@ -74,6 +75,12 @@ function newCombat() {
       dom.replaceWith(newEnemy(og))
       cur = og.enemyName
     }
+
+    function ask(q) {
+      console.log("ASKING")
+    }
+
+    return { set: set, ask: ask }
   }
 
   function newEnemyList(container) {
@@ -81,10 +88,12 @@ function newCombat() {
     return newListElement((val) => {
       const [i,e] = val
       es[i] = drawActiveEnemy(container,e)
+      allEnemies[i] = es[i]
       return (newVal) => {
         if (newVal === undefined) {
-          es[i](undefined)
+          es[i].set(undefined)
           es[i] = undefined
+          allEnemies[i] = undefined
         }
       }
     })
@@ -101,8 +110,11 @@ function newCombat() {
     // XXX: Deeds
   }
 
+  function askEnemy(eid,q) { allEnemies[eid].ask(q) }
+
   return {
     set: setCombat,
-    hide: () => combatD.classList.add("hidden")
+    hide: () => combatD.classList.add("hidden"),
+    askenemy: askEnemy
   }
 }
