@@ -58,7 +58,6 @@ function newCombat() {
     }
   }
 
-  const allEnemies = {}
 
   function drawActiveEnemy(container,e) {
     const dom = newEnemy(e.enemyToken)
@@ -77,44 +76,54 @@ function newCombat() {
     }
 
     function ask(q) {
-      console.log("ASKING")
+      uiExistingAnswer(dom,q)
     }
 
     return { set: set, ask: ask }
   }
 
-  function newEnemyList(container) {
-    const es = []
-    return newListElement((val) => {
-      const [i,e] = val
-      es[i] = drawActiveEnemy(container,e)
-      allEnemies[i] = es[i]
+  function newEnemyList (container) {
+    const state = {}
+
+    function mk(eid,enemyVal) {
+      state[eid] = drawActiveEnemy(container, enemyVal)
       return (newVal) => {
-        if (newVal === undefined) {
-          es[i].set(undefined)
-          es[i] = undefined
-          allEnemies[i] = undefined
-        }
+        state[eid].set(newVal)
+        if (newVal === undefined) delete state[eid]
       }
-    })
+    }
+
+    function ask(eid,q) {
+      const obj = state[eid]
+      if (obj === undefined) return
+      obj.ask(q)
+    }
+
+    return { set: newSetElement(mk, fromKeyValArray)
+           , ask: ask
+           }
+
   }
 
-  const selectedEnemies    = newEnemyList(selectedD)
+  const selectedEnemies = newEnemyList(selectedD)
   const notSelectedEnemies = newEnemyList(unselectedD)
 
   function setCombat(c) {
     combatD.classList.remove("hidden")
     setPhase(c.viewBattlePhase)
-    selectedEnemies(c.viewEnemiesSelected)
-    notSelectedEnemies(c.viewEnemiesUnselected)
+    selectedEnemies.set(c.viewEnemiesSelected)
+    notSelectedEnemies.set(c.viewEnemiesUnselected)
     // XXX: Deeds
   }
 
-  function askEnemy(eid,q) { allEnemies[eid].ask(q) }
+  function askEnemy(eid,q) {
+    selectedEnemies.ask(eid,q)
+    notSelectedEnemies.ask(eid,q)
+  }
 
   return {
     set: setCombat,
     hide: () => combatD.classList.add("hidden"),
-    askenemy: askEnemy
+    askEnemy: askEnemy
   }
 }

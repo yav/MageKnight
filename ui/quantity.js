@@ -1,22 +1,46 @@
+function newSetElement(makeNew, adaptor) {
+  let cur = {}
 
-function newListElement(makeNew) {
-  let old = []
+  return (xs0) => {
+    const done = {}
 
-  function set(xs) {
-    const common = Math.min(old.length,xs.length)
-    let i
-    for (i = 0; i < common.length; ++i) {
-      old[i](xs[i])
+    const xs = adaptor? adaptor(xs0) : xs
+
+    // Add nes and change existing
+    for (const key in xs) {
+      const val = xs[key]
+      const obj = cur[key]
+      if (obj === undefined) {
+        cur[key] = makeNew(key,val)
+      } else {
+        obj(val)
+      }
+      done[key] = true
     }
 
-    for (; i < xs.length; ++i) {
-      old.push(makeNew(xs[i]))
+    // Remove extras
+    for (const key in cur) {
+      if (done[key]) continue
+      console.log(cur[key])
+      cur[key](undefined)
+      delete cur[key]
     }
-
-    while (i < old.length) old.pop()()
   }
+}
 
-  return set
+function fromArray(arr) {
+  const obj = {}
+  for (let i = 0; i < arr.length; ++i) obj[i] = arr[i]
+  return obj
+}
+
+function fromKeyValArray(arr) {
+  const obj = {}
+  for (let i = 0; i < arr.length; ++i) {
+    const [k,v] = arr[i]
+    obj[k] = v
+  }
+  return obj
 }
 
 

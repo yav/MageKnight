@@ -74,27 +74,29 @@ selectAttackTargets what =
                  [ eid | (eid,e) <- Map.toList (view combatEnemies combat)
                        , view enemyAlive e ]  ->
           case candidates of
-            [ eid ] -> doSet s [eid]
-            _       -> selectTgts s [] candidates
+            [ eid ] -> addSel s eid >> pure ()
+            _       -> selectTgts s False candidates
        _ -> pure ()
 
   where
   locCombat = phase % _ActionPhase % _CombatAction    -- in State
   locGroup  = combatPhase % _Attacking % attackGroup
 
-  selectTgts s selected available
-    | null available = doSet s selected
+  selectTgts s end available
+    | null available = pure ()
     | otherwise =
       askInputs ("Select " <> what <> " target.") $
-      [ defOpt s (ActionButton "Done") "End target selection"
-        (doSet s selected)
-      | not (null selected) ] ++
+      [ defOpt s (ActionButton "Done") "End target selection" (pure ())
+      | end ] ++
       [ defOpt s (AskEnemy eid) "Target this enemy."
-        (selectTgts s (eid : selected) (List.delete eid available))
+        do s1 <- addSel s eid
+           selectTgts s1 True (List.delete eid available)
       | eid <- available ]
 
-  doSet s xs =
-    update (SetState (set (locCombat % locGroup) (Set.fromList xs) s))
+  addSel s x =
+    do let s1 = over (locCombat % locGroup) (Set.insert x) s
+       update (SetState s1)
+       pure s1
 
 
 
