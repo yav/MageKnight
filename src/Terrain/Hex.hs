@@ -32,8 +32,8 @@ import qualified Data.Map as Map
 import Data.Aeson qualified as JS
 
 import KOI.Bag
+import KOI.ResourceQ
 
-import Util.ResourceQ
 import Common
 import Mana.Type
 import Enemies
@@ -43,7 +43,6 @@ import Ruins
 
 
 
-type EnemyPool = Map EnemyType (ResourceQ Enemy)
 
 -- | The contents of a single hex cell.
 data HexContent = HexContent

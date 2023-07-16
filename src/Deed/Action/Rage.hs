@@ -5,7 +5,7 @@ import Deed.Action
 --- XXX
 rageBasic :: DeedDef
 rageBasic s =
-  do selectAttackTargets "Ranged attack"
+  do selectAttackTargets
 
 ragePower :: DeedDef
 ragePower _ = pure ()

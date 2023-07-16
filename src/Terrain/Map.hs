@@ -42,17 +42,16 @@ import Data.Aeson(ToJSON,toJSON)
 
 import KOI.Utils
 import KOI.RNGM
+import  KOI.ResourceQ
 
-import  Util.ResourceQ
 import  Util.Perhaps
-
 
 
 import  Terrain.Type
 import  Terrain.Hex
 import  Terrain.Tile
 
-import  Enemies( Enemy(..), EnemyType(..), allEnemies, allEnemyTypes )
+import  Enemies( Enemy(..), EnemyType(..), allEnemies, allEnemyTypes, EnemyPool)
 import  Ruins(Ruins, ruins)
 import  Common(Time(..), Visibility(..))
 
@@ -128,14 +127,14 @@ setupLand LandSetup { .. } =
 
 
 
-blankEnemyPool :: Gen (Map EnemyType (ResourceQ Enemy))
+blankEnemyPool :: Gen EnemyPool
 blankEnemyPool = foldM add Map.empty allEnemyTypes
   where
   add m e = do q <- rqEmpty
                return (Map.insert e q m)
 
 
-initialEnemyPool :: [Enemy] -> Gen (Map EnemyType (ResourceQ Enemy))
+initialEnemyPool :: [Enemy] -> Gen EnemyPool
 initialEnemyPool enemies = do blank <- blankEnemyPool
                               return (foldr add blank enemies)
   where
@@ -163,7 +162,7 @@ data Land = Land
   , ruinsPool       :: ResourceQ Ruins
     -- ^ Ruins are choisen from here.
 
-  , enemyPool       :: Map EnemyType (ResourceQ Enemy)
+  , enemyPool       :: EnemyPool
     -- ^ Enemies are spawned from here
 
   , timeOfDay       :: Time

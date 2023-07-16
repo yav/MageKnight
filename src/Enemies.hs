@@ -2,6 +2,7 @@ module Enemies
   ( Enemy(..)
   , EnemyType(..)
   , allEnemyTypes
+  , EnemyPool
 
   , EnemyAbility(..)
   , EnemyAttack(..)
@@ -9,20 +10,26 @@ module Enemies
   , enemyIsElusive
   , enemyElementalResistances
 
+  , Damage(..)
+  -- , enemyWounds
+
   , allEnemies
   , orcs, guardians, mages, underworld, citizens, draconum
   ) where
 
 import GHC.Generics(Generic)
 import Data.Maybe(listToMaybe)
+import Data.Map (Map)
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Aeson(ToJSON)
 
 import KOI.Enum
+import KOI.ResourceQ
 
 import Common(Element(..))
+
 
 --------------------------------------------------------------------------------
 data EnemyType  = Orc | Guardian | Mage | Underworld | Citizen | Draconum
@@ -67,6 +74,13 @@ enemyElementalResistances en
   where
   rs = Set.fromList [ el | Resists el <- Set.toList (enemyAbilities en) ]
 
+data Damage = Damage
+  { isPoison, isParalyzing, isAssasination :: Bool
+  } deriving (Eq,Ord,Generic,ToJSON)
+
+
+
+
 --------------------------------------------------------------------------------
 data EnemyAbility =
 
@@ -95,6 +109,7 @@ data EnemyAttack = AttacksWith Element Int
                    deriving (Eq,Show,Generic,ToJSON)
 --------------------------------------------------------------------------------
 
+type EnemyPool = Map EnemyType (ResourceQ Enemy)
 
 allEnemies :: [Enemy]
 allEnemies = orcs ++ guardians ++ underworld ++ mages ++ draconum ++ citizens

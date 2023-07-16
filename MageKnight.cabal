@@ -17,6 +17,7 @@ executable MageKnight
     OverloadedStrings,
     FlexibleInstances,
     TypeFamilies,
+    ViewPatterns,
     TemplateHaskell
 
   hs-source-dirs: src
@@ -68,7 +69,6 @@ executable MageKnight
     Offers,
 
     Util.Random,
-    Util.ResourceQ,
     Util.Q,
     Util.Misc,
     Util.Perhaps,

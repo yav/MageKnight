@@ -21,7 +21,7 @@ module Offer
   ) where
 
 import KOI.RNGM
-import Util.ResourceQ
+import KOI.ResourceQ
 
 data Offer a = Offer
   { offerDeck :: ResourceQ a  -- ^ New offers come from here

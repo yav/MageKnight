@@ -2,7 +2,7 @@ module Combat where
 
 import GHC.Generics
 import Data.List(partition)
-import Data.Maybe(fromMaybe)
+import Data.Maybe(fromMaybe,isNothing)
 import Data.Map(Map)
 import Data.Map qualified as Map
 import Data.Set(Set)
@@ -69,11 +69,6 @@ data DamagePhase = DamagePhase
   { _unassignedDamage :: [Damage]
   }
 
-data Damage = Damage
-  { isPoison, isParalyzing, isAssasination :: Bool
-  } deriving (Eq,Ord,Generic,ToJSON)
-
-
 
 makeLenses ''Combat
 makeLenses ''ActiveEnemy
@@ -109,8 +104,21 @@ liveEnemies :: Combat -> Set EnemyId
 liveEnemies =
   Map.keysSet . Map.filter (view enemyAlive) . view combatEnemies
 
+blockableEnemies :: Combat -> Set EnemyId
+blockableEnemies = Map.keysSet . Map.filter mayBlock . view combatEnemies
+  where
+  mayBlock e =
+    view enemyAlive e && view enemyAttacks e && not (view enemyIsFullyBlocked e)
+
+killEnemy :: EnemyId -> Combat -> Combat
+killEnemy eid =
+    over (combatEnemies % at eid) \mb ->
+    case mb of
+      Nothing -> Nothing
+      Just e  -> Just (set enemyAlive False (set enemyAttacks False e))
+
 data EndBattle = EndBattle
-  { defatedEnemeis :: [Enemy]
+  { defatedEnemeis    :: [Enemy]              -- ^ Not including summoned
   , undefeatedEnemies :: Map SiteId [Enemy]
   }
 
@@ -191,9 +199,9 @@ startAttackPhase rng =
     }
 
 attackEnemies :: Combat -> OneAttack -> [ActiveEnemy]
-attackEnemies ba at =
+attackEnemies ba att =
   [ e
-  | eid      <- Set.toList (view attackGroup at)
+  | eid      <- Set.toList (view attackGroup att)
   , Just e   <- [Map.lookup eid (view combatEnemies ba)]
   ]
 
@@ -216,6 +224,14 @@ attackWon ba ap = attackValue resists (view attackDamage ap) >= armor
   (armor,resists) = attackEnemyArmorAndResitance ba ap
 
 --------------------------------------------------------------------------------
+
+startBlockPhase :: OneBlock
+startBlockPhase =
+  OneBlock
+    { _blockingEnemy = Nothing
+    , _blockDeeds = []
+    , _blockAmount = bagEmpty
+    }
 
 -- | How much we need to block.   Assumes no summoner.
 blockNeeded :: Combat -> OneBlock -> (Int, Element)
@@ -243,6 +259,49 @@ blockValue attackElement blockHave =
       Physical  -> True
 
 
+-- | Is this a good place to end a phase
+mayEndPhase :: CombatPhase -> Bool
+mayEndPhase ph =
+  case ph of
+    Attacking a -> Set.null (view attackGroup a)
+    Blocking bl -> isNothing (view blockingEnemy bl)
+    AssigningDamage dmg -> null (view unassignedDamage dmg)
+
+-- | Is it the case that there is nothing else to do in this phase.
+phaseFinished :: Combat -> Bool
+phaseFinished combat = mayEndPhase ph &&
+  case ph of
+    Attacking {} -> Set.null alive
+    Blocking {} -> Set.null blockable
+    AssigningDamage dmg -> null (view unassignedDamage dmg)
+  where
+  ph = view combatPhase combat
+  alive = liveEnemies combat
+  blockable = blockableEnemies combat
+
+-- | Try to advance to the next phase where there's something to do.
+nextPhase :: Combat -> Either EndBattle Combat
+nextPhase = undefined {-combat
+  | not (mayEndPhase ph) = Right combat
+  | Just ph <- after =
+    let new = set combatPhase ph
+    in if phaseFinished new then nextPhase new else Right new
+  | otherwise = undefined -- End Battle
+  where
+  ph = view combatPhase combat
+
+  -- XXX: summon
+  after =
+    case ph of
+      Attacking a
+        | isRangedAttack -> Just (Blocking startBlockPhase)
+        | otherwise -> Nothing
+
+      Blocking {} ->
+        Just (AssigningDamage DamagePhase { _unassignedDamage = undefined })
+
+      AssigningDamage {} -> Just (Attacking (startAttackPhase False))
+-}
 
 --------------------------------------------------------------------------------
 

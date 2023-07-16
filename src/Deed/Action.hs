@@ -64,8 +64,8 @@ drawCards = undefined -- XXX
 
 -- | Select attack targets.  Does nothing if we already have a selection.
 -- Automatically selects the enemy if there is only one available.
-selectAttackTargets :: Text -> Interact ()
-selectAttackTargets what =
+selectAttackTargets :: Interact ()
+selectAttackTargets =
   do s <- getState
      case preview locCombat s of
        Just combat
@@ -85,7 +85,7 @@ selectAttackTargets what =
   selectTgts s end available
     | null available = pure ()
     | otherwise =
-      askInputs ("Select " <> what <> " target.") $
+      askInputs ("Select attack target.") $
       [ defOpt s (ActionButton "Done") "End target selection" (pure ())
       | end ] ++
       [ defOpt s (AskEnemy eid) "Target this enemy."
@@ -97,6 +97,29 @@ selectAttackTargets what =
     do let s1 = over (locCombat % locGroup) (Set.insert x) s
        update (SetState s1)
        pure s1
+
+
+selectBlockTarget :: Interact ()
+selectBlockTarget =
+  do s <- getState
+     case preview locCombat s of
+       Just combat
+         | Just grp <- preview locGroup combat
+         , Nothing  <- grp
+         , let candidates =
+                 [ eid | (eid,e) <- Map.toList (view combatEnemies combat)
+                       , view enemyAlive e, view enemyAttacks e ]  ->
+          case candidates of
+            [ eid ] -> setSel s eid
+            _ -> askInputs ("Select enemy to block.") $
+                   [ defOpt s (AskEnemy eid) "Block this enemy." (setSel s eid)
+                   | eid <- candidates ]
+       _ -> pure ()
+
+  where
+  locCombat   = phase % _ActionPhase % _CombatAction    -- in State
+  locGroup    = combatPhase % _Blocking % blockingEnemy
+  setSel s x  = update (SetState (set (locCombat % locGroup) (Just x) s))
 
 
 
