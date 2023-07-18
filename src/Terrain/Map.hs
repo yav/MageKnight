@@ -42,10 +42,7 @@ import Data.Aeson(ToJSON,toJSON)
 
 import KOI.Utils
 import KOI.RNGM
-import  KOI.ResourceQ
-
-import  Util.Perhaps
-
+import KOI.ResourceQ
 
 import  Terrain.Type
 import  Terrain.Hex
@@ -88,7 +85,7 @@ defaultLandSetup shape countryNum coreNum cities = LandSetup
 
 -- | Setup an initial land.
 -- Returns the land and the number of moansteries in the original setup.
-setupLand :: LandSetup -> Gen (Perhaps (Land, Int))
+setupLand :: LandSetup -> Gen (Maybe (Land, Int))
 setupLand LandSetup { .. } =
   do shuffledCountry <- shuffle useCountryTiles
      shuffledCore    <- shuffle coreNonCityTiles
@@ -112,7 +109,7 @@ setupLand LandSetup { .. } =
                       , playerLocation  = Addr (head startPositions) Center
                       , ..
                       }
-     return (foldM reveal (land0,0) revealPos)
+     pure (foldM reveal (land0,0) revealPos)
   where
   (startTile,revealPos)         = case useShape of
                                     Wedge -> (tileA, init startPositions)
@@ -121,7 +118,7 @@ setupLand LandSetup { .. } =
   startPositions                = [(0,0), (0,1), (1,0), (1,-1)]
 
   reveal (l,ms) addr            = do (l1,ms1) <- initialTile True addr l
-                                     return (l1, ms + ms1)
+                                     pure (l1, ms + ms1)
 
   cityNum                       = length useCityLevels
 
@@ -131,12 +128,12 @@ blankEnemyPool :: Gen EnemyPool
 blankEnemyPool = foldM add Map.empty allEnemyTypes
   where
   add m e = do q <- rqEmpty
-               return (Map.insert e q m)
+               pure (Map.insert e q m)
 
 
 initialEnemyPool :: [Enemy] -> Gen EnemyPool
 initialEnemyPool enemies = do blank <- blankEnemyPool
-                              return (foldr add blank enemies)
+                              pure (foldr add blank enemies)
   where
   add e qs = Map.adjust (rqDiscard e) (enemyType e) qs
 
@@ -176,27 +173,25 @@ data Land = Land
 
 -- | Check if there are any more tiles available.  If so, also check
 -- if the next tile may be placed at the given location.
-selectTile :: Bool -> TileAddr -> Land -> Perhaps (Tile, Land)
+selectTile :: Bool -> TileAddr -> Land -> Maybe (Tile, Land)
 selectTile noCheck pt Land { .. }
   | t : ts <- unexploredTiles =
-    do checkThat (noCheck ||
+    do guard (noCheck ||
                     validPlacement mapShape explored (tileType t) False pt)
-         "The next tile does not fit the location."
-       return (t, Land { unexploredTiles = ts, .. })
+       pure (t, Land { unexploredTiles = ts, .. })
 
   | t : ts <- backupTiles =
-    do checkThat (validPlacement mapShape explored (tileType t) True pt)
-         "The next backup tile does not fit the location."
-       return (t, Land { backupTiles = ts, .. })
+    do guard (validPlacement mapShape explored (tileType t) True pt)
+       pure (t, Land { backupTiles = ts, .. })
 
-  | otherwise = fail "No more map tiles."
+  | otherwise = Nothing
   where
   explored a = a `Map.member` theMap
 
 
 -- | Setup a newly reveal tile.
 -- The 'Int' in the result is the number of monasteries on the tile.
--- This is returned so that we can add the appropriate monasetry tech to
+-- This is pureed so that we can add the appropriate monasetry tech to
 -- the offers.
 populateTile :: Tile -> Land -> (GameTile, Int, Land)
 populateTile tile g = (gt, mons, g1)
@@ -278,26 +273,25 @@ data CombatInfo = CombatInfo
   }
 
 -- | Spawn enemies of the required types.
-spawnCreatures :: [EnemyType] -> Land -> Perhaps ([Enemy], Land)
+spawnCreatures :: [EnemyType] -> Land -> Maybe ([Enemy], Land)
 spawnCreatures tys l =
   case tys of
-    []     -> return ([], l)
+    []     -> pure ([], l)
     t : ts -> do (e, l1) <- spawnCreature t l
                  (es,l2) <- spawnCreatures ts l1
-                 return (e : es, l2)
+                 pure (e : es, l2)
 
 -- | Spawn a creature of the given type.
 -- Fails if there are no more enemies available of the required type.
-spawnCreature :: EnemyType -> Land -> Perhaps (Enemy, Land)
+spawnCreature :: EnemyType -> Land -> Maybe (Enemy, Land)
 spawnCreature ty Land { .. } =
-  perhaps (Text.unwords [ "Insufficient", showText ty, "enemies."]) $
   do rq      <- Map.lookup ty enemyPool
      (e,rq1) <- rqTake rq
-     return (e, Land { enemyPool = Map.insert ty rq1 enemyPool, .. })
+     pure (e, Land { enemyPool = Map.insert ty rq1 enemyPool, .. })
 
 
 -- | Summon a creature to be used by enemies with sommoner powers.
-summonCreature :: Land -> Perhaps (Enemy, Land)
+summonCreature :: Land -> Maybe (Enemy, Land)
 summonCreature = spawnCreature Underworld
 
 discardEnemy :: Enemy -> Land -> Land
@@ -306,21 +300,21 @@ discardEnemy e Land { .. } =
 
 
 -- | Try to explore the given address.
--- If successful, returns an updated land, and the number of
+-- If successful, pures an updated land, and the number of
 -- monasteries that were revealed, so that the units offer can be updated.
 -- Fails if the address is explored, or there is no suitable land to put there.
-exploreAt :: TileAddr -> Land -> Perhaps (Land, Int)
+exploreAt :: TileAddr -> Land -> Maybe (Land, Int)
 exploreAt newTilePos l =
   do let loc = playerLocation l
      (l1,m) <- initialTile False newTilePos l
-     return (revealHiddenNeighbours loc l1, m)
+     pure (revealHiddenNeighbours loc l1, m)
 
 
 -- | Get the features and the conetnt of a tile.
 getHexInfo :: Addr -> Land -> Maybe HexInfo
 getHexInfo Addr { .. } Land { .. } =
   do gt <- Map.lookup addrGlobal theMap
-     return (gameTileInfo addrLocal gt)
+     pure (gameTileInfo addrLocal gt)
 
 -- | Get the feature of a tile at the given address.
 getFeatureAt :: Addr -> Land -> Maybe HexLandInfo
@@ -333,7 +327,7 @@ getRevealedEnemiesAt Addr { .. } Land { .. } =
   fromMaybe [] $
   do gt <- Map.lookup addrGlobal theMap
      let HexInfo { .. } = gameTileInfo addrLocal gt
-     return (hexActiveEnemies hexContent)
+     pure (hexActiveEnemies hexContent)
 
 setPlayer :: Addr -> Land -> Land
 setPlayer a l
@@ -371,11 +365,11 @@ getPlayerNeighbours l =
 
 
 -- | Setup a new tile at the given position.
-initialTile :: Bool -> TileAddr -> Land -> Perhaps (Land, Int)
+initialTile :: Bool -> TileAddr -> Land -> Maybe (Land, Int)
 initialTile noCheck addr l =
   do (t,l1) <- selectTile noCheck addr l
      let (gt,ms,l2) = populateTile t l1
-     return (l2 { theMap = Map.insert addr gt (theMap l2) }, ms)
+     pure (l2 { theMap = Map.insert addr gt (theMap l2) }, ms)
 
 -- | Update a location on the map.
 updateAddr :: Addr -> (HexInfo -> HexContent) -> Land -> Land
@@ -383,12 +377,12 @@ updateAddr Addr { .. } f Land { .. } =
   Land { theMap = Map.adjust (gameTileUpdateAt addrLocal f) addrGlobal theMap
        , .. }
 
--- | Update a location on the map, returning a result.
+-- | Update a location on the map, pureing a result.
 updateAddr' :: Addr -> (HexInfo -> (a, HexContent)) -> Land -> Maybe (a, Land)
 updateAddr' Addr { .. } f Land { .. } =
   do gt <- Map.lookup addrGlobal theMap
      let (res, gt1) = gameTileUpdateAt' addrLocal f gt
-     return (res, Land { theMap = Map.insert addrGlobal gt1 theMap, .. })
+     pure (res, Land { theMap = Map.insert addrGlobal gt1 theMap, .. })
 
 
 -- | Compute which addresses start wars, if we move from one location
@@ -407,7 +401,7 @@ startsBattle Land { .. } fromS toS =
        guard (p i)
        let es = hexActiveEnemies (hexContent i)
        guard (not (null es))
-       return (a,es)
+       pure (a,es)
 
   isRampaging HexInfo
                { hexLandInfo =

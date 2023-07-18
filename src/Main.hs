@@ -1,14 +1,11 @@
 module Main where
 
 import Data.Text(Text)
-import Data.Text qualified as Text
 import Optics
 
 import KOI.CallJS(jsHandlers)
 import KOI.RNGM
 import KOI.Basics
-
-import Util.Perhaps
 
 import Game.KOI
 import Game.State
@@ -42,8 +39,8 @@ main =
          pure
            case (ps,mb) of
              ([],_) -> Left "need a player"
-             (_,Failed msg) -> Left (Text.unpack msg)
-             (p:_, Ok (la,_mon)) ->
+             (_,Nothing) -> Left "Failed to setup land"
+             (p:_, Just (la,_mon)) ->
                Right State { playerId     = p
                            , playerHero   = hero
                            , _source      = src
@@ -191,8 +188,8 @@ getMoveOptions s =
       Nothing -> setPlayer addr la
       Just _  ->
         case exploreAt (addrGlobal addr) la of
-          Ok (l1,newMons) -> l1
-          Failed {} -> la
+          Just (l1,newMons) -> l1
+          Nothing -> la
     ) s
   | (addr,explo) <- getPlayerNeighbours (view land s)
   , let lab = case explo of

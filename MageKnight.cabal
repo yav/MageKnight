@@ -68,10 +68,6 @@ executable MageKnight
     Offer,
     Offers,
 
-    Util.Perhaps,
-
-
-
   build-depends:
     base,
     containers,

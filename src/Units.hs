@@ -2,7 +2,6 @@ module Units where
 
 import Common
 
-import Util.Perhaps
 
 import           Data.Text (Text)
 import           Data.Set  (Set)
@@ -35,19 +34,16 @@ endOfCombat u = u { unitAssignedDamageThisCombat = False }
 unitAssignDamage :: Int {-^ Amount -} ->
                     DamageInfo ->
                     ActiveUnit  {-^ Unit to be damaged -} ->
-                    Perhaps (Int, Maybe ActiveUnit)
+                    Maybe (Int, Maybe ActiveUnit)
                     -- ^ Remaining damage and updated unit.
                     -- If the unit is paralized, we return 'Nothing'.
 unitAssignDamage damage DamageInfo { .. } ActiveUnit { .. }
 
-  | damage < 1 =
-    Failed "Units may be assigned only positive amount of damage."
+  | damage < 1 = Nothing
 
-  | unitWounds > 0 =
-    Failed "The unit is already wounded."
+  | unitWounds > 0 = Nothing
 
-  | unitAssignedDamageThisCombat =
-    Failed "The unit was already assigned damage this combat."
+  | unitAssignedDamageThisCombat = Nothing
 
   | otherwise =
     let resistant = damageElement `Set.member` unitResists baseUnit
@@ -55,12 +51,12 @@ unitAssignDamage damage DamageInfo { .. } ActiveUnit { .. }
         absorbed  = if resistant then 2 * armor else armor
         wounds    = if damagePoisons then 2 else 1
         actualWounds = if resistant && damage <= armor then 0 else wounds
-    in Ok ( max 0 (damage - absorbed)
-          , if actualWounds > 0 && damageParalyzes
-              then Nothing
-              else Just ActiveUnit { unitAssignedDamageThisCombat = True
-                                   , unitWounds = actualWounds, .. }
-          )
+    in Just ( max 0 (damage - absorbed)
+            , if actualWounds > 0 && damageParalyzes
+                then Nothing
+                else Just ActiveUnit { unitAssignedDamageThisCombat = True
+                                     , unitWounds = actualWounds, .. }
+            )
 
 data UnitType = RegularUnit | EliteUnit
 
