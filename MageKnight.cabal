@@ -68,9 +68,6 @@ executable MageKnight
     Offer,
     Offers,
 
-    Util.Random,
-    Util.Q,
-    Util.Misc,
     Util.Perhaps,
 
 

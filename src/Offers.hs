@@ -22,7 +22,6 @@ module Offers
 
     -- * Artifacts
   , takeArtifacts
-  , returnArtifact
 
     -- * Others
   , newSkill
@@ -32,7 +31,7 @@ module Offers
   ) where
 
 import KOI.RNGM
-import Util.Q
+import KOI.ResourceQ
 
 import Offer
 
@@ -131,9 +130,9 @@ offerDisbandUnit u UnitOffer { .. } =
 data Offers = Offers
   { advancedActionOffer :: Offer Deed
   , spellOffer          :: Offer Deed
+  , artifactDeck        :: ResourceQ Deed
   , unitOffer           :: UnitOffer
   , monasteryTech       :: [Deed]   -- part of unit offer
-  , artifactDeck        :: Q Deed
   , activeMonasteries   :: Int
     -- ^ Revealed monasteries that have not been burnt.
 
@@ -194,6 +193,7 @@ setupOffers :: OfferSetup -> Gen Offers
 setupOffers OfferSetup { .. } =
   do advancedActionOffer <- newDeedOffer useAdvancedActionNum useAdvancedActions
      spellOffer          <- newDeedOffer useSpellNum useSpells
+     artifacts           <- rqFromListRandom useArtifacts
      emptyUnit           <- emptyUnitOffer useRegularUnits useEliteUnits
      return Offers
       { unitNumber          = useUnitNum
@@ -203,7 +203,7 @@ setupOffers OfferSetup { .. } =
       , activeMonasteries   = 0
 
       , commonSkillOffer    = []
-      , artifactDeck        = qFromList useArtifacts
+      , artifactDeck        = artifacts
 
       , ..
       }
@@ -223,16 +223,10 @@ offeringMonasteries = monasteryTech
 
 -- | Take the given number of artifacts.  If there aren't enough,
 -- then return whatever is available.
-takeArtifacts ::  Int -> Offers -> ([Deed], Offers)
+takeArtifacts :: Int -> Offers -> ([Deed], Offers)
 takeArtifacts n Offers { .. } =
-  case qTakeFrontN n artifactDeck of
-    Just (as,q) -> (as, Offers { artifactDeck = q, .. })
-    Nothing     -> (qToList artifactDeck, Offers { artifactDeck = qEmpty, .. })
-
--- | Place this artifact at the bottom of the artifcat deck.
-returnArtifact :: Deed -> Offers -> Offers
-returnArtifact d Offers { .. } =
-  Offers { artifactDeck = qAddBack d artifactDeck, .. }
+  case rqTakeN n artifactDeck of
+    (as,q) -> (as, Offers { artifactDeck = q, .. })
 
 
 takeAdvancedAction :: Int -> Offers -> Maybe (Deed, Offers)
