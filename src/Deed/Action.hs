@@ -11,6 +11,7 @@ import Optics
 
 import KOI.PP                       as X
 import KOI.Basics                   as X
+import KOI.Bag
 
 import Common                       as X
 import Mana.Type                    as X
@@ -67,7 +68,7 @@ drawCards = undefined -- XXX
 selectAttackTargets :: Interact ()
 selectAttackTargets =
   do s <- getState
-     case preview locCombat s of
+     case preview currentCombat s of
        Just combat
          | Just grp <- preview locGroup combat, Set.null grp
          , let candidates =
@@ -79,7 +80,6 @@ selectAttackTargets =
        _ -> pure ()
 
   where
-  locCombat = phase % _ActionPhase % _CombatAction    -- in State
   locGroup  = combatPhase % _Attacking % attackGroup
 
   selectTgts s end available
@@ -94,15 +94,26 @@ selectAttackTargets =
       | eid <- available ]
 
   addSel s x =
-    do let s1 = over (locCombat % locGroup) (Set.insert x) s
+    do let s1 = over (currentCombat % locGroup) (Set.insert x) s
        update (SetState s1)
        pure s1
+
+-- | Make an attack.
+-- Will set form an attack group if there isn't one.
+-- Will apply bonuses from statuses.
+-- Assumes that we have already determined that attacking is OK.
+doAttack :: Int -> Element -> Interact ()
+doAttack n e =
+  do selectAttackTargets
+     -- XXX: check for bonuses from statuses
+     updateThe_ (currentCombat % combatPhase % _Attacking % attackDamage)
+                (bagChange n e)
 
 
 selectBlockTarget :: Interact ()
 selectBlockTarget =
   do s <- getState
-     case preview locCombat s of
+     case preview currentCombat s of
        Just combat
          | Just grp <- preview locGroup combat
          , Nothing  <- grp
@@ -117,9 +128,8 @@ selectBlockTarget =
        _ -> pure ()
 
   where
-  locCombat   = phase % _ActionPhase % _CombatAction    -- in State
   locGroup    = combatPhase % _Blocking % blockingEnemy
-  setSel s x  = update (SetState (set (locCombat % locGroup) (Just x) s))
+  setSel s x  = update (SetState (set (currentCombat % locGroup) (Just x) s))
 
 
 

@@ -42,5 +42,6 @@ makeLenses ''State
 makePrisms ''Phase
 makePrisms ''ActionPhase
 
-
+currentCombat :: AffineTraversal' State Combat
+currentCombat = phase % _ActionPhase % _CombatAction
 
