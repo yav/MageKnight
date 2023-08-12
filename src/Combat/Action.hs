@@ -13,7 +13,7 @@ combatOptions s =
     ActionPhase (CombatAction combat) ->
       case view combatPhase combat of
         Attacking a -> attackingOptions s a
-        Blocking  b -> undefined
+        Blocking b -> undefined
         AssigningDamage d -> undefined
     _ -> []
 

@@ -15,7 +15,6 @@ import KOI.Bag
 import Common
 import Terrain.Type(Addr)
 import Enemies
-import Deed.Type
 
 -- | The overall state of the battle
 data Combat = Combat
@@ -23,16 +22,19 @@ data Combat = Combat
   , _combatFortifiedSites :: Set SiteId
   , _combatCompleted      :: [CombatPhase]
   , _combatPhase          :: CombatPhase
+  , _combatTodoBlock      :: [OneEnemyAttack]
+  , _combatTodoWounds     :: Bag Damage
   }
 
 data CombatPhase =
     Attacking OneAttack
   | Blocking OneBlock
-  | AssigningDamage DamagePhase
+  | AssigningDamage (Maybe Damage) -- ^ Damage currently being assigned, if any
 
 type SiteId     = Addr
 type GroupId    = Int
 type EnemyId    = Int
+type AttackId   = Int
 
 --  | A single participant in a battle
 data ActiveEnemy = ActiveEnemy
@@ -56,25 +58,26 @@ data OneAttack = OneAttack
   { isRangedAttack  :: Bool           -- ^ True if we are in the ranged phase
   , _attackGroup    :: Set EnemyId    -- ^ Who we are attacking
   , _attackDamage   :: Bag Element    -- ^ Cumulative damage
-  , _attackDeeds    :: [Deed]
+  }
+
+-- | A single attack of an enemy.
+data OneEnemyAttack = OneEnemyAttack
+  { attacker      :: EnemyId      -- ^ Which enemy
+  , attackNumber  :: AttackId     -- ^ Which attack (for multi attacks)
   }
 
 data OneBlock = OneBlock
-  { _blockingEnemy :: Maybe EnemyId     -- ^ Who are we blocking
-  , _blockAmount   :: Bag Element       -- ^ Amount of block
-  , _blockDeeds    :: [Deed]
+  { _blockingEnemy :: Maybe OneEnemyAttack  -- ^ Who are we blocking
+  , _blockAmount   :: Bag Element           -- ^ Amount of block
   }
 
-data DamagePhase = DamagePhase
-  { _unassignedDamage :: [Damage]
-  }
+
 
 
 makeLenses ''Combat
 makeLenses ''ActiveEnemy
 makeLenses ''OneAttack
 makeLenses ''OneBlock
-makeLenses ''DamagePhase
 makePrisms ''CombatPhase
 
 -- | Get the fortifications for an enemy.
@@ -138,6 +141,8 @@ startCombat sites =
     { _combatEnemies        = allCombatEnemies
     , _combatFortifiedSites = allFortifiedSites
     , _combatCompleted      = []
+    , _combatTodoBlock      = []
+    , _combatTodoWounds     = bagEmpty
     , _combatPhase          = Attacking (startAttackPhase True)
     }
 
@@ -195,7 +200,6 @@ startAttackPhase rng =
     { isRangedAttack  = rng
     , _attackGroup    = Set.empty
     , _attackDamage   = bagEmpty
-    , _attackDeeds    = []
     }
 
 attackEnemies :: Combat -> OneAttack -> [ActiveEnemy]
@@ -229,7 +233,6 @@ startBlockPhase :: OneBlock
 startBlockPhase =
   OneBlock
     { _blockingEnemy = Nothing
-    , _blockDeeds = []
     , _blockAmount = bagEmpty
     }
 
@@ -237,9 +240,12 @@ startBlockPhase =
 blockNeeded :: Combat -> OneBlock -> (Int, Element)
 blockNeeded combat bp =
   fromMaybe (0,Physical)
-  do eid <- view blockingEnemy bp
-     ae  <- Map.lookup eid (view combatEnemies combat)
-     AttacksWith el amt : _ <- pure (view enemyEffectiveAttack ae)
+  do att  <- view blockingEnemy bp
+     ae   <- Map.lookup (attacker att) (view combatEnemies combat)
+     (el,amt) <-
+       case splitAt (attackNumber att) (view enemyEffectiveAttack ae) of
+         (_,AttacksWith el amt : _) -> pure (el,amt)
+         _ -> Nothing
      pure
        if Swift `Set.member` enemyAbilities (enemyToken ae)
          then (2 * amt, el)
@@ -260,24 +266,22 @@ blockValue attackElement blockHave =
 
 
 -- | Is this a good place to end a phase
-mayEndPhase :: CombatPhase -> Bool
-mayEndPhase ph =
-  case ph of
-    Attacking a -> Set.null (view attackGroup a)
-    Blocking bl -> isNothing (view blockingEnemy bl)
-    AssigningDamage dmg -> null (view unassignedDamage dmg)
+mayEndPhase :: Combat -> Bool
+mayEndPhase combat =
+  case view combatPhase combat of
+    Attacking a         -> Set.null (view attackGroup a)
+    Blocking bl         -> isNothing (view blockingEnemy bl)
+    AssigningDamage dmg ->
+      isNothing dmg && bagIsEmpty (view combatTodoWounds combat)
 
 -- | Is it the case that there is nothing else to do in this phase.
 phaseFinished :: Combat -> Bool
-phaseFinished combat = mayEndPhase ph &&
-  case ph of
-    Attacking {} -> Set.null alive
-    Blocking {} -> Set.null blockable
-    AssigningDamage dmg -> null (view unassignedDamage dmg)
-  where
-  ph = view combatPhase combat
-  alive = liveEnemies combat
-  blockable = blockableEnemies combat
+phaseFinished combat =
+  mayEndPhase combat &&
+  case view combatPhase combat of
+    Attacking {}       -> Set.null (liveEnemies combat)
+    Blocking {}        -> null (view combatTodoBlock combat)
+    AssigningDamage {} -> True
 
 -- | Try to advance to the next phase where there's something to do.
 nextPhase :: Combat -> Either EndBattle Combat
@@ -306,17 +310,23 @@ nextPhase = undefined {-combat
 --------------------------------------------------------------------------------
 
 data BattleView = BattleView
-  { viewEnemiesUnselected :: [(EnemyId,ActiveEnemy)]
-  , viewEnemiesSelected   :: [(EnemyId,ActiveEnemy)]
-  , viewDeeds             :: [Deed]
+  { viewEnemiesUnselected :: [EnemyView]
+  , viewEnemiesSelected   :: [EnemyView]
+  , viewDamage            :: [(Damage,Int)]
   , viewBattlePhase       :: BattlePhaseView
+  } deriving (Generic,ToJSON)
+
+data EnemyView = EnemyView
+  { evId      :: EnemyId
+  , evEnemy   :: ActiveEnemy
+  , evAttack  :: Maybe AttackId
   } deriving (Generic,ToJSON)
 
 data BattlePhaseView =
     RangedAttackView Int Int      -- ^ how much we have, how much we need
   | BlockView Int Int             -- ^ how much we have, how much we need
   | AttackView Int Int            -- ^ how much we have, how much we need
-  | DamageView [Damage]
+  | DamageView (Maybe Damage)     -- ^ The selected damage, if any
     deriving (Generic,ToJSON)
 
 
@@ -331,15 +341,15 @@ combatView combat =
       BattleView
         { viewEnemiesUnselected = live
         , viewEnemiesSelected = []
-        , viewDeeds = []
-        , viewBattlePhase = DamageView (view unassignedDamage dmg)
+        , viewDamage = todoDmg
+        , viewBattlePhase = DamageView dmg
         }
 
     Attacking ap ->
       BattleView
         { viewEnemiesUnselected = unsel
         , viewEnemiesSelected = sel
-        , viewDeeds = view attackDeeds ap
+        , viewDamage = todoDmg
         , viewBattlePhase =
           if isRangedAttack ap
             then RangedAttackView us them
@@ -349,24 +359,41 @@ combatView combat =
       (them, resist) = attackEnemyArmorAndResitance combat ap
       us = attackValue resist (view attackDamage ap)
       (sel,unsel) = partition match live
-      match (eid,_) = eid `Set.member` view attackGroup ap
+      match x = evId x `Set.member` view attackGroup ap
 
     Blocking bp ->
       BattleView
         { viewEnemiesUnselected = unsel
         , viewEnemiesSelected = sel
-        , viewDeeds = view blockDeeds bp
+        , viewDamage = todoDmg
         , viewBattlePhase = BlockView have need
         }
       where
-      (sel,unsel)       = partition match live
-      match (eid,_)     = Just eid == view blockingEnemy bp
+      sel =
+        case view blockingEnemy bp of
+          Nothing  -> []
+          Just att ->
+            [ e { evAttack = Just (attackNumber att) }
+            | e <- live, evId e == attacker att
+            ]
+
+      unsel =
+        [ EnemyView { evId = eid
+                    , evEnemy = e
+                    , evAttack = Just (attackNumber oneA)
+                    }
+        | oneA <- view combatTodoBlock combat
+        , let eid = attacker oneA
+        , Just e <- [ Map.lookup eid (view combatEnemies combat) ]
+        ]
+
       (need, attackEl)  = blockNeeded combat bp
       have              = blockValue attackEl (view blockAmount bp)
 
   where
+  todoDmg = bagToNumList (view combatTodoWounds combat)
   live =
-    [ (x, e)
+    [ EnemyView { evId = x, evEnemy = e, evAttack = Nothing }
     | (x,e) <- Map.toList (view combatEnemies combat)
     , view enemyAlive e
     ]

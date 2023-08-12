@@ -6,7 +6,7 @@ import Data.Aeson(ToJSON,FromJSON)
 
 import Mana.Type
 import Terrain.Type
-import Combat(EnemyId)
+import Combat(EnemyId,AttackId)
 
 data Input = Source Mana      -- ^ Mana in the source
            | AskMana Mana     -- ^ Just mana color
@@ -21,7 +21,7 @@ data Input = Source Mana      -- ^ Mana in the source
              -- ^ If Just ty, then tile is off board
              -- and we want to explore it
 
-           | AskEnemy EnemyId
+           | AskEnemy EnemyId (Maybe AttackId)
 
            | AskText Text
            | ActionButton Text

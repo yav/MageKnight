@@ -88,7 +88,7 @@ selectAttackTargets =
       askInputs ("Select attack target.") $
       [ defOpt s (ActionButton "Done") "End target selection" (pure ())
       | end ] ++
-      [ defOpt s (AskEnemy eid) "Target this enemy."
+      [ defOpt s (AskEnemy eid Nothing) "Target this enemy."
         do s1 <- addSel s eid
            selectTgts s1 True (List.delete eid available)
       | eid <- available ]
@@ -116,15 +116,14 @@ selectBlockTarget =
      case preview currentCombat s of
        Just combat
          | Just grp <- preview locGroup combat
-         , Nothing  <- grp
-         , let candidates =
-                 [ eid | (eid,e) <- Map.toList (view combatEnemies combat)
-                       , view enemyAlive e, view enemyAttacks e ]  ->
-          case candidates of
-            [ eid ] -> setSel s eid
-            _ -> askInputs ("Select enemy to block.") $
-                   [ defOpt s (AskEnemy eid) "Block this enemy." (setSel s eid)
-                   | eid <- candidates ]
+         , Nothing  <- grp ->
+         case view combatTodoBlock combat of
+           [ att ] -> setSel s att
+           cs -> askInputs ("Select attack to block.") $
+                  [ defOpt s (AskEnemy (attacker att) (Just (attackNumber att)))
+                            "Block this attack."
+                            (setSel s att)
+                  | att <- cs ]
        _ -> pure ()
 
   where
