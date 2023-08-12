@@ -1,5 +1,6 @@
 
-function newEnemy(e) {
+function newEnemy(e,mbAtt) {
+  // XXX: mbAtt
   const baseSize = constant.enemySize
   const urlI = "img/enemies/" + e.enemyType + "/Type.jpg"
   const url = "img/enemies/" + e.enemyType + "/" + e.enemyName + ".jpg"

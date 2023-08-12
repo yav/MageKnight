@@ -55,24 +55,34 @@ function newCombat() {
         break
       case "DamageView":
         phaseName.set("Assign Damage")
+        // XXX: selected damage if any
     }
   }
 
+  function evKey(eid,mbAtt) {
+    const front = eid.toString()
+    if (mbAtt === null) return front
+    return front + "_" + mbAtt.toString()
+  }
 
-  function drawActiveEnemy(container,e) {
-    const dom = newEnemy(e.enemyToken)
+  function drawActiveEnemy(container,ev) {
+    const e = ev.evEnemy
+    const a = ev.evAttack
+
+    const dom = newEnemy(e.enemyToken, a)
     container.appendChild(dom)
-    let cur = e.enemyToken.enemyName
+    let cur = [ e.enemyToken.enemyName, a ]
 
     function set(val) {
       if (val === undefined) {
         dom.remove()
         return
       }
-      const og = e.enemyToken
-      if (og.enemyName === cur) return
-      dom.replaceWith(newEnemy(og))
-      cur = og.enemyName
+      const og = val.evEnemy.enemyToken
+      const at = val.evAttack
+      if (og.enemyName === cur[0] && at === cur[1]) return
+      dom.replaceWith(newEnemy(og,at))
+      cur = [ og.enemyName, at ]
     }
 
     function ask(q) {
@@ -93,13 +103,22 @@ function newCombat() {
       }
     }
 
-    function ask(eid,q) {
-      const obj = state[eid]
+    function ask(eid,mbAtt,q) {
+      const obj = state[evKey(eid,mbAtt)]
       if (obj === undefined) return
       obj.ask(q)
     }
 
-    return { set: newSetElement(mk, fromKeyValArray)
+   function toObj(xs) {
+     const res = {}
+     for (let i = 0; i < xs.length; ++i) {
+      const ev = xs[i]
+      res[evKey(ev.evId, ev.evAttack)] = ev
+     }
+     return res
+   }
+
+    return { set: newSetElement(mk, toObj)
            , ask: ask
            }
 
@@ -113,12 +132,11 @@ function newCombat() {
     setPhase(c.viewBattlePhase)
     selectedEnemies.set(c.viewEnemiesSelected)
     notSelectedEnemies.set(c.viewEnemiesUnselected)
-    // XXX: Deeds
   }
 
-  function askEnemy(eid,q) {
-    selectedEnemies.ask(eid,q)
-    notSelectedEnemies.ask(eid,q)
+  function askEnemy(eid,mbAtt,q) {
+    selectedEnemies.ask(eid,mbAtt,q)
+    notSelectedEnemies.ask(eid,mbAtt,q)
   }
 
   return {

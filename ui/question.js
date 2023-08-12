@@ -12,7 +12,7 @@ function uiQuestion(q) {
 
         AskLoc: (a,explore) => gui.map.ask(a,explore,q),
 
-        AskEnemy: (eid) => gui.combat.askEnemy(eid,q),
+        AskEnemy: (eid,mbAtt) => gui.combat.askEnemy(eid,mbAtt,q),
 
         ActionButton: (msg) => uiActionButton(msg,q),
         AskText: (t) => uiButton(t,q),
