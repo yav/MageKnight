@@ -22,9 +22,6 @@ module Terrain.Map
 --  , locationCardBonus
 
     -- * Combat
-  , EnemyLifeSpan(..)
-  -- , CombatInfo(..)
-  -- , startCombatAt
   , summonCreature
   , discardEnemy
 

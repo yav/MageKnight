@@ -59,6 +59,7 @@ main =
   deck = Wound : makeDeckFor hero
   com la =
     startCombat
+          la
           [ BattleSite
               { siteId = playerLocation la
               , siteFortified = False

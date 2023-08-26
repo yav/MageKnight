@@ -14,6 +14,7 @@ import KOI.Bag
 
 import Common
 import Terrain.Type(Addr)
+import Terrain.Map(Land)
 import Enemies
 
 -- | The overall state of the battle
@@ -24,6 +25,7 @@ data Combat = Combat
   , _combatPhase          :: CombatPhase
   , _combatTodoBlock      :: [OneEnemyAttack]
   , _combatTodoWounds     :: Bag Damage
+  , _combatLand           :: Land -- ^ for summoning, and update as killed
   }
 
 data CombatPhase =
@@ -135,8 +137,8 @@ data BattleSite = BattleSite
   }
 
 -- | Start a battle
-startCombat :: [BattleSite] -> Combat
-startCombat sites =
+startCombat :: Land -> [BattleSite] -> Combat
+startCombat land sites =
   Combat
     { _combatEnemies        = allCombatEnemies
     , _combatFortifiedSites = allFortifiedSites
@@ -144,6 +146,7 @@ startCombat sites =
     , _combatTodoBlock      = []
     , _combatTodoWounds     = bagEmpty
     , _combatPhase          = Attacking (startAttackPhase True)
+    , _combatLand           = land
     }
 
   where
