@@ -2,7 +2,6 @@ module Enemies
   ( Enemy(..)
   , EnemyType(..)
   , allEnemyTypes
-  , EnemyPool
 
   , EnemyAbility(..)
   , EnemyAttack(..)
@@ -107,10 +106,11 @@ data EnemyAbility =
 data EnemyAttack = AttacksWith Element Int
                  | Summoner
                    deriving (Eq,Show,Generic,ToJSON)
+
+
+
+
 --------------------------------------------------------------------------------
-
-type EnemyPool = Map EnemyType (ResourceQ Enemy)
-
 allEnemies :: [Enemy]
 allEnemies = orcs ++ guardians ++ underworld ++ mages ++ draconum ++ citizens
 

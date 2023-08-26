@@ -55,6 +55,7 @@ executable MageKnight
     Skill,
 
     Enemies,
+    EnemyPool,
     Ruins,
 
     Terrain.Map,

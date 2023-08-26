@@ -37,6 +37,7 @@ import KOI.ResourceQ
 import Common
 import Mana.Type
 import Enemies
+import EnemyPool
 import Ruins
 
 
@@ -136,9 +137,9 @@ hexWithEnemy v et p = hexAddEnemyFromPool v et (hexEmpty, p)
 hexAddEnemyFromPool :: Visibility -> EnemyType -> (HexContent, EnemyPool) ->
                                                   (HexContent, EnemyPool)
 hexAddEnemyFromPool v et (hex,pool) =
-  fromMaybe (hex,pool) $ do q      <- Map.lookup et pool
-                            (e,q1) <- rqTake q
-                            return (hexAddEnemy v e hex, Map.insert et q1 pool)
+  fromMaybe (hex,pool)
+  do (e,newPool) <- getEnemy et pool
+     pure (hexAddEnemy v e hex, newPool)
 
 -- | Make a new hex with a city on it.
 hexWithCity :: BasicMana -> Int -> EnemyPool -> (HexContent, EnemyPool)

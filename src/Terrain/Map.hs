@@ -48,7 +48,8 @@ import  Terrain.Type
 import  Terrain.Hex
 import  Terrain.Tile
 
-import  Enemies( Enemy(..), EnemyType(..), allEnemies, allEnemyTypes, EnemyPool)
+import  Enemies( Enemy(..), EnemyType(..), allEnemies, allEnemyTypes )
+import  EnemyPool
 import  Ruins(Ruins, ruins)
 import  Common(Time(..), Visibility(..))
 
@@ -97,7 +98,7 @@ setupLand LandSetup { .. } =
      questCore <- shuffle (take cityNum shuffledCities ++ questCoreNonCity)
 
      ruinsPool <- rqFromListRandom useRuins
-     enemyPool <- initialEnemyPool useEnemies
+     enemyPool <- newEnemyPool useEnemies
 
 
      let land0 = Land { mapShape        = useShape
@@ -121,21 +122,6 @@ setupLand LandSetup { .. } =
                                      pure (l1, ms + ms1)
 
   cityNum                       = length useCityLevels
-
-
-
-blankEnemyPool :: Gen EnemyPool
-blankEnemyPool = foldM add Map.empty allEnemyTypes
-  where
-  add m e = do q <- rqEmpty
-               pure (Map.insert e q m)
-
-
-initialEnemyPool :: [Enemy] -> Gen EnemyPool
-initialEnemyPool enemies = do blank <- blankEnemyPool
-                              pure (foldr add blank enemies)
-  where
-  add e qs = Map.adjust (rqDiscard e) (enemyType e) qs
 
 
 
@@ -285,10 +271,8 @@ spawnCreatures tys l =
 -- Fails if there are no more enemies available of the required type.
 spawnCreature :: EnemyType -> Land -> Maybe (Enemy, Land)
 spawnCreature ty Land { .. } =
-  do rq      <- Map.lookup ty enemyPool
-     (e,rq1) <- rqTake rq
-     pure (e, Land { enemyPool = Map.insert ty rq1 enemyPool, .. })
-
+  do (e, newPool) <- getEnemy ty enemyPool
+     pure (e, Land { enemyPool = newPool, .. })
 
 -- | Summon a creature to be used by enemies with sommoner powers.
 summonCreature :: Land -> Maybe (Enemy, Land)
@@ -296,7 +280,7 @@ summonCreature = spawnCreature Underworld
 
 discardEnemy :: Enemy -> Land -> Land
 discardEnemy e Land { .. } =
-  Land { enemyPool = Map.adjust (rqDiscard e) (enemyType e) enemyPool, .. }
+  Land { enemyPool = returnEnemy e enemyPool, .. }
 
 
 -- | Try to explore the given address.
