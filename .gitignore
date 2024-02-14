@@ -1,1 +1,6 @@
 /dist-newstyle
+/ui
+node_modules
+.parcel-cache
+*.swp
+

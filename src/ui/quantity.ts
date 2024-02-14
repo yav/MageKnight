@@ -1,10 +1,15 @@
-function newSetElement(makeNew, adaptor) {
+import { uiFromTemplate, uiFromTemplateNested } from "./common-js/template.ts"
+
+/*
+export
+function newSetElement<T>(makeNew: (k:string, v:T) => T,
+                          adaptor: (xs: {[key:string]: T} => {) {
   let cur = {}
 
-  return (xs0) => {
+  return (xs0: { [key: string]: T} ) => {
     const done = {}
 
-    const xs = adaptor? adaptor(xs0) : xs
+    const xs = adaptor? adaptor(xs0) : xs0
 
     // Add nes and change existing
     for (const key in xs) {
@@ -21,52 +26,51 @@ function newSetElement(makeNew, adaptor) {
     // Remove extras
     for (const key in cur) {
       if (done[key]) continue
-      console.log(cur[key])
       cur[key](undefined)
       delete cur[key]
     }
   }
-}
+}*/
 
-function fromArray(arr) {
-  const obj = {}
-  for (let i = 0; i < arr.length; ++i) obj[i] = arr[i]
-  return obj
-}
 
-function fromKeyValArray(arr) {
-  const obj = {}
-  for (let i = 0; i < arr.length; ++i) {
-    const [k,v] = arr[i]
-    obj[k] = v
-  }
-  return obj
+export
+type TextQunatity<T> = {
+  dom: HTMLElement,
+  set: (x: T) => void
 }
 
 
-function newQuantityText() {
-  let val = null
+export
+function newQuantityText<T>() : TextQunatity<T> {
+  let val: T | null = null
   const dom = uiFromTemplate("quantity-text")
 
-  function set(v) {
+  function set(v: T) {
     if (v === val) return
-    dom.textContent = v.toString()
+    dom.textContent = String(v)
     val = v
   }
 
   return { dom: dom, set: set }
 }
 
-function newQuantityGrouped(thing) {
+type GroupedQuantity = {
+  dom: HTMLElement,
+  set: (n: number) => void,
+  get: () => number
+}
+
+export
+function newQuantityGrouped(thing: HTMLElement): GroupedQuantity {
   const [dom, els] = uiFromTemplateNested("quantity-grouped")
   const counter = els.counter
   dom.classList.add("hidden")
   counter.classList.add("hidden")
   dom.appendChild(thing)
 
-  let have = 0
+  let have: number = 0
 
-  function set(need) {
+  function set(need: number) {
     if (have === need) return
     have = need
     switch (need) {
@@ -81,18 +85,18 @@ function newQuantityGrouped(thing) {
         break
 
       default:
-        counter.textContent = need
+        counter.textContent = String(need)
         dom.classList.remove("hidden")
         counter.classList.remove("hidden")
         break
     }
-    have = need;
+    have = need
   }
 
-  const obj = {}
-  obj.dom = dom
-  obj.set = set
-  obj.get = () => have
+  return {
+    dom: dom,
+    set: set,
+    get: () => have
+  }
 
-  return obj
 }

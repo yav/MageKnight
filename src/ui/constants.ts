@@ -1,8 +1,41 @@
+
+export 
+type Mana = (typeof mana)[number]
+
+export
+type HexLoc = (typeof hex_locs)[number]
+
+
+export
 const mana = [ "Red", "Green", "White", "Blue", "Gold", "Black" ]
+
+export
 const hex_locs = [ "Center", "NE", "E", "SE", "SW", "W", "NW" ]
 
-const constant = {}
+export
+let constant :
+  { cardWidth: number,
+    cardHeight: number,
+    smallCardWidth: number,
+    smallCardHeight: number,
 
+    buttonHeight: number,
+    buttonWidth: number,
+
+    dieSize: number,
+
+    tileSize: number,
+    hexWidth: number,
+    hexHeight: number,
+    charWidth: number,
+    charHeight: number,
+
+    enemySize: number,
+    ruinsWidth: number,
+    ruinsHeight: number
+  }
+
+export
 function setupConstants() {
   constant.cardWidth       = 220
   constant.cardHeight      = constant.cardWidth * 7 / 5
@@ -27,7 +60,7 @@ function setupConstants() {
   constant.ruinsHeight     = constant.hexWidth * 0.4
 
   const glob = document.documentElement.style
-  for (c in constant) {
+  for (const c in constant) {
     glob.setProperty("--" + c, constant[c])
     glob.setProperty("--" + c + "_px", constant[c] + "px")
   }

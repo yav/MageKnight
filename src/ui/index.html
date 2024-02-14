@@ -13,9 +13,6 @@
 <link rel="stylesheet" href="style/cards.css">
 <link rel="stylesheet" href="style/resources.css">
 <link rel="stylesheet" href="style/combat.css">
-<script src="common-js/connect.js"></script>
-<script src="common-js/html.js"></script>
-<script src="dynamic.js"></script>
 <script src="constants.js"></script>
 <script src="quantity.js"></script>
 <script src="tooltip.js"></script>
@@ -29,9 +26,12 @@
 <script src="question.js"></script>
 <script src="template.js"></script>
 <script src="resources.js"></script>
-<script src="main.js"></script>
+<script type="module">
+  import main from "./main.ts"
+  document.addEventListener("DOMContentLoaded", main);
+</script>
 </head>
-<body id="main" onload="main()">
+<body id="main">
 <div id="panel">
   <div class="lhs">
     <div id="hand"></div>
@@ -132,6 +132,8 @@
   <div id="ruins" class="ruins"></div>
 
   <div id="move-resource" class="move-resource"></div>
+
+  <div id="button" class="button question"></div>
 </div>
 </body>
 </html>

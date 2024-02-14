@@ -1,0 +1,23 @@
+{
+  "name": "MageKnight",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "start": "parcel watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+
+  "targets": {
+    "default": {
+      "source":  "./src/ui/index.html",
+      "distDir": "./ui"
+    }
+  },
+
+  "devDependencies": {
+    "parcel": "^2.11.0"
+  }
+}

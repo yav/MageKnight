@@ -1,16 +1,54 @@
+import { gui, conn } from "./main.ts"
+import { Question } from "./common-js/connect.ts"
+import { uiFromTemplate, uiGet } from "./common-js/template.ts"
+import { Q, uiExistingAnswer, uiAddQuestionCleanup, uiQuestionCleanup } from "./question.ts"
+import { SelectorBoxes } from "./cards.ts"
 
-function newHand() {
 
-  const dcards    = document.getElementById("hand")
-  const dpreview  = document.getElementById("card-preview")
-  const dselected = document.getElementById("card-selected")
+export
+type SelectedMode = "SelectedBasic" | "SelectedAdvanced" | "SelectedSideways"
+
+export
+type Selection = {
+  _selectedDeed: string,
+  _selectedMode: SelectedMode
+}
+
+export
+type Hand = {
+  _handSelected: Selection | null,
+  _handCards: string[]
+}
+
+export
+type HandUI = {
+  set: (x: Hand) => void,
+  select:  (x: Selection | null) => void,
+  ask: (ix: number,q: Question<Q>) => void,
+  askAdvanced: (q: Question<Q>) => void,
+  askSideways: (q: Question<Q>) => void
+}
+
+export
+function newHand(): HandUI {
+
+  const dcards    = uiGet("hand")
+  const dpreview  = uiGet("card-preview")
+  const dselected = uiGet("card-selected")
 
   const getName   = gui.cards.getName
-  const draw      = (d) => gui.cards.drawDeed(d)
+  const draw      = (d: string) => gui.cards.drawDeed(d)
 
-  let selected = null
+  let selected: Selected | null = null
 
-  function setSelected(newSel) {
+  type Selected = {
+    name: string, 
+    dom: HTMLElement,
+    selectors: SelectorBoxes,
+    mode: SelectedMode | null
+  }
+
+  function setSelected(newSel: Selection | null) {
 
     if (newSel === null) {
       if (selected === null) return
@@ -37,7 +75,8 @@ function newHand() {
     setMode(newMode)
   }
 
-  function setMode(newMode) {
+  function setMode(newMode: SelectedMode) {
+    if (selected === null) return
     if (newMode === selected.mode) return
     switch (newMode) {
       case "SelectedBasic":
@@ -61,15 +100,20 @@ function newHand() {
 
 
 
-  const deeds = []
+  const deeds: DrawnDeed[] = []
+  type DrawnDeed = {
+    name: string, small: HTMLElement, big: HTMLElement
+  }
 
-  function setHand(hand) {
+
+
+  function setHand(hand: Hand) {
 
     setSelected(hand._handSelected)
 
     const newDeeds = hand._handCards
 
-    function newHandCard(d,i,replace) {
+    function newHandCard(d: string,i: number,replace: boolean) {
       const funs  = draw(d)
       const small = funs.small()
       const big   = funs.big()
@@ -90,7 +134,7 @@ function newHand() {
     }
 
     const common = Math.min(deeds.length,newDeeds.length)
-    let i
+    let i: number
     for (i = 0; i < common; ++i) {
       const d  = deeds[i]
       const nd = newDeeds[i]
@@ -101,6 +145,7 @@ function newHand() {
 
     for(; i < deeds.length; ++i) {
       const it = deeds.pop()
+      if (it === undefined) continue
       it.small.remove()
       it.big.remove()
     }
@@ -112,34 +157,33 @@ function newHand() {
   }
 
 
-  function askHand(ix,q) {
+  function askHand(ix: number,q: Question<Q>) {
     uiExistingAnswer(deeds[ix].small,q)
   }
 
-  function askSideways(q) {
+  function askSideways(q: Question<Q>) {
     if (selected === null) return
     const dom = uiFromTemplate("card-sideways-icon")
     selected.dom.appendChild(dom)
     uiAddQuestionCleanup(() => dom.remove())
     dom.addEventListener("click",() => {
-      sendJSON(q)
+      conn.sendJSON(q)
       uiQuestionCleanup()
     })
   }
 
-  function askAdvanced(q) {
+  function askAdvanced(q: Question<Q>) {
     if (selected === null) return
     uiExistingAnswer(selected.selectors.get(1), q)
   }
 
-  const obj = {}
-  obj.set = setHand
-  obj.select = setSelected
-  obj.ask = askHand
-  obj.askAdvanced = askAdvanced
-  obj.askSideways = askSideways
-
-  return obj
+  return {
+    set: setHand,
+    select: setSelected,
+    ask: askHand,
+    askAdvanced: askAdvanced,
+    askSideways: askSideways
+  }
 }
 
 

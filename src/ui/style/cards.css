@@ -24,7 +24,7 @@
   display: inline-block;
   width:  var(--cardWidth_px);
   height: var(--cardHeight_px);
-  border-radius: calc(var(--cardHeight_px / 30));
+  border-radius: calc(var(--cardHeight_px)/30);
 }
 
 .card.big.sideways {

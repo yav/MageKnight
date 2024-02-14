@@ -1,7 +1,44 @@
-function newCards() {
+import { uiFromTemplate } from "./common-js/template.ts"
+import { constant } from "./constants.ts"
+
+export
+type CardsUI = {
+  getName: (d: DeedUI) => string,
+  drawDeed: (name: string) => DeedUI
+}
 
 
-  const dims =
+export 
+type DeedUI = {
+  name: string
+  small: () => HTMLElement,
+  big: () => HTMLElement,
+  selectors: (container: HTMLElement) => SelectorBoxes
+}
+
+export
+type SelectorBoxes = {
+  get:  (i: number) => HTMLElement,
+  hide: (i: number) => void,
+  show: (i: number) => void
+}
+
+export
+function newCards(): CardsUI {
+
+  type Cards<T> =
+    { Action: T, AdvancedAction: T, Artifact: T, Spell: T, Wound: T }
+
+  type CardTy = keyof Cards<void>
+
+  type CardDef =
+    { cols: number, ho: number, vo: number[]
+    , boxes: [number,number][]
+    , cards: string []
+    }
+    
+
+  const dims: Cards<CardDef> =
     { Action:
         { cols: 7, ho: 0.22, vo: [6.3]
         , boxes: [ [0.57, 0.21], [0.72, 0.37] ]
@@ -131,9 +168,13 @@ function newCards() {
 
     , Wound:
         { cols: 1, ho: 0.22, vo: [11.4]
+        , boxes: []
         , cards: ["Wound"]
         }
     }
+
+   
+
     const cardLoc = {}
     for (const ty in dims) {
       const inf = dims[ty]
@@ -145,16 +186,17 @@ function newCards() {
       }
     }
 
-  function getDeedType(deed) {
-    for (const ty in dims) {
+  function getDeedType(deed: string) : CardTy {
+    for (const ty in Object.keys(dims)) {
       const cards = dims[ty].cards
       for (let i = 0; i < cards.length; ++i) {
-        if (cards[i] === deed) return ty
+        if (cards[i] === deed) return ty as CardTy
       }
     }
+    throw new Error("I don't know deed: " + deed)
   }
 
-  function drawDeed(deed) {
+  function drawDeed(deed: string) : DeedUI {
     const [r,c]   = cardLoc[deed]
     const cardTy  = getDeedType(deed)
     const info    = dims[cardTy]
@@ -162,7 +204,7 @@ function newCards() {
     function small() {
 
       const dom = uiFromTemplate("card-small")
-      dom.style.setProperty("--background-columns",info.cols)
+      dom.style.setProperty("--background-columns",String(info.cols))
 
       for (let i = 0; i < info.vo.length; ++i) {
         const s = uiFromTemplate("card-element");
@@ -180,10 +222,10 @@ function newCards() {
       return dom
     }
 
-    function big(d) {
+    function big() {
       const dom = uiFromTemplate("card-big")
       dom.classList.add(cardTy)
-      dom.style.setProperty("--background-columns",info.cols)
+      dom.style.setProperty("--background-columns",String(info.cols))
       dom.style.backgroundPosition =
         (-c * constant.cardWidth)  + "px " +
         (-r * constant.cardHeight) + "px"
@@ -191,38 +233,37 @@ function newCards() {
       return dom
     }
 
-    function selectorBoxes(dom) {
+    function selectorBoxes(dom: HTMLElement): SelectorBoxes {
       const boxes = info.boxes
 
-      const bs = []
+      const bs: HTMLElement[] = []
       for (let i = 0; i < boxes.length; ++i) {
         const [boxY,boxH] = boxes[i]
         const box = uiFromTemplate("card-big-selector")
-        box.style.setProperty("--mk-box-height", boxH)
-        box.style.setProperty("--mk-box-top", boxY)
+        box.style.setProperty("--mk-box-height", String(boxH))
+        box.style.setProperty("--mk-box-top", String(boxY))
         bs[i] = box
         dom.appendChild(box)
       }
 
       return {
-        get:  (i) => bs[i],
-        hide: (i) => bs[i].classList.add("hidden"),
-        show: (i) => bs[i].classList.remove("hidden"),
+        get:  (i: number) => bs[i],
+        hide: (i: number) => bs[i].classList.add("hidden"),
+        show: (i: number) => bs[i].classList.remove("hidden"),
       }
     }
 
-    const obj = {}
-    obj.name = name
-    obj.small = small
-    obj.big = big
-    obj.selectors = selectorBoxes
-    return obj
+    return {
+      name: deed,
+      small: small,
+      big: big,
+      selectors: selectorBoxes
+    }
+    
   }
 
-  const obj = {}
-  obj.getName     = (d) => d.deedName
-  obj.drawDeed    = drawDeed
-
-  return obj
-
+  return {
+    getName: (d: DeedUI) => d.name, 
+    drawDeed: drawDeed
+  }
 }
